@@ -1,0 +1,62 @@
+<main class="landing-wrapper">
+    <section class="hero container py-5 py-lg-6">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-6">
+                <span class="eyebrow">Frontend de microservicios</span>
+                <h1 class="display-4 fw-semibold mt-3 mb-3">Panel Angular para 5 microservicios</h1>
+                <p class="lead mb-4">
+                    Proyecto base listo para conectar con tus APIs. Incluye autenticacion inicial,
+                    rutas protegidas y una experiencia visual moderna desde el primer commit.
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a routerLink="/login" class="btn btn-brand btn-lg px-4">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>
+                        Ir al login
+                    </a>
+                    <a href="#arquitectura" class="btn btn-outline-dark btn-lg px-4">Ver arquitectura</a>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="hero-card p-4 p-lg-5">
+                    <img src="/images/hero-dashboard.svg" alt="Ilustracion dashboard" class="img-fluid mb-4" />
+                    <h2 class="h4 mb-3">Modulos preparados</h2>
+                    <ul class="service-list list-unstyled m-0">
+                        @for (item of microservices; track item) {
+                        <li>
+                            <i class="bi bi-check2-circle"></i>
+                            {{ item }}
+                        </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="arquitectura" class="container pb-5">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <article class="feature-card p-4 h-100">
+                    <i class="bi bi-shield-lock feature-icon"></i>
+                    <h3 class="h5 mt-3">Rutas protegidas</h3>
+                    <p class="mb-0">Guard configurado para asegurar el acceso al Home tras autenticar.</p>
+                </article>
+            </div>
+            <div class="col-md-4">
+                <article class="feature-card p-4 h-100">
+                    <i class="bi bi-palette2 feature-icon"></i>
+                    <h3 class="h5 mt-3">Estilo listo</h3>
+                    <p class="mb-0">Bootstrap + SCSS con variables para acelerar personalizacion visual.</p>
+                </article>
+            </div>
+            <div class="col-md-4">
+                <article class="feature-card p-4 h-100">
+                    <i class="bi bi-diagram-3 feature-icon"></i>
+                    <h3 class="h5 mt-3">Escalable</h3>
+                    <p class="mb-0">Estructura lista para integrar tus 5 backends de microservicios.</p>
+                </article>
+            </div>
+        </div>
+    </section>
+</main>

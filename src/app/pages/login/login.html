@@ -1,0 +1,47 @@
+<main class="login-page d-flex align-items-center py-4">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-5 col-md-8">
+                <section class="login-card p-4 p-lg-5">
+                    <a routerLink="/" class="btn btn-link back-link px-0 mb-2">
+                        <i class="bi bi-arrow-left"></i>
+                        Volver
+                    </a>
+                    <h1 class="h2 mb-1">Acceso al panel</h1>
+                    <p class="text-secondary mb-4">Ingresa con un correo y una contrasena para continuar.</p>
+
+                    <form [formGroup]="loginForm" (ngSubmit)="submit()" novalidate>
+                        <div class="mb-3">
+                            <label class="form-label" for="email">Correo</label>
+                            <input id="email" type="email" class="form-control form-control-lg" formControlName="email"
+                                placeholder="equipo@empresa.com" />
+                            @if (loginForm.controls.email.touched && loginForm.controls.email.invalid) {
+                            <small class="text-danger">Ingresa un correo valido.</small>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="password">Contrasena</label>
+                            <input id="password" type="password" class="form-control form-control-lg"
+                                formControlName="password" placeholder="********" />
+                            @if (loginForm.controls.password.touched && loginForm.controls.password.invalid) {
+                            <small class="text-danger">Minimo 4 caracteres.</small>
+                            }
+                        </div>
+
+                        @if (errorMessage) {
+                        <div class="alert alert-danger py-2" role="alert">
+                            {{ errorMessage }}
+                        </div>
+                        }
+
+                        <button class="btn btn-brand btn-lg w-100 mt-2" type="submit">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>
+                            Iniciar sesion
+                        </button>
+                    </form>
+                </section>
+            </div>
+        </div>
+    </div>
+</main>

@@ -1,0 +1,39 @@
+.home-page {
+    min-height: 100dvh;
+    background:
+        radial-gradient(circle at 85% 15%, rgba(252, 206, 127, 0.35), transparent 38%),
+        radial-gradient(circle at 10% 88%, rgba(132, 173, 255, 0.25), transparent 35%),
+        linear-gradient(180deg, #f7f3ea 0%, #eaf1fb 100%);
+}
+
+.dashboard-header {
+    border-radius: 1.3rem;
+    border: 1px solid rgba(21, 38, 62, 0.1);
+    background-color: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 1rem 2rem rgba(23, 42, 66, 0.12);
+}
+
+.eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.14rem;
+    font-size: 0.78rem;
+    color: #34557f;
+    font-weight: 700;
+}
+
+.module-card {
+    border-radius: 1rem;
+    border: 1px solid rgba(28, 45, 72, 0.09);
+    background-color: rgba(255, 255, 255, 0.9);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+
+    &:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 1rem 2rem rgba(24, 47, 75, 0.12);
+    }
+}
+
+.module-icon {
+    font-size: 1.7rem;
+    color: #2f4f87;
+}

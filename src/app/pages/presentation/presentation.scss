@@ -1,0 +1,63 @@
+.landing-wrapper {
+    min-height: 100dvh;
+    background:
+        radial-gradient(circle at 15% 20%, rgba(250, 216, 137, 0.3), transparent 35%),
+        radial-gradient(circle at 85% 15%, rgba(111, 187, 255, 0.25), transparent 40%),
+        linear-gradient(160deg, #f8f3e8 0%, #e8eef6 100%);
+}
+
+.hero {
+    min-height: 76dvh;
+    display: flex;
+    align-items: center;
+}
+
+.eyebrow {
+    letter-spacing: 0.15rem;
+    text-transform: uppercase;
+    font-size: 0.78rem;
+    color: #34557f;
+    font-weight: 700;
+}
+
+.hero-card {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(33, 39, 56, 0.1);
+    border-radius: 1.2rem;
+    box-shadow: 0 1.6rem 2.2rem rgba(16, 35, 58, 0.12);
+}
+
+.service-list {
+    display: grid;
+    gap: 0.9rem;
+
+    li {
+        display: flex;
+        gap: 0.6rem;
+        align-items: center;
+        color: #223654;
+        font-weight: 500;
+    }
+
+    i {
+        color: #248255;
+        font-size: 1.1rem;
+    }
+}
+
+.feature-card {
+    background-color: rgba(255, 255, 255, 0.88);
+    border-radius: 1rem;
+    border: 1px solid rgba(24, 41, 66, 0.09);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+
+    &:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 1rem 1.8rem rgba(21, 46, 74, 0.12);
+    }
+}
+
+.feature-icon {
+    font-size: 1.5rem;
+    color: #304f87;
+}

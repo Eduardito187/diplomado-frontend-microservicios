@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');
+
+:root {
+    --brand-primary: #2f4f87;
+    --brand-primary-strong: #1e355c;
+    --brand-accent: #dd9147;
+    --text-main: #1f2f45;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    min-height: 100%;
+}
+
+body {
+    margin: 0;
+    font-family: 'Manrope', sans-serif;
+    color: var(--text-main);
+    background-color: #f5f6f8;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.btn-brand {
+    --bs-btn-bg: var(--brand-primary);
+    --bs-btn-border-color: var(--brand-primary);
+    --bs-btn-hover-bg: var(--brand-primary-strong);
+    --bs-btn-hover-border-color: var(--brand-primary-strong);
+    --bs-btn-active-bg: var(--brand-primary-strong);
+    --bs-btn-active-border-color: var(--brand-primary-strong);
+    --bs-btn-color: #ffffff;
+    font-weight: 700;
+}
+
+.py-lg-6 {
+    @media (min-width: 992px) {
+        padding-top: 5rem !important;
+        padding-bottom: 5rem !important;
+    }
+}
