@@ -1,0 +1,234 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h2 class="page-h2">Planes de Comida</h2>
+      <p class="page-desc">Crear plan nutricional y consultar por ID (el backend no expone listado)</p>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div class="toolbar">
+      <h3 class="page-h2" style="font-size:1rem;margin:0">Nuevo plan</h3>
+    </div>
+
+    <form [formGroup]="planForm" (ngSubmit)="submit()" novalidate class="p-3">
+      <div class="form-grid">
+        <div class="field">
+          <label for="mp-nutri">Nutricionista ID *</label>
+          <input id="mp-nutri" type="text" formControlName="idNutricionist" placeholder="UUID" />
+        </div>
+        <div class="field">
+          <label for="mp-pat">Paciente ID *</label>
+          <input id="mp-pat" type="text" formControlName="idPatient" placeholder="UUID" />
+        </div>
+        <div class="field">
+          <label for="mp-apt">Cita ID *</label>
+          <input id="mp-apt" type="text" formControlName="idAppointment" placeholder="UUID" />
+        </div>
+        <div class="field">
+          <label for="mp-sub">Suscripción ID *</label>
+          <input id="mp-sub" type="text" formControlName="idSubscription" placeholder="UUID" />
+        </div>
+        <div class="field">
+          <label for="mp-total">Total días *</label>
+          <input id="mp-total" type="number" min="1" formControlName="totalDays" />
+        </div>
+        <div class="field">
+          <label for="mp-cal">Calorías totales *</label>
+          <input id="mp-cal" type="number" min="0" formControlName="totalCalories" />
+        </div>
+        <div class="field">
+          <label for="mp-start">Fecha inicio *</label>
+          <input id="mp-start" type="date" formControlName="starDate" />
+        </div>
+        <div class="field">
+          <label for="mp-end">Fecha fin *</label>
+          <input id="mp-end" type="date" formControlName="endDate" />
+        </div>
+      </div>
+
+      <div class="mt-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h4 class="page-h2" style="font-size:0.95rem;margin:0">Días del plan</h4>
+          <button type="button" class="btn btn-outline-secondary btn-sm" (click)="addDay()">
+            <i class="bi bi-plus-lg me-1"></i>Agregar día
+          </button>
+        </div>
+
+        @for (dayCtrl of days.controls; track $index; let di = $index) {
+          <div class="table-card mb-3" [formGroup]="$any(dayCtrl)">
+            <div class="toolbar">
+              <div class="field" style="max-width:120px">
+                <label [attr.for]="'mp-day-' + di">Día #</label>
+                <input [id]="'mp-day-' + di" type="number" min="1" formControlName="day" />
+              </div>
+              <button type="button" class="btn-icon danger" title="Eliminar día" (click)="removeDay(di)">
+                <i class="bi bi-trash3-fill"></i>
+              </button>
+              <button type="button" class="btn btn-outline-secondary btn-sm ms-auto" (click)="addTimeFood(di)">
+                <i class="bi bi-plus-lg me-1"></i>Agregar comida
+              </button>
+            </div>
+
+            @for (tfCtrl of timeFoodsOf(di).controls; track $index; let ti = $index) {
+              <div class="p-2 border-top" [formGroup]="$any(tfCtrl)">
+                <div class="form-grid">
+                  <div class="field">
+                    <label [attr.for]="'mp-tf-type-' + di + '-' + ti">Tipo</label>
+                    <select [id]="'mp-tf-type-' + di + '-' + ti" formControlName="type">
+                      <option value="BREAKFAST">Desayuno</option>
+                      <option value="LUNCH">Almuerzo</option>
+                      <option value="DINNER">Cena</option>
+                      <option value="SNACK">Snack</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label [attr.for]="'mp-tf-order-' + di + '-' + ti">Orden</label>
+                    <input [id]="'mp-tf-order-' + di + '-' + ti" type="number" min="1" formControlName="order" />
+                  </div>
+                  <div class="field" style="align-self:end">
+                    <button type="button" class="btn-icon danger" title="Eliminar comida" (click)="removeTimeFood(di, ti)">
+                      <i class="bi bi-trash3-fill"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="mt-2">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <strong style="font-size:0.8rem">Recetas</strong>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" (click)="addRecipeRef(di, ti)">
+                      <i class="bi bi-plus-lg me-1"></i>Agregar receta
+                    </button>
+                  </div>
+                  @for (rCtrl of recipesOf(di, ti).controls; track $index; let ri = $index) {
+                    <div class="form-grid" [formGroup]="$any(rCtrl)">
+                      <div class="field">
+                        <label [attr.for]="'mp-r-id-' + di + '-' + ti + '-' + ri">Receta ID</label>
+                        <input [id]="'mp-r-id-' + di + '-' + ti + '-' + ri" type="text" formControlName="idRecipe" placeholder="UUID" />
+                      </div>
+                      <div class="field">
+                        <label [attr.for]="'mp-r-portion-' + di + '-' + ti + '-' + ri">Porción</label>
+                        <input [id]="'mp-r-portion-' + di + '-' + ti + '-' + ri" type="number" min="1" formControlName="portion" />
+                      </div>
+                      <div class="field" style="align-self:end">
+                        <button type="button" class="btn-icon danger" title="Eliminar receta" (click)="removeRecipeRef(di, ti, ri)">
+                          <i class="bi bi-trash3-fill"></i>
+                        </button>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-brand" [disabled]="saving()">
+          @if (saving()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+          Crear plan
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div class="table-card mt-4">
+    <div class="toolbar">
+      <h3 class="page-h2" style="font-size:1rem;margin:0">Consultar plan por ID</h3>
+    </div>
+    <div class="p-3">
+      <div class="form-grid">
+        <div class="field field-full">
+          <label for="mp-lookup">ID del plan</label>
+          <div class="d-flex gap-2">
+            <input
+              id="mp-lookup"
+              type="text"
+              placeholder="UUID del plan"
+              [value]="lookupId()"
+              (input)="lookupId.set($any($event.target).value)"
+            />
+            <button type="button" class="btn btn-brand" [disabled]="lookupLoading() || !lookupId().trim()" (click)="lookup()">
+              @if (lookupLoading()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+              Consultar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      @if (lookupResult(); as plan) {
+        <div class="detail-grid mt-3">
+          <div class="detail-item">
+            <span class="detail-label">ID</span>
+            <span class="detail-value">{{ plan.id }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Paciente</span>
+            <span class="detail-value">{{ plan.idPatient }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Nutricionista</span>
+            <span class="detail-value">{{ plan.idNutricionist }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Total días</span>
+            <span class="detail-value">{{ plan.totalDays }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Calorías totales</span>
+            <span class="detail-value">{{ plan.totalCalories }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Rango</span>
+            <span class="detail-value">{{ plan.starDate }} → {{ plan.endDate }}</span>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="table-card mt-4">
+    <div class="toolbar">
+      <h3 class="page-h2" style="font-size:1rem;margin:0">Planes creados en esta sesión</h3>
+      <span class="count-badge">{{ recentPlans().length }}</span>
+    </div>
+    @if (recentPlans().length === 0) {
+      <app-empty-state
+        icon="bi-clipboard2-heart"
+        title="Sin planes recientes"
+        description="Los planes creados en esta pestaña aparecerán aquí."
+      />
+    } @else {
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Resumen</th>
+              <th class="th-actions">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of recentPlans(); track p.id) {
+              <tr>
+                <td><code>{{ p.id }}</code></td>
+                <td>{{ p.summary }}</td>
+                <td>
+                  <div class="action-btns">
+                    <button class="btn-icon" title="Actualizar" (click)="refresh(p.id)">
+                      <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                    <button class="btn-icon danger" title="Cancelar" (click)="cancel(p.id)">
+                      <i class="bi bi-x-circle-fill"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>

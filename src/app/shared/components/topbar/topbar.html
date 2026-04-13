@@ -1,0 +1,20 @@
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="btn-menu-toggle d-lg-none" (click)="onMenuToggle()" aria-label="Abrir menú">
+      <i class="bi bi-list"></i>
+    </button>
+    <div class="page-heading">
+      <h1 class="page-title">{{ pageTitle() }}</h1>
+      @if (pageSubtitle()) {
+        <p class="page-subtitle">{{ pageSubtitle() }}</p>
+      }
+    </div>
+  </div>
+
+  <div class="topbar-right">
+    <div class="topbar-badge">
+      <i class="bi bi-wifi"></i>
+      <span>En línea</span>
+    </div>
+  </div>
+</header>

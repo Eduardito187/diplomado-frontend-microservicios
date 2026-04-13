@@ -1,0 +1,244 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: #f8f9fb;
+}
+
+.public-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: saturate(180%) blur(14px);
+  border-bottom: 1px solid rgba(24, 41, 66, 0.07);
+}
+
+.public-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1.25rem;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  text-decoration: none;
+  color: #1f2f45;
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+
+.brand-mark {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #2f4f87, #dd9147);
+  box-shadow: 0 4px 10px rgba(47, 79, 135, 0.25);
+}
+
+.brand-accent { color: #dd9147; }
+
+.nav-toggle {
+  display: none;
+  border: none;
+  background: transparent;
+  font-size: 1.6rem;
+  color: #1f2f45;
+  cursor: pointer;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 1.75rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  a {
+    text-decoration: none;
+    color: #435471;
+    font-weight: 500;
+    font-size: 0.93rem;
+    padding: 0.35rem 0;
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+
+    &:hover { color: #1f2f45; }
+    &.active {
+      color: #2f4f87;
+      border-bottom-color: #dd9147;
+    }
+  }
+
+  .nav-cta a {
+    border: none;
+    color: #fff;
+  }
+}
+
+.btn-brand {
+  background: linear-gradient(135deg, #2f4f87, #dd9147);
+  color: #fff;
+  border: none;
+  padding: 0.55rem 1.2rem;
+  border-radius: 999px;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  box-shadow: 0 8px 18px rgba(47, 79, 135, 0.25);
+  transition: transform 0.2s, box-shadow 0.2s;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 22px rgba(47, 79, 135, 0.3);
+    color: #fff;
+  }
+}
+
+.public-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.public-footer {
+  background: #122036;
+  color: #c9d4e4;
+  margin-top: auto;
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1.2fr 1fr;
+  gap: 2.5rem;
+  padding: 3rem 1.25rem 2rem;
+
+  h4 {
+    font-size: 0.9rem;
+    letter-spacing: 0.1rem;
+    text-transform: uppercase;
+    color: #fff;
+    margin-bottom: 1rem;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+
+  a {
+    color: #a9b7cc;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+
+    &:hover { color: #fff; }
+  }
+
+  .brand { color: #fff; }
+}
+
+.footer-tagline {
+  margin-top: 0.9rem;
+  font-size: 0.9rem;
+  color: #a9b7cc;
+  line-height: 1.55;
+}
+
+.contact-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  font-size: 0.9rem;
+
+  i { color: #dd9147; margin-top: 3px; }
+}
+
+.socials {
+  display: flex;
+  gap: 0.75rem;
+
+  a {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    transition: background 0.2s, transform 0.2s;
+
+    &:hover {
+      background: #dd9147;
+      color: #fff;
+      transform: translateY(-2px);
+    }
+  }
+}
+
+.footer-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1.1rem 0;
+  font-size: 0.82rem;
+
+  .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 1.25rem;
+  }
+
+  .admin-link {
+    color: #7b8ca8;
+    text-decoration: none;
+
+    &:hover { color: #dd9147; }
+  }
+}
+
+@media (max-width: 900px) {
+  .nav-toggle { display: block; }
+
+  .nav-links {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    background: #fff;
+    border-bottom: 1px solid rgba(24, 41, 66, 0.08);
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+
+    &.open { max-height: 500px; }
+
+    li { padding: 0.9rem 1.5rem; border-bottom: 1px solid rgba(24, 41, 66, 0.06); }
+    .nav-cta { padding: 1rem 1.5rem; }
+    .nav-cta a { width: 100%; justify-content: center; }
+  }
+
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    padding-bottom: 1.5rem;
+  }
+
+  .footer-bottom .container {
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+  }
+}

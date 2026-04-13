@@ -1,28 +1,97 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth-guard';
-import { Home } from './pages/home/home';
-import { Login } from './pages/login/login';
 import { Presentation } from './pages/presentation/presentation';
+import { Login } from './pages/login/login';
+import { PublicLayout } from './pages/public/public-layout';
 
 export const routes: Routes = [
-    {
+  {
+    path: '',
+    component: PublicLayout,
+    children: [
+      {
         path: '',
         component: Presentation,
-        title: 'Presentacion | Frontend Microservicios'
-    },
-    {
-        path: 'login',
-        component: Login,
-        title: 'Login | Frontend Microservicios'
-    },
-    {
-        path: 'home',
-        component: Home,
-        canActivate: [authGuard],
-        title: 'Home | Frontend Microservicios'
-    },
-    {
-        path: '**',
-        redirectTo: ''
-    }
+        title: 'NurTriCenter | Nutrición a tu puerta',
+      },
+      {
+        path: 'servicios',
+        title: 'Servicios | NurTriCenter',
+        loadComponent: () =>
+          import('./pages/public/services-public').then((m) => m.ServicesPublic),
+      },
+      {
+        path: 'nutricionistas',
+        title: 'Nutricionistas | NurTriCenter',
+        loadComponent: () =>
+          import('./pages/public/team-public').then((m) => m.TeamPublic),
+      },
+      {
+        path: 'nosotros',
+        title: 'Nosotros | NurTriCenter',
+        loadComponent: () =>
+          import('./pages/public/about-public').then((m) => m.AboutPublic),
+      },
+      {
+        path: 'contacto',
+        title: 'Contacto | NurTriCenter',
+        loadComponent: () =>
+          import('./pages/public/contact-public').then((m) => m.ContactPublic),
+      },
+    ],
+  },
+  {
+    path: 'login',
+    component: Login,
+    title: 'Iniciar Sesión | NurTriCenter',
+  },
+  {
+    path: 'admin',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/admin/admin-layout').then((m) => m.AdminLayout),
+    children: [
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      {
+        path: 'dashboard',
+        title: 'Dashboard | NurTriCenter',
+        loadComponent: () => import('./pages/dashboard/dashboard').then((m) => m.Dashboard),
+      },
+      {
+        path: 'patients',
+        title: 'Pacientes | NurTriCenter',
+        loadComponent: () => import('./pages/patients/patients').then((m) => m.Patients),
+      },
+      {
+        path: 'appointments',
+        title: 'Citas | NurTriCenter',
+        loadComponent: () =>
+          import('./pages/appointments/appointments').then((m) => m.Appointments),
+      },
+      {
+        path: 'production',
+        title: 'Producción | NurTriCenter',
+        loadComponent: () => import('./pages/production/production').then((m) => m.Production),
+      },
+      {
+        path: 'meal-plans',
+        title: 'Planes de Comida | NurTriCenter',
+        loadComponent: () => import('./pages/meal-plans/meal-plans').then((m) => m.MealPlans),
+      },
+      {
+        path: 'recipes',
+        title: 'Recetas | NurTriCenter',
+        loadComponent: () => import('./pages/recipes/recipes').then((m) => m.RecipesComponent),
+      },
+    ],
+  },
+  {
+    path: 'home',
+    redirectTo: '/admin/dashboard',
+    pathMatch: 'full',
+  },
+  {
+    path: '**',
+    redirectTo: '',
+  },
 ];

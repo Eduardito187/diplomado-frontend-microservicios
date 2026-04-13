@@ -1,0 +1,123 @@
+@use '../../shared/styles/page-shared' as *;
+@use '../../shared/styles/modal-shared' as *;
+
+.avatar-circle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2f4f87, #0891b2);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.patient-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.patient-name {
+  display: block;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #1f2f45;
+}
+
+.patient-email {
+  display: block;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.doc-badge {
+  font-size: 0.75rem;
+  background: #f1f5f9;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  color: #475569;
+  font-family: monospace;
+}
+
+// Patient profile in view modal
+.patient-profile {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.profile-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2f4f87, #0891b2);
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.profile-info {
+  h4 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1f2f45;
+    margin: 0 0 0.25rem;
+  }
+  p {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin: 0 0 0.5rem;
+  }
+}
+
+.addresses-section {
+  margin-top: 1rem;
+
+  h5 {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #374151;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+  }
+}
+
+.address-card {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: #f8fafc;
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+  color: #374151;
+  margin-bottom: 0.4rem;
+
+  i {
+    color: #0891b2;
+    flex-shrink: 0;
+  }
+}
+
+.badge-principal {
+  margin-left: auto;
+  font-size: 0.65rem;
+  font-weight: 700;
+  background: #dbeafe;
+  color: #1e40af;
+  border-radius: 10px;
+  padding: 0.15rem 0.5rem;
+}

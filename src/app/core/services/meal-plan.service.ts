@@ -1,0 +1,72 @@
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, map } from 'rxjs';
+import { API, ResultEnvelope } from '../config/api.config';
+import {
+  MealPlan,
+  Recipe,
+  Ingredient,
+  CreateMealPlanDto,
+  CreateRecipeDto,
+  CreateIngredientDto,
+} from '../models/meal-plan.model';
+
+function unwrap<T>(env: ResultEnvelope<T>): T {
+  if (!env || env.success === false) {
+    throw new Error(env?.error?.message ?? 'Request failed');
+  }
+  return env.value as T;
+}
+
+@Injectable({ providedIn: 'root' })
+export class MealPlanService {
+  private readonly http = inject(HttpClient);
+
+  getMealPlanById(id: string): Observable<MealPlan> {
+    return this.http
+      .get<ResultEnvelope<MealPlan>>(API.mealPlans.byId(id))
+      .pipe(map(unwrap<MealPlan>));
+  }
+
+  createMealPlan(dto: CreateMealPlanDto): Observable<string> {
+    return this.http
+      .post<ResultEnvelope<string>>(API.mealPlans.base, dto)
+      .pipe(map(unwrap<string>));
+  }
+
+  updateMealPlan(id: string): Observable<boolean> {
+    return this.http
+      .patch<ResultEnvelope<boolean>>(API.mealPlans.byId(id), {})
+      .pipe(map(unwrap<boolean>));
+  }
+
+  cancelMealPlan(id: string): Observable<boolean> {
+    return this.http
+      .patch<ResultEnvelope<boolean>>(API.mealPlans.cancel(id), {})
+      .pipe(map(unwrap<boolean>));
+  }
+
+  getRecipeById(id: string): Observable<Recipe> {
+    return this.http
+      .get<ResultEnvelope<Recipe>>(API.recipes.byId(id))
+      .pipe(map(unwrap<Recipe>));
+  }
+
+  createRecipe(dto: CreateRecipeDto): Observable<string> {
+    return this.http
+      .post<ResultEnvelope<string>>(API.recipes.base, dto)
+      .pipe(map(unwrap<string>));
+  }
+
+  getIngredientById(id: string): Observable<Ingredient> {
+    return this.http
+      .get<ResultEnvelope<Ingredient>>(API.ingredients.byId(id))
+      .pipe(map(unwrap<Ingredient>));
+  }
+
+  createIngredient(dto: CreateIngredientDto): Observable<string> {
+    return this.http
+      .post<ResultEnvelope<string>>(API.ingredients.base, dto)
+      .pipe(map(unwrap<string>));
+  }
+}

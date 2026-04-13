@@ -1,62 +1,145 @@
-<main class="landing-wrapper">
-    <section class="hero container py-5 py-lg-6">
-        <div class="row align-items-center g-4">
-            <div class="col-lg-6">
-                <span class="eyebrow">Frontend de microservicios</span>
-                <h1 class="display-4 fw-semibold mt-3 mb-3">Panel Angular para 5 microservicios</h1>
-                <p class="lead mb-4">
-                    Proyecto base listo para conectar con tus APIs. Incluye autenticacion inicial,
-                    rutas protegidas y una experiencia visual moderna desde el primer commit.
-                </p>
-                <div class="d-flex flex-wrap gap-3">
-                    <a routerLink="/login" class="btn btn-brand btn-lg px-4">
-                        <i class="bi bi-box-arrow-in-right me-2"></i>
-                        Ir al login
-                    </a>
-                    <a href="#arquitectura" class="btn btn-outline-dark btn-lg px-4">Ver arquitectura</a>
-                </div>
-            </div>
+<section class="hero">
+  <div class="container hero-grid">
+    <div class="hero-copy">
+      <span class="eyebrow">Plataforma de nutrición</span>
+      <h1>
+        Comer bien<br />
+        nunca fue tan <span class="text-accent">simple</span>.
+      </h1>
+      <p class="lead">
+        Planes nutricionales personalizados, diseñados por profesionales y entregados a tu puerta.
+        Cuidamos cada detalle para que solo te preocupes por disfrutar.
+      </p>
+      <div class="hero-ctas">
+        <a routerLink="/servicios" class="btn-primary">
+          <i class="bi bi-basket3 me-2"></i>
+          Ver planes
+        </a>
+        <a routerLink="/contacto" class="btn-secondary">
+          <i class="bi bi-calendar-check me-2"></i>
+          Agendar cita
+        </a>
+      </div>
 
-            <div class="col-lg-6">
-                <div class="hero-card p-4 p-lg-5">
-                    <img src="/images/hero-dashboard.svg" alt="Ilustracion dashboard" class="img-fluid mb-4" />
-                    <h2 class="h4 mb-3">Modulos preparados</h2>
-                    <ul class="service-list list-unstyled m-0">
-                        @for (item of microservices; track item) {
-                        <li>
-                            <i class="bi bi-check2-circle"></i>
-                            {{ item }}
-                        </li>
-                        }
-                    </ul>
-                </div>
-            </div>
+      <div class="hero-stats">
+        <div>
+          <strong>1,500+</strong>
+          <span>Pacientes atendidos</span>
         </div>
-    </section>
+        <div>
+          <strong>15</strong>
+          <span>Nutricionistas colegiadas</span>
+        </div>
+        <div>
+          <strong>98%</strong>
+          <span>Satisfacción</span>
+        </div>
+      </div>
+    </div>
 
-    <section id="arquitectura" class="container pb-5">
-        <div class="row g-3">
-            <div class="col-md-4">
-                <article class="feature-card p-4 h-100">
-                    <i class="bi bi-shield-lock feature-icon"></i>
-                    <h3 class="h5 mt-3">Rutas protegidas</h3>
-                    <p class="mb-0">Guard configurado para asegurar el acceso al Home tras autenticar.</p>
-                </article>
-            </div>
-            <div class="col-md-4">
-                <article class="feature-card p-4 h-100">
-                    <i class="bi bi-palette2 feature-icon"></i>
-                    <h3 class="h5 mt-3">Estilo listo</h3>
-                    <p class="mb-0">Bootstrap + SCSS con variables para acelerar personalizacion visual.</p>
-                </article>
-            </div>
-            <div class="col-md-4">
-                <article class="feature-card p-4 h-100">
-                    <i class="bi bi-diagram-3 feature-icon"></i>
-                    <h3 class="h5 mt-3">Escalable</h3>
-                    <p class="mb-0">Estructura lista para integrar tus 5 backends de microservicios.</p>
-                </article>
-            </div>
+    <div class="hero-visual">
+      <div class="float-card card-main">
+        <div class="card-head">
+          <i class="bi bi-bowl-food"></i>
+          <span>Tu plan de hoy</span>
         </div>
-    </section>
-</main>
+        <ul>
+          <li><span class="dot breakfast"></span> Desayuno — 420 kcal</li>
+          <li><span class="dot lunch"></span> Almuerzo — 650 kcal</li>
+          <li><span class="dot snack"></span> Snack — 180 kcal</li>
+          <li><span class="dot dinner"></span> Cena — 520 kcal</li>
+        </ul>
+        <div class="progress-bar"><span style="width:72%"></span></div>
+        <small>72% de tu meta diaria</small>
+      </div>
+      <div class="float-card card-badge">
+        <i class="bi bi-award-fill"></i>
+        <div>
+          <strong>Certificados</strong>
+          <span>Nutrición clínica</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section features">
+  <div class="container">
+    <header class="section-head">
+      <span class="eyebrow">Por qué elegirnos</span>
+      <h2>Nutrición pensada para tu vida real</h2>
+    </header>
+
+    <div class="feature-grid">
+      @for (f of features; track f.title) {
+        <article class="feature-card">
+          <div class="feature-icon"><i class="bi {{ f.icon }}"></i></div>
+          <h3>{{ f.title }}</h3>
+          <p>{{ f.text }}</p>
+        </article>
+      }
+    </div>
+  </div>
+</section>
+
+<section class="section steps-section">
+  <div class="container">
+    <header class="section-head">
+      <span class="eyebrow">Cómo funciona</span>
+      <h2>De la consulta al plato en 4 pasos</h2>
+    </header>
+
+    <div class="steps-grid">
+      @for (s of steps; track s.n) {
+        <div class="step">
+          <div class="step-number">{{ s.n }}</div>
+          <h3>{{ s.title }}</h3>
+          <p>{{ s.text }}</p>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<section class="section plans-section">
+  <div class="container">
+    <header class="section-head">
+      <span class="eyebrow">Nuestros planes</span>
+      <h2>Elige el que mejor se adapta a ti</h2>
+    </header>
+
+    <div class="plans-grid">
+      @for (p of plans; track p.name) {
+        <article class="plan-card" [class.highlight]="p.highlight">
+          @if (p.highlight) {
+            <span class="plan-tag">Más popular</span>
+          }
+          <h3>{{ p.name }}</h3>
+          <div class="plan-price">
+            <strong>{{ p.price }}</strong>
+            <span>{{ p.period }}</span>
+          </div>
+          <ul>
+            @for (f of p.features; track f) {
+              <li><i class="bi bi-check-circle-fill"></i> {{ f }}</li>
+            }
+          </ul>
+          <a routerLink="/contacto" class="plan-cta">Empezar ahora</a>
+        </article>
+      }
+    </div>
+  </div>
+</section>
+
+<section class="section cta-section">
+  <div class="container cta-box">
+    <div>
+      <h2>¿Listo para transformar tu alimentación?</h2>
+      <p>Agenda una evaluación gratuita con una de nuestras nutricionistas.</p>
+    </div>
+    <a routerLink="/contacto" class="btn-primary">
+      <i class="bi bi-chat-heart me-2"></i>
+      Agendar evaluación
+    </a>
+  </div>
+</section>

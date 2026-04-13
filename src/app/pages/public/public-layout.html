@@ -1,0 +1,96 @@
+<header class="public-header">
+  <nav class="container public-nav">
+    <a routerLink="/" class="brand" (click)="closeMenu()">
+      <span class="brand-mark"></span>
+      <span class="brand-name">NurTri<span class="brand-accent">Center</span></span>
+    </a>
+
+    <button
+      type="button"
+      class="nav-toggle"
+      (click)="toggleMenu()"
+      aria-label="Abrir menú"
+      [attr.aria-expanded]="menuOpen()"
+    >
+      <i class="bi" [class.bi-list]="!menuOpen()" [class.bi-x]="menuOpen()"></i>
+    </button>
+
+    <ul class="nav-links" [class.open]="menuOpen()">
+      <li>
+        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMenu()">Inicio</a>
+      </li>
+      <li>
+        <a routerLink="/servicios" routerLinkActive="active" (click)="closeMenu()">Servicios</a>
+      </li>
+      <li>
+        <a routerLink="/nutricionistas" routerLinkActive="active" (click)="closeMenu()">Nutricionistas</a>
+      </li>
+      <li>
+        <a routerLink="/nosotros" routerLinkActive="active" (click)="closeMenu()">Nosotros</a>
+      </li>
+      <li>
+        <a routerLink="/contacto" routerLinkActive="active" (click)="closeMenu()">Contacto</a>
+      </li>
+      <li class="nav-cta">
+        <a routerLink="/login" class="btn btn-brand" (click)="closeMenu()">
+          <i class="bi bi-box-arrow-in-right me-1"></i>
+          Ingresar
+        </a>
+      </li>
+    </ul>
+  </nav>
+</header>
+
+<main class="public-main">
+  <router-outlet />
+</main>
+
+<footer class="public-footer">
+  <div class="container footer-grid">
+    <div>
+      <div class="brand">
+        <span class="brand-mark"></span>
+        <span class="brand-name">NurTri<span class="brand-accent">Center</span></span>
+      </div>
+      <p class="footer-tagline">
+        Nutrición personalizada y planes de alimentación entregados a tu puerta.
+      </p>
+    </div>
+
+    <div>
+      <h4>Navegación</h4>
+      <ul>
+        <li><a routerLink="/">Inicio</a></li>
+        <li><a routerLink="/servicios">Servicios</a></li>
+        <li><a routerLink="/nutricionistas">Nutricionistas</a></li>
+        <li><a routerLink="/nosotros">Nosotros</a></li>
+        <li><a routerLink="/contacto">Contacto</a></li>
+      </ul>
+    </div>
+
+    <div>
+      <h4>Contacto</h4>
+      <ul class="contact-list">
+        <li><i class="bi bi-geo-alt"></i> Av. Principal 123, Lima</li>
+        <li><i class="bi bi-telephone"></i> +51 999 888 777</li>
+        <li><i class="bi bi-envelope"></i> hola&#64;nurtricenter.com</li>
+      </ul>
+    </div>
+
+    <div>
+      <h4>Síguenos</h4>
+      <div class="socials">
+        <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+        <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+        <a href="#" aria-label="WhatsApp"><i class="bi bi-whatsapp"></i></a>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <div class="container">
+      <span>© {{ 2026 }} NurTriCenter. Todos los derechos reservados.</span>
+      <a routerLink="/login" class="admin-link">Acceso administradores</a>
+    </div>
+  </div>
+</footer>

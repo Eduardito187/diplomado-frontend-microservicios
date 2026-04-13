@@ -1,0 +1,302 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h2 class="page-h2">Citas</h2>
+      <p class="page-desc">Agenda por nutricionista y día</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-secondary" (click)="openNutritionistCreate()">
+        <i class="bi bi-person-badge-fill me-2"></i>Nuevo nutricionista
+      </button>
+      <button class="btn btn-brand" (click)="openSchedule()">
+        <i class="bi bi-calendar-plus-fill me-2"></i>Programar Cita
+      </button>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div class="field">
+      <label for="f-nutri">Nutricionista</label>
+      <select
+        id="f-nutri"
+        [value]="selectedNutritionistId()"
+        (change)="onNutritionistChange($any($event.target).value)"
+      >
+        <option value="">— selecciona —</option>
+        @for (n of nutritionists(); track n.id) {
+          <option [value]="n.id">{{ nutritionistFullName(n) }}@if (n.specialty) { — {{ n.specialty }}}</option>
+        }
+      </select>
+    </div>
+    <div class="field">
+      <label for="f-date">Fecha</label>
+      <input
+        id="f-date"
+        type="date"
+        [value]="selectedDate()"
+        (change)="onDateChange($any($event.target).value)"
+      />
+    </div>
+    <span class="count-badge">{{ summary().total }} citas</span>
+  </div>
+
+  <div class="table-card">
+    @if (loading() || appointmentsLoading()) {
+      <div class="table-loading">
+        @for (i of [1,2,3]; track i) {
+          <div class="skeleton-row">
+            <div class="skeleton sk-avatar"></div>
+            <div class="skeleton-lines">
+              <div class="skeleton sk-line"></div>
+              <div class="skeleton sk-line-sm"></div>
+            </div>
+            <div class="skeleton sk-badge"></div>
+          </div>
+        }
+      </div>
+    } @else if (!selectedNutritionistId()) {
+      <app-empty-state
+        icon="bi-person-vcard"
+        title="Selecciona un nutricionista"
+        description="Elige un nutricionista y una fecha para ver las citas programadas."
+      />
+    } @else if (appointments().length === 0) {
+      <app-empty-state
+        icon="bi-calendar2-x"
+        title="Sin citas"
+        description="No hay citas registradas para la fecha seleccionada."
+        actionLabel="Programar Cita"
+        (action)="openSchedule()"
+      />
+    } @else {
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Paciente</th>
+              <th>Tipo</th>
+              <th>Fecha</th>
+              <th>Estado</th>
+              <th class="th-actions">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (a of appointments(); track a.id) {
+              <tr>
+                <td>{{ patientName(a.patientId) }}</td>
+                <td>{{ a.type ?? '—' }}</td>
+                <td>{{ formatDate(a.scheduleDate) }}</td>
+                <td><app-badge-status [status]="statusKey(a.status)" /></td>
+                <td>
+                  <div class="action-btns">
+                    @if (isScheduled(a)) {
+                      <button class="btn-icon" title="Atender" (click)="openAttend(a)">
+                        <i class="bi bi-check-circle-fill"></i>
+                      </button>
+                      <button class="btn-icon" title="No asistió" (click)="markNotAttended(a)">
+                        <i class="bi bi-dash-circle"></i>
+                      </button>
+                      <button class="btn-icon danger" title="Cancelar" (click)="cancelAppointment(a)">
+                        <i class="bi bi-x-circle-fill"></i>
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+
+  <div class="table-card mt-4">
+    <div class="toolbar">
+      <h3 class="page-h2" style="font-size:1rem;margin:0">Nutricionistas</h3>
+      <span class="count-badge">{{ nutritionists().length }}</span>
+    </div>
+    @if (nutritionists().length === 0) {
+      <app-empty-state
+        icon="bi-person-vcard"
+        title="Sin nutricionistas"
+        actionLabel="Nuevo nutricionista"
+        (action)="openNutritionistCreate()"
+      />
+    } @else {
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Especialidad</th>
+              <th>Licencia</th>
+              <th class="th-actions">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (n of nutritionists(); track n.id) {
+              <tr>
+                <td>{{ nutritionistFullName(n) }}</td>
+                <td>{{ n.specialty ?? '—' }}</td>
+                <td>{{ n.professionalLicense ?? '—' }}</td>
+                <td>
+                  <div class="action-btns">
+                    <button class="btn-icon" title="Editar" (click)="openNutritionistEdit(n)">
+                      <i class="bi bi-pencil-fill"></i>
+                    </button>
+                    <button class="btn-icon danger" title="Eliminar" (click)="deleteNutritionist(n)">
+                      <i class="bi bi-trash3-fill"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>
+
+@if (modalMode() === 'schedule') {
+  <div class="modal-backdrop" (click)="closeModal()" (keydown.escape)="closeModal()" aria-hidden="true"></div>
+  <dialog class="modal-panel" open aria-modal="true" aria-labelledby="apt-schedule-title">
+    <div class="modal-head">
+      <h3 id="apt-schedule-title">Programar Cita</h3>
+      <button class="btn-close-modal" (click)="closeModal()" aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="modal-body">
+      <form [formGroup]="scheduleForm" (ngSubmit)="submitSchedule()" novalidate>
+        <div class="form-grid">
+          <div class="field field-full">
+            <label for="sch-patient">Paciente *</label>
+            <select id="sch-patient" formControlName="patientId">
+              <option value="">— selecciona —</option>
+              @for (p of patients(); track p.id) {
+                <option [value]="p.id">{{ p.name }} {{ p.lastname }}</option>
+              }
+            </select>
+          </div>
+          <div class="field field-full">
+            <label for="sch-nutri">Nutricionista *</label>
+            <select id="sch-nutri" formControlName="nutritionistId">
+              <option value="">— selecciona —</option>
+              @for (n of nutritionists(); track n.id) {
+                <option [value]="n.id">{{ nutritionistFullName(n) }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label for="sch-type">Tipo *</label>
+            <select id="sch-type" formControlName="type">
+              <option value="CONSULTATION">Consulta</option>
+              <option value="FOLLOWUP">Seguimiento</option>
+              <option value="EVALUATION">Evaluación</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="sch-date">Fecha y hora *</label>
+            <input id="sch-date" type="datetime-local" formControlName="scheduleDate" />
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline-secondary" (click)="closeModal()">Cancelar</button>
+          <button type="submit" class="btn btn-brand" [disabled]="saving()">
+            @if (saving()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+            Programar
+          </button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+}
+
+@if (modalMode() === 'attend' && selectedAppointment()) {
+  <div class="modal-backdrop" (click)="closeModal()" (keydown.escape)="closeModal()" aria-hidden="true"></div>
+  <dialog class="modal-panel" open aria-modal="true" aria-labelledby="apt-attend-title">
+    <div class="modal-head">
+      <h3 id="apt-attend-title">Atender Cita</h3>
+      <button class="btn-close-modal" (click)="closeModal()" aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-subtext">
+        Paciente: <strong>{{ patientName(selectedAppointment()!.patientId) }}</strong><br />
+        Fecha: {{ formatDate(selectedAppointment()!.scheduleDate) }}
+      </p>
+      <form [formGroup]="attendForm" (ngSubmit)="submitAttend()" novalidate>
+        <div class="form-grid">
+          <div class="field">
+            <label for="a-w">Peso (kg)</label>
+            <input id="a-w" type="number" step="0.1" formControlName="weightKg" />
+          </div>
+          <div class="field">
+            <label for="a-h">Altura (cm)</label>
+            <input id="a-h" type="number" step="0.1" formControlName="heightCm" />
+          </div>
+          <div class="field">
+            <label for="a-f">% Grasa corporal</label>
+            <input id="a-f" type="number" step="0.1" formControlName="bodyFatPercent" />
+          </div>
+          <div class="field field-full">
+            <label for="a-d">Diagnóstico</label>
+            <textarea id="a-d" rows="2" formControlName="diagnosisSummary"></textarea>
+          </div>
+          <div class="field field-full">
+            <label for="a-r">Recomendaciones</label>
+            <textarea id="a-r" rows="2" formControlName="recommendations"></textarea>
+          </div>
+          <div class="field field-full">
+            <label for="a-n">Notas</label>
+            <textarea id="a-n" rows="2" formControlName="notes"></textarea>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline-secondary" (click)="closeModal()">Cancelar</button>
+          <button type="submit" class="btn btn-brand" [disabled]="saving()">
+            @if (saving()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+            Registrar atención
+          </button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+}
+
+@if (modalMode() === 'nutritionist-create' || modalMode() === 'nutritionist-edit') {
+  <div class="modal-backdrop" (click)="closeModal()" (keydown.escape)="closeModal()" aria-hidden="true"></div>
+  <dialog class="modal-panel" open aria-modal="true" aria-labelledby="nutri-title">
+    <div class="modal-head">
+      <h3 id="nutri-title">{{ modalMode() === 'nutritionist-create' ? 'Nuevo Nutricionista' : 'Editar Nutricionista' }}</h3>
+      <button class="btn-close-modal" (click)="closeModal()" aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="modal-body">
+      <form [formGroup]="nutritionistForm" (ngSubmit)="submitNutritionist()" novalidate>
+        <div class="form-grid">
+          <div class="field">
+            <label for="nu-name">Nombre *</label>
+            <input id="nu-name" type="text" formControlName="name" />
+          </div>
+          <div class="field">
+            <label for="nu-ln">Apellido *</label>
+            <input id="nu-ln" type="text" formControlName="lastname" />
+          </div>
+          <div class="field field-full">
+            <label for="nu-sp">Especialidad</label>
+            <input id="nu-sp" type="text" formControlName="specialty" />
+          </div>
+          <div class="field field-full">
+            <label for="nu-lic">Licencia profesional</label>
+            <input id="nu-lic" type="text" formControlName="professionalLicense" />
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline-secondary" (click)="closeModal()">Cancelar</button>
+          <button type="submit" class="btn btn-brand" [disabled]="saving()">
+            @if (saving()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+            {{ modalMode() === 'nutritionist-create' ? 'Crear' : 'Guardar' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+}

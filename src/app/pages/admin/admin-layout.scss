@@ -1,0 +1,29 @@
+$sidebar-width: 260px;
+
+.admin-shell {
+  display: flex;
+  min-height: 100vh;
+  background: #f5f6f8;
+}
+
+.admin-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  margin-left: $sidebar-width;
+  transition: margin-left 0.3s ease;
+
+  @media (max-width: 991px) {
+    margin-left: 0;
+  }
+}
+
+.admin-main {
+  flex: 1;
+  padding: 1.5rem;
+
+  @media (min-width: 768px) {
+    padding: 2rem;
+  }
+}

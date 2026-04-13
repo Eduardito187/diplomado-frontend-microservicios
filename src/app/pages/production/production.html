@@ -1,0 +1,239 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h2 class="page-h2">Producción</h2>
+      <p class="page-desc">Pipeline de órdenes y explorador de recursos del microservicio de cocina</p>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <button
+      class="btn"
+      [class.btn-brand]="activeTab() === 'workflow'"
+      [class.btn-outline-secondary]="activeTab() !== 'workflow'"
+      (click)="setTab('workflow')"
+    >
+      <i class="bi bi-diagram-3-fill me-2"></i>Pipeline
+    </button>
+    <button
+      class="btn"
+      [class.btn-brand]="activeTab() === 'resources'"
+      [class.btn-outline-secondary]="activeTab() !== 'resources'"
+      (click)="setTab('resources')"
+    >
+      <i class="bi bi-collection me-2"></i>Recursos
+    </button>
+  </div>
+
+  @if (activeTab() === 'workflow') {
+    <div class="table-card">
+      <div class="toolbar">
+        <h3 class="page-h2" style="font-size:1rem;margin:0">1. Generar orden</h3>
+      </div>
+      <form [formGroup]="generarForm" (ngSubmit)="submitGenerar()" novalidate class="p-3">
+        <div class="form-grid">
+          <div class="field">
+            <label for="gen-fecha">Fecha *</label>
+            <input id="gen-fecha" type="date" formControlName="fecha" />
+          </div>
+        </div>
+        <div class="mt-3">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <strong style="font-size:0.85rem">Items</strong>
+            <button type="button" class="btn btn-outline-secondary btn-sm" (click)="addItem()">
+              <i class="bi bi-plus-lg me-1"></i>Agregar item
+            </button>
+          </div>
+          @for (it of workflowItems.controls; track $index; let i = $index) {
+            <div class="form-grid" [formGroup]="$any(it)">
+              <div class="field">
+                <label [attr.for]="'gen-sku-' + i">SKU *</label>
+                <input [id]="'gen-sku-' + i" type="text" formControlName="sku" />
+              </div>
+              <div class="field">
+                <label [attr.for]="'gen-qty-' + i">Cantidad *</label>
+                <input [id]="'gen-qty-' + i" type="number" min="1" formControlName="qty" />
+              </div>
+              <div class="field" style="align-self:end">
+                <button type="button" class="btn-icon danger" title="Eliminar" (click)="removeItem(i)">
+                  <i class="bi bi-trash3-fill"></i>
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+        <div class="modal-actions">
+          <button type="submit" class="btn btn-brand" [disabled]="saving()">
+            @if (saving()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+            Generar
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="table-card mt-4">
+      <div class="toolbar">
+        <h3 class="page-h2" style="font-size:1rem;margin:0">2. Ejecutar etapa</h3>
+      </div>
+      <form [formGroup]="stageForm" class="p-3" (ngSubmit)="$event.preventDefault()">
+        <div class="form-grid">
+          <div class="field field-full">
+            <label for="stg-id">ID de la orden</label>
+            <input id="stg-id" type="text" formControlName="id" placeholder="UUID de la orden" />
+            @if (generatedOrderId()) {
+              <small>Última orden generada: <code>{{ generatedOrderId() }}</code></small>
+            }
+          </div>
+        </div>
+        <div class="d-flex gap-2 flex-wrap mt-2">
+          <button type="button" class="btn btn-outline-secondary" [disabled]="saving()" (click)="runStage('planificar')">
+            <i class="bi bi-diagram-3 me-2"></i>Planificar
+          </button>
+          <button type="button" class="btn btn-outline-secondary" [disabled]="saving()" (click)="runStage('procesar')">
+            <i class="bi bi-gear-wide-connected me-2"></i>Procesar
+          </button>
+          <button type="button" class="btn btn-outline-secondary" [disabled]="saving()" (click)="runStage('despachar')">
+            <i class="bi bi-truck me-2"></i>Despachar
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="table-card mt-4">
+      <div class="toolbar">
+        <h3 class="page-h2" style="font-size:1rem;margin:0">Bitácora de la sesión</h3>
+        <span class="count-badge">{{ workflowLog().length }}</span>
+      </div>
+      @if (workflowLog().length === 0) {
+        <app-empty-state icon="bi-journal-text" title="Sin actividad" description="Las etapas ejecutadas aparecerán aquí." />
+      } @else {
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr><th>Cuándo</th><th>Etapa</th><th>Detalle</th></tr>
+            </thead>
+            <tbody>
+              @for (l of workflowLog(); track l.at) {
+                <tr>
+                  <td>{{ formatDate(l.at) }}</td>
+                  <td>{{ stageLabel(l.stage) }}</td>
+                  <td>{{ l.detail }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  }
+
+  @if (activeTab() === 'resources') {
+    <div class="table-card">
+      <div class="toolbar flex-wrap">
+        @for (r of resources; track r.key) {
+          <button
+            type="button"
+            class="btn btn-sm"
+            [class.btn-brand]="selectedResource() === r.key"
+            [class.btn-outline-secondary]="selectedResource() !== r.key"
+            (click)="selectResource(r.key)"
+          >
+            <i class="bi {{ r.icon }} me-1"></i>{{ r.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="table-card mt-3">
+      <div class="toolbar">
+        <h3 class="page-h2" style="font-size:1rem;margin:0">
+          {{ editingId() ? 'Editar' : 'Nuevo' }} — {{ selectedMeta().label }}
+        </h3>
+      </div>
+      <div class="p-3">
+        <div class="field field-full">
+          <label for="res-json">JSON</label>
+          <textarea
+            id="res-json"
+            rows="8"
+            style="font-family:monospace;font-size:0.8rem"
+            [value]="createJson()"
+            (input)="createJson.set($any($event.target).value)"
+          ></textarea>
+          <small>Cada recurso tiene su propio schema. Envía el JSON que espera el endpoint de Laravel.</small>
+        </div>
+        <div class="modal-actions">
+          @if (editingId()) {
+            <button type="button" class="btn btn-outline-secondary" (click)="cancelEdit()">Cancelar edición</button>
+          }
+          <button type="button" class="btn btn-brand" [disabled]="saving()" (click)="submitResource()">
+            @if (saving()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+            {{ editingId() ? 'Guardar cambios' : 'Crear' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-card mt-3">
+      <div class="toolbar">
+        <h3 class="page-h2" style="font-size:1rem;margin:0">{{ selectedMeta().label }}</h3>
+        <span class="count-badge">{{ items().length }}</span>
+        <button type="button" class="btn btn-outline-secondary btn-sm ms-auto" (click)="loadResource()">
+          <i class="bi bi-arrow-clockwise me-1"></i>Recargar
+        </button>
+      </div>
+      @if (loading()) {
+        <div class="p-3"><span class="spinner-border spinner-border-sm me-2"></span>Cargando…</div>
+      } @else if (items().length === 0) {
+        <app-empty-state
+          [icon]="selectedMeta().icon"
+          title="Sin registros"
+          description="Aún no hay datos para este recurso."
+        />
+      } @else {
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                @for (c of columns(); track c) {
+                  <th>{{ c }}</th>
+                }
+                <th class="th-actions">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of items(); track row.id) {
+                <tr>
+                  <td><code style="font-size:0.7rem">{{ row.id }}</code></td>
+                  @for (c of columns(); track c) {
+                    <td>{{ cellValue(row, c) }}</td>
+                  }
+                  <td>
+                    <div class="action-btns">
+                      <button class="btn-icon" title="Editar" (click)="editItem(row)">
+                        <i class="bi bi-pencil-fill"></i>
+                      </button>
+                      <button class="btn-icon danger" title="Eliminar" (click)="deleteItem(row)">
+                        <i class="bi bi-trash3-fill"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+
+    <div class="table-card mt-3">
+      <div class="toolbar">
+        <h3 class="page-h2" style="font-size:1rem;margin:0">Payload crudo</h3>
+      </div>
+      <div class="p-3">
+        <pre style="font-size:0.7rem;max-height:300px;overflow:auto">{{ items() | json }}</pre>
+      </div>
+    </div>
+  }
+</div>

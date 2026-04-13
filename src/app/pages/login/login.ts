@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Auth } from '../../core/services/auth';
@@ -10,7 +10,10 @@ import { Auth } from '../../core/services/auth';
   styleUrl: './login.scss',
 })
 export class Login {
-  errorMessage = '';
+  readonly loading = signal(false);
+  readonly errorMessage = signal('');
+  readonly showPassword = signal(false);
+
   readonly loginForm;
 
   constructor(
@@ -19,29 +22,34 @@ export class Login {
     private readonly router: Router
   ) {
     this.loginForm = this.fb.nonNullable.group({
-      email: ['', [Validators.required, Validators.email]],
+      username: ['', [Validators.required, Validators.minLength(3)]],
       password: ['', [Validators.required, Validators.minLength(4)]],
     });
   }
 
+  togglePassword(): void {
+    this.showPassword.update((v) => !v);
+  }
+
   submit(): void {
-    this.errorMessage = '';
+    this.errorMessage.set('');
 
     if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();
-      this.errorMessage = 'Completa correctamente los campos.';
       return;
     }
 
-    const { email, password } = this.loginForm.getRawValue();
-    const logged = this.auth.login(email, password);
+    this.loading.set(true);
+    const { username, password } = this.loginForm.getRawValue();
 
-    if (!logged) {
-      this.errorMessage = 'No fue posible iniciar sesion.';
-      return;
-    }
-
-    this.router.navigateByUrl('/home');
+    this.auth.login(username, password).subscribe({
+      next: () => {
+        this.router.navigateByUrl('/admin/dashboard');
+      },
+      error: (err: Error) => {
+        this.errorMessage.set(err.message ?? 'No fue posible iniciar sesión.');
+        this.loading.set(false);
+      },
+    });
   }
-
 }

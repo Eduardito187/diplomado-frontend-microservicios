@@ -1,0 +1,25 @@
+<div class="stat-card" [style.--card-color]="color()">
+  <div class="stat-card-body">
+    <div class="stat-info">
+      @if (loading()) {
+        <div class="skeleton skeleton-value"></div>
+        <div class="skeleton skeleton-label"></div>
+      } @else {
+        <span class="stat-value">{{ value() }}</span>
+        <span class="stat-label">{{ label() }}</span>
+        @if (sublabel()) {
+          <span class="stat-sublabel">{{ sublabel() }}</span>
+        }
+        @if (trend()) {
+          <span class="stat-trend" [class.trend-up]="trendUp()" [class.trend-down]="!trendUp()">
+            <i class="bi" [class.bi-arrow-up-short]="trendUp()" [class.bi-arrow-down-short]="!trendUp()"></i>
+            {{ trend() }}
+          </span>
+        }
+      }
+    </div>
+    <div class="stat-icon-wrap">
+      <i class="bi {{ icon() }}"></i>
+    </div>
+  </div>
+</div>

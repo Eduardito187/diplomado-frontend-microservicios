@@ -1,0 +1,53 @@
+<aside class="sidebar" [class.open]="isOpen()">
+  <!-- Overlay for mobile -->
+  <div class="sidebar-overlay d-lg-none" (click)="onClose()"></div>
+
+  <div class="sidebar-inner">
+    <!-- Logo -->
+    <div class="sidebar-logo">
+      <div class="logo-mark">
+        <i class="bi bi-heart-pulse-fill"></i>
+      </div>
+      <div class="logo-text">
+        <span class="logo-name">NurTriCenter</span>
+        <span class="logo-sub">Panel Administrativo</span>
+      </div>
+      <button class="btn-close-sidebar d-lg-none" (click)="onClose()" aria-label="Cerrar menú">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="sidebar-nav">
+      <p class="nav-section-label">MENÚ</p>
+      @for (item of navItems; track item.route) {
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="active"
+          class="nav-item"
+          [style.--item-color]="item.color"
+          (click)="onClose()"
+        >
+          <span class="nav-icon">
+            <i class="bi {{ item.icon }}"></i>
+          </span>
+          <span class="nav-label">{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+
+    <!-- Footer -->
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar">{{ userInitials }}</div>
+        <div class="user-details">
+          <span class="user-name">{{ user?.name ?? user?.username ?? 'Usuario' }}</span>
+          <span class="user-role">{{ user?.roles?.[0] ?? 'Admin' }}</span>
+        </div>
+      </div>
+      <button class="btn-logout" (click)="logout()" title="Cerrar sesión">
+        <i class="bi bi-box-arrow-right"></i>
+      </button>
+    </div>
+  </div>
+</aside>
