@@ -2,10 +2,6 @@ import { environment } from '../../../environments/environment';
 
 export const GATEWAY_URL = environment.gatewayUrl;
 
-const PATIENTS_DIRECT = environment.patientsDirectUrl;
-const APPOINTMENTS_DIRECT = environment.appointmentsDirectUrl;
-const MEAL_PLANS_DIRECT = environment.mealPlansDirectUrl;
-
 const resource = (name: string) => ({
   base: `${GATEWAY_URL}/production/${name}`,
   byId: (id: string) => `${GATEWAY_URL}/production/${name}/${id}`,
@@ -13,8 +9,8 @@ const resource = (name: string) => ({
 
 export const API = {
   auth: {
-    login: `${PATIENTS_DIRECT}/api/login`,
-    refresh: `${PATIENTS_DIRECT}/api/refresh`,
+    login: `${GATEWAY_URL}/auth/patient/login`,
+    refresh: `${GATEWAY_URL}/auth/patient/refresh`,
   },
 
   patients: {
@@ -30,13 +26,13 @@ export const API = {
   appointments: {
     schedule: `${GATEWAY_URL}/appointment/schedule`,
     attend: `${GATEWAY_URL}/appointment/attend`,
-    cancel: `${APPOINTMENTS_DIRECT}/api/appointment/cancel`,
-    notAttended: `${APPOINTMENTS_DIRECT}/api/appointment/notattended`,
+    cancel: `${GATEWAY_URL}/appointment/cancel`,
+    notAttended: `${GATEWAY_URL}/appointment/notattended`,
   },
 
   nutritionists: {
     base: `${GATEWAY_URL}/nutritionist`,
-    appointmentsByDate: `${APPOINTMENTS_DIRECT}/api/nutritionist/appointments`,
+    appointmentsByDate: `${GATEWAY_URL}/nutritionist/appointments`,
   },
 
   production: {
@@ -60,17 +56,17 @@ export const API = {
   },
 
   mealPlans: {
-    base: `${MEAL_PLANS_DIRECT}/meal-plans`,
-    byId: (id: string) => `${MEAL_PLANS_DIRECT}/meal-plans/${id}`,
-    cancel: (id: string) => `${MEAL_PLANS_DIRECT}/meal-plans/${id}/cancel`,
+    base: `${GATEWAY_URL}/meal-plans`,
+    byId: (id: string) => `${GATEWAY_URL}/meal-plans/${id}`,
+    cancel: (id: string) => `${GATEWAY_URL}/meal-plans/${id}/cancel`,
   },
   recipes: {
-    base: `${MEAL_PLANS_DIRECT}/recipes`,
-    byId: (id: string) => `${MEAL_PLANS_DIRECT}/recipes/${id}`,
+    base: `${GATEWAY_URL}/recipes`,
+    byId: (id: string) => `${GATEWAY_URL}/recipes/${id}`,
   },
   ingredients: {
-    base: `${MEAL_PLANS_DIRECT}/ingredients`,
-    byId: (id: string) => `${MEAL_PLANS_DIRECT}/ingredients/${id}`,
+    base: `${GATEWAY_URL}/ingredients`,
+    byId: (id: string) => `${GATEWAY_URL}/ingredients/${id}`,
   },
 };
 
