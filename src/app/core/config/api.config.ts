@@ -9,8 +9,8 @@ const resource = (name: string) => ({
 
 export const API = {
   auth: {
-    login: `${GATEWAY_URL}/auth/patient/login`,
-    refresh: `${GATEWAY_URL}/auth/patient/refresh`,
+    login: `${GATEWAY_URL}/auth/login`,
+    refresh: `${GATEWAY_URL}/auth/refresh`,
   },
 
   patients: {
