@@ -130,6 +130,7 @@ export class MealPlans {
           ...list,
         ]);
         this.toast.success(`Plan creado (${id}).`);
+        this.resetPlanForm();
         this.saving.set(false);
       },
       error: (err) => {
@@ -137,6 +138,21 @@ export class MealPlans {
         this.saving.set(false);
       },
     });
+  }
+
+  private resetPlanForm(): void {
+    this.planForm.reset({
+      idNutricionist: '',
+      idPatient: '',
+      idAppointment: '',
+      idSubscription: '',
+      totalDays: 7,
+      starDate: '',
+      endDate: '',
+      totalCalories: 2000,
+    });
+    this.days.clear();
+    this.addDay();
   }
 
   lookup(): void {

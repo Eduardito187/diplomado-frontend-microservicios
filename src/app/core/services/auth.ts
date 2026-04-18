@@ -1,12 +1,19 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, tap, catchError, throwError } from 'rxjs';
+import { Observable, tap, catchError, throwError, map, shareReplay, finalize } from 'rxjs';
 import { API } from '../config/api.config';
 
 const TOKEN_KEY = 'nurtricenter_access_token';
 const REFRESH_KEY = 'nurtricenter_refresh_token';
 const USER_KEY = 'nurtricenter_user';
+
+function decodeJwtPayload(token: string): Record<string, unknown> {
+  const part = token.split('.')[1] ?? '';
+  const b64 = part.replaceAll('-', '+').replaceAll('_', '/');
+  const padded = b64.padEnd(b64.length + ((4 - (b64.length % 4)) % 4), '=');
+  return JSON.parse(atob(padded));
+}
 
 export interface LoginResponse {
   access_token: string;
@@ -25,6 +32,8 @@ export interface UserInfo {
 
 @Injectable({ providedIn: 'root' })
 export class Auth {
+  private refreshInFlight: Observable<string> | null = null;
+
   constructor(
     private readonly http: HttpClient,
     private readonly router: Router
@@ -38,7 +47,13 @@ export class Auth {
           localStorage.setItem(REFRESH_KEY, res.refresh_token);
         }
         try {
-          const payload = JSON.parse(atob(res.access_token.split('.')[1]));
+          const payload = decodeJwtPayload(res.access_token) as {
+            preferred_username?: string;
+            email?: string;
+            name?: string;
+            given_name?: string;
+            realm_access?: { roles?: string[] };
+          };
           const user: UserInfo = {
             username: payload.preferred_username ?? username,
             email: payload.email,
@@ -58,6 +73,25 @@ export class Auth {
     );
   }
 
+  refresh(): Observable<string> {
+    if (this.refreshInFlight) return this.refreshInFlight;
+    const refreshToken = localStorage.getItem(REFRESH_KEY);
+    if (!refreshToken) return throwError(() => new Error('No refresh token'));
+
+    this.refreshInFlight = this.http
+      .post<LoginResponse>(API.auth.refresh, { refresh_token: refreshToken })
+      .pipe(
+        tap((res) => {
+          localStorage.setItem(TOKEN_KEY, res.access_token);
+          if (res.refresh_token) localStorage.setItem(REFRESH_KEY, res.refresh_token);
+        }),
+        map((res) => res.access_token),
+        shareReplay(1),
+        finalize(() => (this.refreshInFlight = null))
+      );
+    return this.refreshInFlight;
+  }
+
   logout(): void {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(REFRESH_KEY);
@@ -69,8 +103,8 @@ export class Auth {
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token) return false;
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.exp * 1000 > Date.now();
+      const payload = decodeJwtPayload(token) as { exp?: number };
+      return !!payload.exp && payload.exp * 1000 > Date.now();
     } catch {
       return !!token;
     }

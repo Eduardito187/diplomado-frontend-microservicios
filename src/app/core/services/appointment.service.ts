@@ -21,8 +21,9 @@ function unwrap<T>(env: ResultEnvelope<T>): T {
 function isoToDdMmYyyyHms(iso: string): string {
   const [datePart, timePart = '00:00:00'] = iso.split('T');
   const [y, m, d] = datePart.split('-');
-  const time = timePart.slice(0, 8).padEnd(8, '0').replaceAll('0Z', '00');
-  return `${d}-${m}-${y} ${time.length === 5 ? time + ':00' : time}`;
+  const time = timePart.slice(0, 8);
+  const withSeconds = time.length === 5 ? `${time}:00` : time;
+  return `${d}-${m}-${y} ${withSeconds}`;
 }
 
 function isoToDdMmYyyy(iso: string): string {

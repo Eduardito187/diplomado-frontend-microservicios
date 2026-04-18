@@ -91,7 +91,17 @@ export const routes: Routes = [
     pathMatch: 'full',
   },
   {
+    path: 'error',
+    redirectTo: 'error/500',
+    pathMatch: 'full',
+  },
+  {
+    path: 'error/:code',
+    title: 'Error | NurTriCenter',
+    loadComponent: () => import('./pages/error/error').then((m) => m.ErrorPage),
+  },
+  {
     path: '**',
-    redirectTo: '',
+    redirectTo: 'error/404',
   },
 ];

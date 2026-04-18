@@ -1,8 +1,10 @@
-export const GATEWAY_URL = 'http://localhost:5000';
+import { environment } from '../../../environments/environment';
 
-const PATIENTS_DIRECT = 'http://localhost:8080';
-const APPOINTMENTS_DIRECT = 'http://localhost:9004';
-const MEAL_PLANS_DIRECT = 'http://localhost:39001';
+export const GATEWAY_URL = environment.gatewayUrl;
+
+const PATIENTS_DIRECT = environment.patientsDirectUrl;
+const APPOINTMENTS_DIRECT = environment.appointmentsDirectUrl;
+const MEAL_PLANS_DIRECT = environment.mealPlansDirectUrl;
 
 const resource = (name: string) => ({
   base: `${GATEWAY_URL}/production/${name}`,

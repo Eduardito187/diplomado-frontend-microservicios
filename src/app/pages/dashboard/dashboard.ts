@@ -1,5 +1,5 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
-import { forkJoin, catchError, of } from 'rxjs';
+import { forkJoin, catchError, of, finalize } from 'rxjs';
 import { PatientService } from '../../core/services/patient.service';
 import { AppointmentService } from '../../core/services/appointment.service';
 import { ProductionService } from '../../core/services/production.service';
@@ -40,12 +40,13 @@ export class Dashboard implements OnInit {
       patients: this.patientSvc.getAll().pipe(catchError(() => of([] as Patient[]))),
       nutritionists: this.aptSvc.getNutritionists().pipe(catchError(() => of([] as Nutritionist[]))),
       productos: this.prodSvc.getProductos().pipe(catchError(() => of([] as Producto[]))),
-    }).subscribe(({ patients, nutritionists, productos }) => {
-      this.patients.set(patients);
-      this.nutritionists.set(nutritionists);
-      this.productos.set(productos);
-      this.loading.set(false);
-    });
+    })
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe(({ patients, nutritionists, productos }) => {
+        this.patients.set(patients);
+        this.nutritionists.set(nutritionists);
+        this.productos.set(productos);
+      });
   }
 
   initials(name = ''): string {

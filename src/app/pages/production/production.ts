@@ -10,6 +10,13 @@ import { ToastService } from '../../core/services/toast.service';
 import { GenerarOrdenDto } from '../../core/models/production.model';
 import { EmptyState } from '../../shared/components/empty-state/empty-state';
 
+function toLocalYyyyMmDd(d: Date): string {
+  const y = d.getFullYear();
+  const m = `${d.getMonth() + 1}`.padStart(2, '0');
+  const day = `${d.getDate()}`.padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 type WorkflowStage = 'generar' | 'planificar' | 'procesar' | 'despachar';
 type ActiveTab = 'workflow' | 'resources';
 
@@ -69,7 +76,7 @@ export class Production implements OnInit {
   readonly generatedOrderId = signal<string | null>(null);
 
   readonly generarForm = this.fb.nonNullable.group({
-    fecha: [new Date().toISOString().slice(0, 10), Validators.required],
+    fecha: [toLocalYyyyMmDd(new Date()), Validators.required],
     items: this.fb.array<ReturnType<typeof this.buildItem>>([]),
   });
 

@@ -1,5 +1,6 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { finalize } from 'rxjs';
 import { PatientService } from '../../core/services/patient.service';
 import { ToastService } from '../../core/services/toast.service';
 import { Patient, CreatePatientDto, CreateAddressDto } from '../../core/models/patient.model';
@@ -66,16 +67,13 @@ export class Patients implements OnInit {
 
   load(): void {
     this.loading.set(true);
-    this.svc.getAll().subscribe({
-      next: (data) => {
-        this.patients.set(data ?? []);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.toast.error('No se pudo cargar la lista de pacientes.');
-        this.loading.set(false);
-      },
-    });
+    this.svc
+      .getAll()
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe({
+        next: (data) => this.patients.set(data ?? []),
+        error: () => this.toast.error('No se pudo cargar la lista de pacientes.'),
+      });
   }
 
   openCreate(): void {
@@ -141,33 +139,31 @@ export class Patients implements OnInit {
     const mode = this.modalMode();
 
     if (mode === 'create') {
-      this.svc.create(dto).subscribe({
-        next: () => {
-          this.toast.success(`Paciente ${dto.name} creado.`);
-          this.closeModal();
-          this.saving.set(false);
-          this.load();
-        },
-        error: (err) => {
-          this.toast.error(err?.message ?? 'Error al crear el paciente.');
-          this.saving.set(false);
-        },
-      });
+      this.svc
+        .create(dto)
+        .pipe(finalize(() => this.saving.set(false)))
+        .subscribe({
+          next: () => {
+            this.toast.success(`Paciente ${dto.name} creado.`);
+            this.closeModal();
+            this.load();
+          },
+          error: (err) => this.toast.error(err?.message ?? 'Error al crear el paciente.'),
+        });
     } else if (mode === 'edit') {
       const current = this.selected();
       if (!current) return;
-      this.svc.update(current.id, dto).subscribe({
-        next: () => {
-          this.toast.success('Paciente actualizado correctamente.');
-          this.closeModal();
-          this.saving.set(false);
-          this.load();
-        },
-        error: (err) => {
-          this.toast.error(err?.message ?? 'Error al actualizar el paciente.');
-          this.saving.set(false);
-        },
-      });
+      this.svc
+        .update(current.id, dto)
+        .pipe(finalize(() => this.saving.set(false)))
+        .subscribe({
+          next: () => {
+            this.toast.success('Paciente actualizado correctamente.');
+            this.closeModal();
+            this.load();
+          },
+          error: (err) => this.toast.error(err?.message ?? 'Error al actualizar el paciente.'),
+        });
     }
   }
 
@@ -180,34 +176,32 @@ export class Patients implements OnInit {
     if (!patient) return;
     this.saving.set(true);
     const dto = this.addressForm.getRawValue() as CreateAddressDto;
-    this.svc.addAddress(patient.id, dto).subscribe({
-      next: () => {
-        this.toast.success('Dirección agregada.');
-        this.closeModal();
-        this.saving.set(false);
-        this.load();
-      },
-      error: () => {
-        this.toast.error('Error al agregar la dirección.');
-        this.saving.set(false);
-      },
-    });
+    this.svc
+      .addAddress(patient.id, dto)
+      .pipe(finalize(() => this.saving.set(false)))
+      .subscribe({
+        next: () => {
+          this.toast.success('Dirección agregada.');
+          this.closeModal();
+          this.load();
+        },
+        error: () => this.toast.error('Error al agregar la dirección.'),
+      });
   }
 
   deletePatient(): void {
     const target = this.deleteTarget();
     if (!target) return;
-    this.svc.delete(target.id).subscribe({
-      next: () => {
-        this.patients.update((list) => list.filter((p) => p.id !== target.id));
-        this.toast.success(`Paciente ${target.name} eliminado.`);
-        this.deleteTarget.set(null);
-      },
-      error: () => {
-        this.toast.error('Error al eliminar el paciente.');
-        this.deleteTarget.set(null);
-      },
-    });
+    this.svc
+      .delete(target.id)
+      .pipe(finalize(() => this.deleteTarget.set(null)))
+      .subscribe({
+        next: () => {
+          this.patients.update((list) => list.filter((p) => p.id !== target.id));
+          this.toast.success(`Paciente ${target.name} eliminado.`);
+        },
+        error: () => this.toast.error('Error al eliminar el paciente.'),
+      });
   }
 
   initials(p: Patient): string {
@@ -219,8 +213,6 @@ export class Patients implements OnInit {
   }
 
   subscriptionBadge(p: Patient): 'active' | 'inactive' {
-    return p.subscriptionStatus && p.subscriptionStatus.toUpperCase() === 'ACTIVE'
-      ? 'active'
-      : 'inactive';
+    return p.subscriptionStatus?.toUpperCase() === 'ACTIVE' ? 'active' : 'inactive';
   }
 }

@@ -13,6 +13,13 @@ import { BadgeStatus } from '../../shared/components/badge-status/badge-status';
 import { EmptyState } from '../../shared/components/empty-state/empty-state';
 import { forkJoin, catchError, of } from 'rxjs';
 
+function toLocalYyyyMmDd(d: Date): string {
+  const y = d.getFullYear();
+  const m = `${d.getMonth() + 1}`.padStart(2, '0');
+  const day = `${d.getDate()}`.padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 type ModalMode =
   | 'schedule'
   | 'attend'
@@ -39,7 +46,7 @@ export class Appointments implements OnInit {
   readonly patients = signal<Patient[]>([]);
 
   readonly selectedNutritionistId = signal<string>('');
-  readonly selectedDate = signal<string>(new Date().toISOString().slice(0, 10));
+  readonly selectedDate = signal<string>(toLocalYyyyMmDd(new Date()));
   readonly appointments = signal<ScheduledAppointment[]>([]);
   readonly appointmentsLoading = signal(false);
 
