@@ -54,7 +54,7 @@ export class Patients implements OnInit {
     label: ['Principal'],
     line1: ['', Validators.required],
     line2: [''],
-    country: ['Perú'],
+    country: ['Bolivia'],
     province: [''],
     city: ['', Validators.required],
     latitude: [null as number | null],
@@ -103,7 +103,7 @@ export class Patients implements OnInit {
 
   openAddAddress(p: Patient): void {
     this.selected.set(p);
-    this.addressForm.reset({ country: 'Perú', label: 'Principal' });
+    this.addressForm.reset({ country: 'Bolivia', label: 'Principal' });
     this.modalMode.set('address');
   }
 

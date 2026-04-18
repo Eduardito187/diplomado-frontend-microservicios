@@ -65,19 +65,19 @@ export class ServicesPublic {
   readonly plans: Plan[] = [
     {
       name: 'Plan Saludable',
-      price: 'S/ 299',
+      price: 'Bs 350',
       period: '/ semana',
       description: 'Ideal para empezar a comer mejor sin complicaciones.',
       features: [
         '3 comidas al día',
         '6 días a la semana',
         'Balance macro estándar',
-        'Entrega en Lima Metropolitana',
+        'Entrega en Santa Cruz de la Sierra',
       ],
     },
     {
       name: 'Plan Pro',
-      price: 'S/ 459',
+      price: 'Bs 650',
       period: '/ semana',
       highlight: true,
       description: 'Para quienes buscan resultados concretos con soporte profesional.',
@@ -91,7 +91,7 @@ export class ServicesPublic {
     },
     {
       name: 'Plan Clínico',
-      price: 'S/ 589',
+      price: 'Bs 890',
       period: '/ semana',
       description: 'Diseñado para condiciones que requieren supervisión médica.',
       features: [

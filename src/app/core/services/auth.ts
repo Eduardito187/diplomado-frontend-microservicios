@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap, catchError, throwError, map, shareReplay, finalize } from 'rxjs';
-import { API } from '../config/api.config';
+import { API, KEYCLOAK } from '../config/api.config';
 
 const TOKEN_KEY = 'nurtricenter_access_token';
 const REFRESH_KEY = 'nurtricenter_refresh_token';
@@ -40,7 +40,14 @@ export class Auth {
   ) {}
 
   login(username: string, password: string): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(API.auth.login, { username, password }).pipe(
+    const body = new HttpParams()
+      .set('grant_type', 'password')
+      .set('client_id', KEYCLOAK.clientId)
+      .set('username', username)
+      .set('password', password);
+    const headers = new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' });
+
+    return this.http.post<LoginResponse>(API.auth.login, body.toString(), { headers }).pipe(
       tap((res) => {
         localStorage.setItem(TOKEN_KEY, res.access_token);
         if (res.refresh_token) {
@@ -66,8 +73,8 @@ export class Auth {
         }
       }),
       catchError((err) => {
-        const msg =
-          err.error?.message ?? err.error?.error_description ?? 'Credenciales incorrectas';
+        const desc = err.error?.error_description ?? err.error?.error;
+        const msg = desc ?? err.message ?? 'No fue posible iniciar sesión';
         return throwError(() => new Error(msg));
       })
     );
@@ -78,8 +85,14 @@ export class Auth {
     const refreshToken = localStorage.getItem(REFRESH_KEY);
     if (!refreshToken) return throwError(() => new Error('No refresh token'));
 
+    const body = new HttpParams()
+      .set('grant_type', 'refresh_token')
+      .set('client_id', KEYCLOAK.clientId)
+      .set('refresh_token', refreshToken);
+    const headers = new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' });
+
     this.refreshInFlight = this.http
-      .post<LoginResponse>(API.auth.refresh, { refresh_token: refreshToken })
+      .post<LoginResponse>(API.auth.refresh, body.toString(), { headers })
       .pipe(
         tap((res) => {
           localStorage.setItem(TOKEN_KEY, res.access_token);

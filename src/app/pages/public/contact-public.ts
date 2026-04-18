@@ -30,7 +30,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
             </div>
             <div>
               <label for="phone">Teléfono</label>
-              <input id="phone" type="tel" formControlName="phone" placeholder="+51 999 999 999" />
+              <input id="phone" type="tel" formControlName="phone" placeholder="+591 7 123 4567" />
             </div>
           </div>
 
@@ -60,7 +60,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
             <div class="icon"><i class="bi bi-geo-alt"></i></div>
             <div>
               <h4>Dirección</h4>
-              <p>Av. Principal 123, San Isidro<br />Lima, Perú</p>
+              <p>Av. San Martín #1234, Equipetrol Norte<br />Santa Cruz de la Sierra, Bolivia</p>
             </div>
           </div>
 
@@ -68,7 +68,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
             <div class="icon"><i class="bi bi-telephone"></i></div>
             <div>
               <h4>Teléfono</h4>
-              <a href="tel:+51999888777">+51 999 888 777</a>
+              <a href="tel:+59171234567">+591 7123 4567</a>
             </div>
           </div>
 

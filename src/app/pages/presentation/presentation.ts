@@ -34,19 +34,19 @@ export class Presentation {
   readonly plans = [
     {
       name: 'Plan Saludable',
-      price: 'S/ 299',
+      price: 'Bs 350',
       period: '/ semana',
       highlight: false,
       features: [
         '3 comidas al día',
         '6 días a la semana',
         'Balance macro estándar',
-        'Entrega en Lima Metropolitana',
+        'Entrega en Santa Cruz de la Sierra',
       ],
     },
     {
       name: 'Plan Pro',
-      price: 'S/ 459',
+      price: 'Bs 650',
       period: '/ semana',
       highlight: true,
       features: [
@@ -59,7 +59,7 @@ export class Presentation {
     },
     {
       name: 'Plan Clínico',
-      price: 'S/ 589',
+      price: 'Bs 890',
       period: '/ semana',
       highlight: false,
       features: [

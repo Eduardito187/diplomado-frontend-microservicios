@@ -2,6 +2,13 @@ import { environment } from '../../../environments/environment';
 
 export const GATEWAY_URL = environment.gatewayUrl;
 
+const KC = environment.keycloak;
+export const KEYCLOAK = {
+  tokenUrl: `${KC.url}/realms/${KC.realm}/protocol/openid-connect/token`,
+  logoutUrl: `${KC.url}/realms/${KC.realm}/protocol/openid-connect/logout`,
+  clientId: KC.clientId,
+};
+
 const resource = (name: string) => ({
   base: `${GATEWAY_URL}/production/${name}`,
   byId: (id: string) => `${GATEWAY_URL}/production/${name}/${id}`,
@@ -9,8 +16,9 @@ const resource = (name: string) => ({
 
 export const API = {
   auth: {
-    login: `${GATEWAY_URL}/auth/login`,
-    refresh: `${GATEWAY_URL}/auth/refresh`,
+    login: KEYCLOAK.tokenUrl,
+    refresh: KEYCLOAK.tokenUrl,
+    logout: KEYCLOAK.logoutUrl,
   },
 
   patients: {

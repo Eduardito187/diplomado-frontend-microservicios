@@ -249,7 +249,7 @@ export class Production implements OnInit {
 
   formatDate(date: string): string {
     if (!date) return '—';
-    return new Intl.DateTimeFormat('es-PE', {
+    return new Intl.DateTimeFormat('es-BO', {
       day: '2-digit',
       month: 'short',
       hour: '2-digit',
