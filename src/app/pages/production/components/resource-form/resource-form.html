@@ -1,0 +1,96 @@
+<form [formGroup]="form()" (ngSubmit)="onSubmit()" novalidate class="resource-form">
+  <div class="form-grid">
+    @for (f of schema().fields; track f.name) {
+      <div class="field" [class.field-full]="f.type === 'textarea' || f.type === 'json'">
+        <label [attr.for]="'rf-' + f.name">
+          {{ f.label }}
+          @if (f.required) { <span class="req">*</span> }
+        </label>
+
+        @switch (f.type) {
+          @case ('textarea') {
+            <textarea
+              [id]="'rf-' + f.name"
+              [formControlName]="f.name"
+              [placeholder]="f.placeholder ?? ''"
+              rows="3"
+            ></textarea>
+          }
+          @case ('json') {
+            <textarea
+              [id]="'rf-' + f.name"
+              [formControlName]="f.name"
+              [placeholder]="f.placeholder ?? '[]'"
+              rows="4"
+              class="mono"
+            ></textarea>
+          }
+          @case ('number') {
+            <input
+              [id]="'rf-' + f.name"
+              type="number"
+              step="0.01"
+              [min]="f.min ?? null"
+              [formControlName]="f.name"
+              [placeholder]="f.placeholder ?? ''"
+            />
+          }
+          @case ('integer') {
+            <input
+              [id]="'rf-' + f.name"
+              type="number"
+              step="1"
+              [min]="f.min ?? null"
+              [formControlName]="f.name"
+              [placeholder]="f.placeholder ?? ''"
+            />
+          }
+          @case ('date') {
+            <input
+              [id]="'rf-' + f.name"
+              type="date"
+              [formControlName]="f.name"
+            />
+          }
+          @case ('uuid') {
+            <input
+              [id]="'rf-' + f.name"
+              type="text"
+              [formControlName]="f.name"
+              placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+              autocomplete="off"
+            />
+          }
+          @default {
+            <input
+              [id]="'rf-' + f.name"
+              type="text"
+              [formControlName]="f.name"
+              [placeholder]="f.placeholder ?? ''"
+              [attr.maxlength]="f.maxLength ?? null"
+              autocomplete="off"
+            />
+          }
+        }
+
+        @if (hasError(f.name)) {
+          <small class="err">{{ errorMessage(f) }}</small>
+        } @else if (f.hint) {
+          <small>{{ f.hint }}</small>
+        }
+      </div>
+    }
+  </div>
+
+  <div class="modal-actions">
+    @if (mode() === 'edit') {
+      <button type="button" class="btn btn-outline-secondary" (click)="onCancel()">
+        Cancelar
+      </button>
+    }
+    <button type="submit" class="btn btn-brand" [disabled]="saving()">
+      @if (saving()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+      {{ mode() === 'edit' ? 'Guardar cambios' : 'Crear' }}
+    </button>
+  </div>
+</form>

@@ -144,96 +144,89 @@
       </div>
     </div>
 
-    <div class="table-card mt-3">
-      <div class="toolbar">
-        <h3 class="page-h2" style="font-size:1rem;margin:0">
-          {{ editingId() ? 'Editar' : 'Nuevo' }} — {{ selectedMeta().label }}
-        </h3>
-      </div>
-      <div class="p-3">
-        <div class="field field-full">
-          <label for="res-json">JSON</label>
-          <textarea
-            id="res-json"
-            rows="8"
-            style="font-family:monospace;font-size:0.8rem"
-            [value]="createJson()"
-            (input)="createJson.set($any($event.target).value)"
-          ></textarea>
-          <small>Cada recurso tiene su propio schema. Envía el JSON que espera el endpoint de Laravel.</small>
-        </div>
-        <div class="modal-actions">
-          @if (editingId()) {
-            <button type="button" class="btn btn-outline-secondary" (click)="cancelEdit()">Cancelar edición</button>
-          }
-          <button type="button" class="btn btn-brand" [disabled]="saving()" (click)="submitResource()">
-            @if (saving()) { <span class="spinner-border spinner-border-sm me-2"></span> }
-            {{ editingId() ? 'Guardar cambios' : 'Crear' }}
+    @if (view() === 'create' || view() === 'edit') {
+      <div class="table-card mt-3">
+        <div class="toolbar">
+          <h3 class="page-h2" style="font-size:1rem;margin:0">
+            <i class="bi {{ selectedSchema().icon }} me-2"></i>
+            {{ view() === 'edit' ? 'Editar' : 'Nuevo' }} {{ selectedSchema().singular }}
+          </h3>
+          <button type="button" class="btn btn-outline-secondary btn-sm ms-auto" (click)="cancelForm()">
+            <i class="bi bi-arrow-left me-1"></i>Volver al listado
           </button>
         </div>
-      </div>
-    </div>
-
-    <div class="table-card mt-3">
-      <div class="toolbar">
-        <h3 class="page-h2" style="font-size:1rem;margin:0">{{ selectedMeta().label }}</h3>
-        <span class="count-badge">{{ items().length }}</span>
-        <button type="button" class="btn btn-outline-secondary btn-sm ms-auto" (click)="loadResource()">
-          <i class="bi bi-arrow-clockwise me-1"></i>Recargar
-        </button>
-      </div>
-      @if (loading()) {
-        <div class="p-3"><span class="spinner-border spinner-border-sm me-2"></span>Cargando…</div>
-      } @else if (items().length === 0) {
-        <app-empty-state
-          [icon]="selectedMeta().icon"
-          title="Sin registros"
-          description="Aún no hay datos para este recurso."
+        <app-resource-form
+          [schema]="selectedSchema()"
+          [initial]="editingRow()"
+          [saving]="saving()"
+          [mode]="view() === 'edit' ? 'edit' : 'create'"
+          (save)="submitResource($event)"
+          (cancel)="cancelForm()"
         />
-      } @else {
-        <div class="table-responsive">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                @for (c of columns(); track c) {
-                  <th>{{ c }}</th>
-                }
-                <th class="th-actions">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (row of items(); track row.id) {
-                <tr>
-                  <td><code style="font-size:0.7rem">{{ row.id }}</code></td>
-                  @for (c of columns(); track c) {
-                    <td>{{ cellValue(row, c) }}</td>
-                  }
-                  <td>
-                    <div class="action-btns">
-                      <button class="btn-icon" title="Editar" (click)="editItem(row)">
-                        <i class="bi bi-pencil-fill"></i>
-                      </button>
-                      <button class="btn-icon danger" title="Eliminar" (click)="deleteItem(row)">
-                        <i class="bi bi-trash3-fill"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
+      </div>
+    } @else {
+      <div class="table-card mt-3">
+        <div class="toolbar">
+          <h3 class="page-h2" style="font-size:1rem;margin:0">
+            <i class="bi {{ selectedSchema().icon }} me-2"></i>{{ selectedSchema().label }}
+          </h3>
+          <span class="count-badge">{{ items().length }}</span>
+          <div class="ms-auto d-flex gap-2">
+            <button type="button" class="btn btn-outline-secondary btn-sm" (click)="loadResource()">
+              <i class="bi bi-arrow-clockwise me-1"></i>Recargar
+            </button>
+            <button type="button" class="btn btn-brand btn-sm" (click)="openCreate()">
+              <i class="bi bi-plus-lg me-1"></i>Nuevo
+            </button>
+          </div>
         </div>
-      }
-    </div>
 
-    <div class="table-card mt-3">
-      <div class="toolbar">
-        <h3 class="page-h2" style="font-size:1rem;margin:0">Payload crudo</h3>
+        @if (loading()) {
+          <div class="p-3"><span class="spinner-border spinner-border-sm me-2"></span>Cargando…</div>
+        } @else if (items().length === 0) {
+          <app-empty-state
+            [icon]="selectedSchema().icon"
+            title="Sin registros"
+            [description]="'Aún no hay ' + selectedSchema().label.toLowerCase() + '. Crea el primero.'"
+            [actionLabel]="'Crear ' + selectedSchema().singular"
+            (action)="openCreate()"
+          />
+        } @else {
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  @for (c of columns(); track c) {
+                    <th>{{ c }}</th>
+                  }
+                  <th class="th-actions">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of items(); track row.id) {
+                  <tr>
+                    <td><code style="font-size:0.7rem">{{ row.id }}</code></td>
+                    @for (c of columns(); track c) {
+                      <td>{{ cellValue(row, c) }}</td>
+                    }
+                    <td>
+                      <div class="action-btns">
+                        <button class="btn-icon" title="Editar" (click)="openEdit(row)">
+                          <i class="bi bi-pencil-fill"></i>
+                        </button>
+                        <button class="btn-icon danger" title="Eliminar" (click)="deleteItem(row)">
+                          <i class="bi bi-trash3-fill"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
       </div>
-      <div class="p-3">
-        <pre style="font-size:0.7rem;max-height:300px;overflow:auto">{{ items() | json }}</pre>
-      </div>
-    </div>
+    }
   }
 </div>

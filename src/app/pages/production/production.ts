@@ -1,6 +1,5 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { FormBuilder, FormArray, ReactiveFormsModule, Validators } from '@angular/forms';
-import { JsonPipe } from '@angular/common';
 import {
   ProductionService,
   LaravelResource,
@@ -9,6 +8,8 @@ import {
 import { ToastService } from '../../core/services/toast.service';
 import { GenerarOrdenDto } from '../../core/models/production.model';
 import { EmptyState } from '../../shared/components/empty-state/empty-state';
+import { RESOURCE_SCHEMAS, ResourceSchema } from './resource-schemas';
+import { ResourceForm } from './components/resource-form/resource-form';
 
 function toLocalYyyyMmDd(d: Date): string {
   const y = d.getFullYear();
@@ -19,16 +20,11 @@ function toLocalYyyyMmDd(d: Date): string {
 
 type WorkflowStage = 'generar' | 'planificar' | 'procesar' | 'despachar';
 type ActiveTab = 'workflow' | 'resources';
-
-interface ResourceMeta {
-  key: ProductionResourceKey;
-  label: string;
-  icon: string;
-}
+type ResourceView = 'list' | 'create' | 'edit';
 
 @Component({
   selector: 'app-production',
-  imports: [ReactiveFormsModule, EmptyState, JsonPipe],
+  imports: [ReactiveFormsModule, EmptyState, ResourceForm],
   templateUrl: './production.html',
   styleUrl: './production.scss',
 })
@@ -41,35 +37,26 @@ export class Production implements OnInit {
   readonly loading = signal(false);
   readonly activeTab = signal<ActiveTab>('workflow');
 
-  readonly resources: ResourceMeta[] = [
-    { key: 'productos', label: 'Productos', icon: 'bi-box-seam' },
-    { key: 'paquetes', label: 'Paquetes', icon: 'bi-boxes' },
-    { key: 'recetas', label: 'Recetas (cocina)', icon: 'bi-egg-fried' },
-    { key: 'suscripciones', label: 'Suscripciones', icon: 'bi-bookmark-star' },
-    { key: 'calendarios', label: 'Calendarios', icon: 'bi-calendar3' },
-    { key: 'calendarioItems', label: 'Calendario items', icon: 'bi-calendar-event' },
-    { key: 'etiquetas', label: 'Etiquetas', icon: 'bi-tags' },
-    { key: 'porciones', label: 'Porciones', icon: 'bi-cup-hot' },
-    { key: 'ventanasEntrega', label: 'Ventanas entrega', icon: 'bi-clock-history' },
-    { key: 'direcciones', label: 'Direcciones', icon: 'bi-geo-alt' },
-    { key: 'pacientes', label: 'Pacientes', icon: 'bi-people-fill' },
-  ];
+  readonly resources: ResourceSchema[] = Object.values(RESOURCE_SCHEMAS);
 
   readonly selectedResource = signal<ProductionResourceKey>('productos');
   readonly items = signal<LaravelResource[]>([]);
-  readonly createJson = signal('{\n  \n}');
-  readonly editingId = signal<string | null>(null);
+  readonly view = signal<ResourceView>('list');
+  readonly editingRow = signal<LaravelResource | null>(null);
 
-  readonly selectedMeta = computed(
-    () => this.resources.find((r) => r.key === this.selectedResource()) ?? this.resources[0],
+  readonly selectedSchema = computed<ResourceSchema>(
+    () => RESOURCE_SCHEMAS[this.selectedResource()],
   );
 
   readonly columns = computed(() => {
+    const schema = this.selectedSchema();
     const list = this.items();
-    if (list.length === 0) return [] as string[];
-    const keys = new Set<string>();
-    for (const row of list) for (const k of Object.keys(row)) keys.add(k);
-    return Array.from(keys).filter((k) => k !== 'id').slice(0, 5);
+    if (list.length === 0) return schema.primaryColumns;
+    const present = new Set<string>();
+    for (const row of list) for (const k of Object.keys(row)) present.add(k);
+    const fromSchema = schema.primaryColumns.filter((c) => present.has(c));
+    if (fromSchema.length > 0) return fromSchema;
+    return Array.from(present).filter((k) => k !== 'id').slice(0, 4);
   });
 
   readonly workflowLog = signal<Array<{ stage: WorkflowStage; at: string; detail: string }>>([]);
@@ -97,8 +84,8 @@ export class Production implements OnInit {
 
   selectResource(key: ProductionResourceKey): void {
     this.selectedResource.set(key);
-    this.editingId.set(null);
-    this.createJson.set('{\n  \n}');
+    this.view.set('list');
+    this.editingRow.set(null);
     this.loadResource();
   }
 
@@ -113,57 +100,58 @@ export class Production implements OnInit {
       error: () => {
         this.items.set([]);
         this.loading.set(false);
-        this.toast.error(`No se pudo cargar ${key}.`);
+        this.toast.error(`No se pudo cargar ${this.selectedSchema().label}.`);
       },
     });
   }
 
-  submitResource(): void {
+  openCreate(): void {
+    this.editingRow.set(null);
+    this.view.set('create');
+  }
+
+  openEdit(row: LaravelResource): void {
+    this.editingRow.set(row);
+    this.view.set('edit');
+  }
+
+  cancelForm(): void {
+    this.editingRow.set(null);
+    this.view.set('list');
+  }
+
+  submitResource(body: Record<string, unknown>): void {
     const key = this.selectedResource();
-    let body: unknown;
-    try {
-      body = JSON.parse(this.createJson());
-    } catch {
-      this.toast.error('JSON inválido.');
-      return;
-    }
+    const editing = this.editingRow();
     this.saving.set(true);
-    const id = this.editingId();
-    const op = id ? this.svc.update(key, id, body) : this.svc.create(key, body);
+    const op = editing
+      ? this.svc.update(key, editing.id, body)
+      : this.svc.create(key, body);
+
     op.subscribe({
       next: () => {
-        this.toast.success(id ? 'Actualizado.' : 'Creado.');
-        this.createJson.set('{\n  \n}');
-        this.editingId.set(null);
+        this.toast.success(editing ? 'Actualizado.' : 'Creado.');
         this.saving.set(false);
+        this.cancelForm();
         this.loadResource();
       },
       error: (err) => {
-        this.toast.error(err?.message ?? 'Error al guardar.');
+        this.toast.error(this.extractError(err) ?? 'Error al guardar.');
         this.saving.set(false);
       },
     });
   }
 
-  editItem(row: LaravelResource): void {
-    const { id, ...rest } = row;
-    this.editingId.set(id);
-    this.createJson.set(JSON.stringify(rest, null, 2));
-  }
-
-  cancelEdit(): void {
-    this.editingId.set(null);
-    this.createJson.set('{\n  \n}');
-  }
-
   deleteItem(row: LaravelResource): void {
-    const key = this.selectedResource();
-    this.svc.remove(key, row.id).subscribe({
+    const label = this.selectedSchema().singular;
+    if (!confirm(`¿Eliminar ${label}? Esta acción no se puede deshacer.`)) return;
+
+    this.svc.remove(this.selectedResource(), row.id).subscribe({
       next: () => {
         this.toast.success('Eliminado.');
         this.items.update((list) => list.filter((r) => r.id !== row.id));
       },
-      error: () => this.toast.error('Error al eliminar.'),
+      error: (err) => this.toast.error(this.extractError(err) ?? 'Error al eliminar.'),
     });
   }
 
@@ -267,5 +255,15 @@ export class Production implements OnInit {
     if (typeof v === 'object') return JSON.stringify(v);
     if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') return String(v);
     return JSON.stringify(v);
+  }
+
+  private extractError(err: unknown): string | null {
+    if (!err || typeof err !== 'object') return null;
+    const e = err as { error?: { message?: string; errors?: Record<string, string[]> }; message?: string };
+    if (e.error?.errors) {
+      const messages = Object.values(e.error.errors).flat();
+      if (messages.length) return messages.join(' · ');
+    }
+    return e.error?.message ?? e.message ?? null;
   }
 }

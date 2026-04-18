@@ -1,0 +1,18 @@
+.resource-form {
+  padding: 1rem;
+
+  .req {
+    color: #dc2626;
+    margin-left: 0.15rem;
+  }
+
+  .err {
+    color: #dc2626;
+    font-size: 0.75rem;
+  }
+
+  textarea.mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.8rem;
+  }
+}
