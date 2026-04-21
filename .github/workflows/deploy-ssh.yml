@@ -2,10 +2,10 @@ name: Release (SSH)
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "production" ]
 
 concurrency:
-  group: release-main
+  group: release-production
   cancel-in-progress: true
 
 env:
