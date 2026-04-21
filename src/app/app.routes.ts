@@ -83,6 +83,11 @@ export const routes: Routes = [
         title: 'Recetas | NurTriCenter',
         loadComponent: () => import('./pages/recipes/recipes').then((m) => m.RecipesComponent),
       },
+      {
+        path: 'logistics',
+        title: 'Logística | NurTriCenter',
+        loadComponent: () => import('./pages/logistics/logistics').then((m) => m.Logistics),
+      },
     ],
   },
   {

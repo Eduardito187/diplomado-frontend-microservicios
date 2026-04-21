@@ -1,0 +1,71 @@
+@use '../../shared/styles/page-shared' as *;
+
+.order-input {
+  width: 90px;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.82rem;
+}
+
+.order-editor {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.pkg-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+
+  strong {
+    font-size: 0.83rem;
+    color: #1f2f45;
+  }
+
+  small {
+    font-size: 0.72rem;
+    color: #64748b;
+    word-break: break-all;
+  }
+}
+
+.address-cell {
+  max-width: 280px;
+}
+
+.action-stack {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.evidence-group,
+.incident-grid {
+  display: grid;
+  gap: 0.35rem;
+  justify-items: end;
+}
+
+.evidence-group input,
+.incident-grid input,
+.incident-grid select {
+  min-width: 220px;
+  max-width: 260px;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.8rem;
+  background: #fff;
+}
+
+@media (max-width: 960px) {
+  .action-stack {
+    justify-content: flex-start;
+  }
+
+  .evidence-group,
+  .incident-grid {
+    justify-items: start;
+  }
+}

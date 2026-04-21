@@ -141,4 +141,20 @@ export class Auth {
     const user = this.getCurrentUser();
     return user?.roles?.includes(role) ?? false;
   }
+
+  getTokenPayload(): Record<string, unknown> | null {
+    const token = this.getToken();
+    if (!token) return null;
+    try {
+      return decodeJwtPayload(token);
+    } catch {
+      return null;
+    }
+  }
+
+  getDriverId(): string | null {
+    const payload = this.getTokenPayload();
+    const sub = payload?.['sub'];
+    return typeof sub === 'string' && sub.trim() ? sub : null;
+  }
 }

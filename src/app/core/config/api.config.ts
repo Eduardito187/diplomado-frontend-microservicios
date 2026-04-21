@@ -76,6 +76,17 @@ export const API = {
     base: `${GATEWAY_URL}/ingredients`,
     byId: (id: string) => `${GATEWAY_URL}/ingredients/${id}`,
   },
+  logistics: {
+    base: `${GATEWAY_URL}/logistics`,
+    getPackage: `${GATEWAY_URL}/logistics/Package/getPackage`,
+    getPackagesByDriverAndDate: `${GATEWAY_URL}/logistics/Package/getPackagesByDriverAndDeliveryDate`,
+    setDeliveryOrder: `${GATEWAY_URL}/logistics/Package/setDeliveryOrder`,
+    cancelDelivery: `${GATEWAY_URL}/logistics/Package/cancelDelivery`,
+    markDeliveryFailed: `${GATEWAY_URL}/logistics/Package/markDeliveryFailed`,
+    markDeliveryInTransit: `${GATEWAY_URL}/logistics/Package/markDeliveryInTransit`,
+    markDeliveryCompleted: `${GATEWAY_URL}/logistics/Package/markDeliveryCompleted`,
+    registerDeliveryIncident: `${GATEWAY_URL}/logistics/Package/registerDeliveryIncident`,
+  },
 };
 
 export interface ResultEnvelope<T> {

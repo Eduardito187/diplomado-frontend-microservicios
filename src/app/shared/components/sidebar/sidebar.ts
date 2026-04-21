@@ -46,6 +46,12 @@ export class Sidebar {
       route: '/admin/recipes',
       color: '#7c3aed',
     },
+    {
+      label: 'Logística',
+      icon: 'bi-truck',
+      route: '/admin/logistics',
+      color: '#0f766e',
+    },
   ];
 
   constructor(readonly auth: Auth) {}

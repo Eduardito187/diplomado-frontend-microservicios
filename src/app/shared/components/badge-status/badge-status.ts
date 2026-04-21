@@ -33,6 +33,10 @@ import { Component, input } from '@angular/core';
     .status-badge-despachada  { background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; }
     .status-badge-activo   { background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; }
     .status-badge-inactivo { background:#f9fafb; color:#6b7280; border:1px solid #e5e7eb; }
+    .status-badge-pending   { background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; }
+    .status-badge-in-transit { background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; }
+    .status-badge-completed { background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; }
+    .status-badge-failed    { background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; }
     .status-badge-default { background:#f1f5f9; color:#475569; border:1px solid #e2e8f0; }
   `],
 })
@@ -57,6 +61,11 @@ export class BadgeStatus {
     CANCELLED:    { label: 'Cancelada',   css: 'cancelled',  icon: 'bi-x-circle' },
     ATTENDED:     { label: 'Atendida',    css: 'attended',   icon: 'bi-check-circle-fill' },
     NOT_ATTENDED: { label: 'No asistió',  css: 'no-show',    icon: 'bi-dash-circle' },
+    Pending:      { label: 'Pendiente',   css: 'pending',    icon: 'bi-hourglass-split' },
+    InTransit:    { label: 'En tránsito', css: 'in-transit', icon: 'bi-truck' },
+    Completed:    { label: 'Completada',  css: 'completed',  icon: 'bi-check2-circle' },
+    Failed:       { label: 'Fallida',     css: 'failed',     icon: 'bi-exclamation-circle' },
+    Cancelled:    { label: 'Cancelada',   css: 'cancelled',  icon: 'bi-x-circle' },
   };
 
   label(): string {
