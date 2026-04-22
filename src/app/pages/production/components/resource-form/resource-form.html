@@ -52,6 +52,13 @@
               [formControlName]="f.name"
             />
           }
+          @case ('datetime') {
+            <input
+              [id]="'rf-' + f.name"
+              type="datetime-local"
+              [formControlName]="f.name"
+            />
+          }
           @case ('uuid') {
             <input
               [id]="'rf-' + f.name"

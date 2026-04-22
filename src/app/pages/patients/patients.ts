@@ -61,7 +61,7 @@ export class Patients implements OnInit {
     name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(255)]],
     lastname: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(255)]],
     email: ['', [Validators.email, Validators.maxLength(255)]],
-    cellphone: ['', [Validators.maxLength(255)]],
+    cellphone: ['', [Validators.pattern(/^\d{8}$/)]],
     birthDate: ['', [Validators.required, pastDateValidator]],
     document: ['', [Validators.required, Validators.maxLength(255)]],
     subscriptionId: [''],

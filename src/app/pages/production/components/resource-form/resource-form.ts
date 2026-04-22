@@ -13,6 +13,7 @@ import {
   FormGroup,
   ReactiveFormsModule,
   ValidationErrors,
+  ValidatorFn,
   Validators,
 } from '@angular/forms';
 import { FieldDef, ResourceSchema } from '../../resource-schemas';
@@ -34,6 +35,30 @@ function uuidValidator(control: AbstractControl): ValidationErrors | null {
   if (!v) return null;
   const ok = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(v));
   return ok ? null : { invalidUuid: true };
+}
+
+function buildValidators(f: FieldDef): ValidatorFn[] {
+  const validators: ValidatorFn[] = [];
+  if (f.required) validators.push(Validators.required);
+  if (f.min !== undefined) validators.push(Validators.min(f.min));
+  if (f.maxLength !== undefined) validators.push(Validators.maxLength(f.maxLength));
+  if (f.type === 'json') validators.push(jsonValidator);
+  if (f.type === 'uuid') validators.push(uuidValidator);
+  return validators;
+}
+
+function normalizeInitialValue(f: FieldDef, raw: unknown = ''): unknown {
+  if (raw === null) return '';
+  if (f.type === 'json' && raw && typeof raw === 'object') {
+    return JSON.stringify(raw, null, 2);
+  }
+  if (f.type === 'date' && typeof raw === 'string' && raw.length > 10) {
+    return raw.slice(0, 10);
+  }
+  if (f.type === 'datetime' && typeof raw === 'string' && raw.length > 0) {
+    return raw.replace(' ', 'T').slice(0, 16);
+  }
+  return raw;
 }
 
 @Component({
@@ -126,22 +151,10 @@ export class ResourceForm implements OnChanges {
     const init = this.initial() ?? {};
 
     for (const f of this.schema().fields) {
-      const validators = [];
-      if (f.required) validators.push(Validators.required);
-      if (f.min !== undefined) validators.push(Validators.min(f.min));
-      if (f.maxLength !== undefined) validators.push(Validators.maxLength(f.maxLength));
-      if (f.type === 'json') validators.push(jsonValidator);
-      if (f.type === 'uuid') validators.push(uuidValidator);
-
-      let initialValue: unknown = init[f.name] ?? '';
-      if (f.type === 'json' && initialValue && typeof initialValue === 'object') {
-        initialValue = JSON.stringify(initialValue, null, 2);
-      }
-      if (f.type === 'date' && typeof initialValue === 'string' && initialValue.length > 10) {
-        initialValue = initialValue.slice(0, 10);
-      }
-
-      controls[f.name] = new FormControl(initialValue, validators);
+      controls[f.name] = new FormControl(
+        normalizeInitialValue(f, init[f.name]),
+        buildValidators(f),
+      );
     }
 
     this.form.set(new FormGroup(controls));

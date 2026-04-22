@@ -67,7 +67,9 @@ export class Production implements OnInit {
     items: this.fb.array<ReturnType<typeof this.buildItem>>([]),
   });
 
-  readonly stageForm = this.fb.nonNullable.group({ id: [''] });
+  readonly stageForm = this.fb.nonNullable.group({ id: [''], porcionId: [''] });
+
+  readonly porciones = signal<LaravelResource[]>([]);
 
   constructor() {
     this.addItem();
@@ -75,6 +77,14 @@ export class Production implements OnInit {
 
   ngOnInit(): void {
     this.loadResource();
+    this.loadPorciones();
+  }
+
+  private loadPorciones(): void {
+    this.svc.list('porciones').subscribe({
+      next: (list) => this.porciones.set(list ?? []),
+      error: () => this.porciones.set([]),
+    });
   }
 
   setTab(tab: ActiveTab): void {
@@ -203,12 +213,25 @@ export class Production implements OnInit {
   }
 
   runStage(stage: Exclude<WorkflowStage, 'generar'>): void {
-    const id = this.stageForm.controls.id.value.trim();
-    if (!id) {
+    const ordenProduccionId = this.stageForm.controls.id.value.trim();
+    if (!ordenProduccionId) {
       this.toast.error('Ingresa el ID de la orden.');
       return;
     }
-    const body = { id };
+
+    let body: Record<string, unknown>;
+    if (stage === 'planificar') {
+      const porcionId = this.stageForm.controls.porcionId.value.trim();
+      if (!porcionId) {
+        this.toast.error('Selecciona una porción para planificar.');
+        return;
+      }
+      body = { ordenProduccionId, porcionId };
+    } else {
+      body = { ordenProduccionId };
+    }
+
+    const id = ordenProduccionId;
     const stageMap = {
       planificar: () => this.svc.planificarOrden(body),
       procesar: () => this.svc.procesarOrden(body),

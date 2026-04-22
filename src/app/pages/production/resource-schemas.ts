@@ -6,6 +6,7 @@ export type FieldType =
   | 'number'
   | 'integer'
   | 'date'
+  | 'datetime'
   | 'uuid'
   | 'json';
 
@@ -131,8 +132,8 @@ export const RESOURCE_SCHEMAS: Record<ProductionResourceKey, ResourceSchema> = {
     singular: 'ventana de entrega',
     primaryColumns: ['desde', 'hasta'],
     fields: [
-      { name: 'desde', label: 'Desde', type: 'date', required: true },
-      { name: 'hasta', label: 'Hasta', type: 'date', required: true, hint: 'Debe ser posterior a "desde"' },
+      { name: 'desde', label: 'Desde', type: 'datetime', required: true },
+      { name: 'hasta', label: 'Hasta', type: 'datetime', required: true, hint: 'Debe ser posterior a "desde" (incluye hora)' },
     ],
   },
   direcciones: {

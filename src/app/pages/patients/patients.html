@@ -147,7 +147,17 @@
           </div>
           <div class="field">
             <label for="p-cell">Teléfono</label>
-            <input id="p-cell" type="tel" formControlName="cellphone" placeholder="+591 7 123 4567" />
+            <input
+              id="p-cell"
+              type="tel"
+              formControlName="cellphone"
+              placeholder="71234567"
+              inputmode="numeric"
+              maxlength="8"
+            />
+            @if (patientForm.controls.cellphone.touched && patientForm.controls.cellphone.invalid) {
+              <small>Debe tener exactamente 8 dígitos, sin espacios ni prefijo.</small>
+            }
           </div>
           <div class="field">
             <label for="p-birth">Fecha de Nacimiento *</label>
