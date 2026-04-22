@@ -1,6 +1,23 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  AbstractControl,
+  FormBuilder,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms';
 import { finalize } from 'rxjs';
+
+function pastDateValidator(control: AbstractControl): ValidationErrors | null {
+  const v = control.value;
+  if (!v) return null;
+  const parsed = new Date(v);
+  if (Number.isNaN(parsed.getTime())) return { pastDate: true };
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return parsed < today ? null : { pastDate: true };
+}
+
 import { PatientService } from '../../core/services/patient.service';
 import { ToastService } from '../../core/services/toast.service';
 import { Patient, CreatePatientDto, CreateAddressDto } from '../../core/models/patient.model';
@@ -41,12 +58,12 @@ export class Patients implements OnInit {
   });
 
   readonly patientForm = this.fb.nonNullable.group({
-    name: ['', [Validators.required, Validators.minLength(2)]],
-    lastname: ['', [Validators.required, Validators.minLength(2)]],
-    email: ['', [Validators.required, Validators.email]],
-    cellphone: [''],
-    birthDate: [''],
-    document: [''],
+    name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(255)]],
+    lastname: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(255)]],
+    email: ['', [Validators.email, Validators.maxLength(255)]],
+    cellphone: ['', [Validators.maxLength(255)]],
+    birthDate: ['', [Validators.required, pastDateValidator]],
+    document: ['', [Validators.required, Validators.maxLength(255)]],
     subscriptionId: [''],
   });
 

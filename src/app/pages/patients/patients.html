@@ -139,7 +139,7 @@
             }
           </div>
           <div class="field field-full">
-            <label for="p-email">Correo electrónico *</label>
+            <label for="p-email">Correo electrónico</label>
             <input id="p-email" type="email" formControlName="email" placeholder="correo@ejemplo.com" />
             @if (patientForm.controls.email.touched && patientForm.controls.email.invalid) {
               <small>Ingresa un correo válido.</small>
@@ -150,12 +150,18 @@
             <input id="p-cell" type="tel" formControlName="cellphone" placeholder="+591 7 123 4567" />
           </div>
           <div class="field">
-            <label for="p-birth">Fecha de Nacimiento</label>
+            <label for="p-birth">Fecha de Nacimiento *</label>
             <input id="p-birth" type="date" formControlName="birthDate" />
+            @if (patientForm.controls.birthDate.touched && patientForm.controls.birthDate.invalid) {
+              <small>Requerida y debe ser una fecha pasada.</small>
+            }
           </div>
           <div class="field">
-            <label for="p-doc">Documento</label>
+            <label for="p-doc">Documento *</label>
             <input id="p-doc" type="text" formControlName="document" placeholder="12345678" />
+            @if (patientForm.controls.document.touched && patientForm.controls.document.invalid) {
+              <small>El documento es obligatorio.</small>
+            }
           </div>
           <div class="field">
             <label for="p-sub">Suscripción ID</label>
