@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth-guard';
+import { roleGuard } from './core/guards/role-guard';
+import { SECTION_ROLES } from './core/config/roles';
 import { Presentation } from './pages/presentation/presentation';
 import { Login } from './pages/login/login';
 import { PublicLayout } from './pages/public/public-layout';
@@ -60,32 +62,38 @@ export const routes: Routes = [
       {
         path: 'patients',
         title: 'Pacientes | NurTriCenter',
+        canActivate: [roleGuard(SECTION_ROLES.patients)],
         loadComponent: () => import('./pages/patients/patients').then((m) => m.Patients),
       },
       {
         path: 'appointments',
         title: 'Citas | NurTriCenter',
+        canActivate: [roleGuard(SECTION_ROLES.appointments)],
         loadComponent: () =>
           import('./pages/appointments/appointments').then((m) => m.Appointments),
       },
       {
         path: 'production',
         title: 'Producción | NurTriCenter',
+        canActivate: [roleGuard(SECTION_ROLES.production)],
         loadComponent: () => import('./pages/production/production').then((m) => m.Production),
       },
       {
         path: 'meal-plans',
         title: 'Planes de Comida | NurTriCenter',
+        canActivate: [roleGuard(SECTION_ROLES['meal-plans'])],
         loadComponent: () => import('./pages/meal-plans/meal-plans').then((m) => m.MealPlans),
       },
       {
         path: 'recipes',
         title: 'Recetas | NurTriCenter',
+        canActivate: [roleGuard(SECTION_ROLES.recipes)],
         loadComponent: () => import('./pages/recipes/recipes').then((m) => m.RecipesComponent),
       },
       {
         path: 'logistics',
         title: 'Logística | NurTriCenter',
+        canActivate: [roleGuard(SECTION_ROLES.logistics)],
         loadComponent: () => import('./pages/logistics/logistics').then((m) => m.Logistics),
       },
     ],

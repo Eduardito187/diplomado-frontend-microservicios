@@ -65,7 +65,7 @@ export class Auth {
             username: payload.preferred_username ?? username,
             email: payload.email,
             name: payload.name ?? payload.given_name,
-            roles: payload.realm_access?.roles ?? [],
+            roles: (payload.realm_access?.roles ?? []).map((r) => r.toLowerCase()),
           };
           localStorage.setItem(USER_KEY, JSON.stringify(user));
         } catch {
@@ -139,7 +139,19 @@ export class Auth {
 
   hasRole(role: string): boolean {
     const user = this.getCurrentUser();
-    return user?.roles?.includes(role) ?? false;
+    const target = role.toLowerCase();
+    return (user?.roles ?? []).some((r) => r.toLowerCase() === target);
+  }
+
+  hasAnyRole(roles: readonly string[]): boolean {
+    if (!roles || roles.length === 0) return this.isAuthenticated();
+    const user = this.getCurrentUser();
+    const mine = new Set((user?.roles ?? []).map((r) => r.toLowerCase()));
+    return roles.some((r) => mine.has(r.toLowerCase()));
+  }
+
+  getRoles(): string[] {
+    return (this.getCurrentUser()?.roles ?? []).map((r) => r.toLowerCase());
   }
 
   getTokenPayload(): Record<string, unknown> | null {
