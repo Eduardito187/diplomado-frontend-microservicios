@@ -1,0 +1,23 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h2 class="page-h2">Recetas e Ingredientes</h2>
+    </div>
+  </div>
+  <div class="toolbar">
+    <button class="btn" [class.btn-brand]="activeTab() === 'recipes'"
+      [class.btn-outline-secondary]="activeTab() !== 'recipes'" (click)="setTab('recipes')">
+      <i class="bi bi-journal-richtext me-2"></i>Recetas
+    </button>
+    <button class="btn" [class.btn-brand]="activeTab() === 'ingredients'"
+      [class.btn-outline-secondary]="activeTab() !== 'ingredients'" (click)="setTab('ingredients')">
+      <i class="bi bi-basket-fill me-2"></i>Ingredientes
+    </button>
+  </div>
+  @if (activeTab() === 'recipes') {
+  <app-recipes></app-recipes>
+  }
+  @if (activeTab() === 'ingredients') {
+  <app-ingredients></app-ingredients>
+  }
+</div>

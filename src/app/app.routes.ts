@@ -88,7 +88,7 @@ export const routes: Routes = [
         path: 'recipes',
         title: 'Recetas | NurTriCenter',
         canActivate: [roleGuard(SECTION_ROLES.recipes)],
-        loadComponent: () => import('./pages/recipes/recipes').then((m) => m.RecipesComponent),
+        loadComponent: () => import('./pages/recipes/recipes-ingredients').then((m) => m.RecipesIngredients),
       },
       {
         path: 'logistics',
