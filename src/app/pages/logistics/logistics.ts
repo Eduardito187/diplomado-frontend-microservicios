@@ -1,9 +1,12 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { finalize, forkJoin, of } from 'rxjs';
 import { Auth } from '../../core/services/auth';
 import { LogisticsService } from '../../core/services/logistics.service';
 import { ToastService } from '../../core/services/toast.service';
+import { SECTION_ROLES } from '../../core/config/roles';
+import { ensureRole } from '../../core/utils/role-check';
 import { IncidentType, PackageDto } from '../../core/models/logistics.model';
 import { BadgeStatus } from '../../shared/components/badge-status/badge-status';
 import { EmptyState } from '../../shared/components/empty-state/empty-state';
@@ -25,6 +28,7 @@ export class Logistics implements OnInit {
   private readonly logisticsSvc = inject(LogisticsService);
   private readonly auth = inject(Auth);
   private readonly toast = inject(ToastService);
+  private readonly router = inject(Router);
 
   readonly loading = signal<boolean>(true);
   readonly savingOrders = signal<boolean>(false);
@@ -51,6 +55,7 @@ export class Logistics implements OnInit {
   readonly canSaveOrders = computed(() => this.hasOrderChanges() && !this.savingOrders());
 
   ngOnInit(): void {
+    if (!ensureRole(SECTION_ROLES.logistics, this.auth, this.router)) return;
     const driver = this.auth.getDriverId();
     this.driverId.set(driver);
     if (!driver) {

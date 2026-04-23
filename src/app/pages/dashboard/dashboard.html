@@ -1,40 +1,47 @@
 <div class="dashboard">
   <section class="stats-grid">
-    <app-stat-card
-      label="Total Pacientes"
-      [value]="totalPatients()"
-      icon="bi-people-fill"
-      color="#0891b2"
-      [loading]="loading()"
-      sublabel="Registrados en el sistema"
-    />
-    <app-stat-card
-      label="Suscripciones Activas"
-      [value]="activeSubscriptions()"
-      icon="bi-bookmark-star-fill"
-      color="#0f766e"
-      [loading]="loading()"
-      sublabel="Pacientes con suscripción vigente"
-    />
-    <app-stat-card
-      label="Nutricionistas"
-      [value]="totalNutritionists()"
-      icon="bi-person-vcard-fill"
-      color="#b45309"
-      [loading]="loading()"
-      sublabel="Equipo profesional"
-    />
-    <app-stat-card
-      label="Productos de Cocina"
-      [value]="totalProductos()"
-      icon="bi-box-seam"
-      color="#15803d"
-      [loading]="loading()"
-      sublabel="Catálogo de producción"
-    />
+    @if (canSeePatients) {
+      <app-stat-card
+        label="Total Pacientes"
+        [value]="totalPatients()"
+        icon="bi-people-fill"
+        color="#0891b2"
+        [loading]="loading()"
+        sublabel="Registrados en el sistema"
+      />
+      <app-stat-card
+        label="Suscripciones Activas"
+        [value]="activeSubscriptions()"
+        icon="bi-bookmark-star-fill"
+        color="#0f766e"
+        [loading]="loading()"
+        sublabel="Pacientes con suscripción vigente"
+      />
+    }
+    @if (canSeeAppointments) {
+      <app-stat-card
+        label="Nutricionistas"
+        [value]="totalNutritionists()"
+        icon="bi-person-vcard-fill"
+        color="#b45309"
+        [loading]="loading()"
+        sublabel="Equipo profesional"
+      />
+    }
+    @if (canSeeProduction) {
+      <app-stat-card
+        label="Productos de Cocina"
+        [value]="totalProductos()"
+        icon="bi-box-seam"
+        color="#15803d"
+        [loading]="loading()"
+        sublabel="Catálogo de producción"
+      />
+    }
   </section>
 
   <div class="content-grid">
+    @if (canSeePatients) {
     <section class="panel">
       <div class="panel-header">
         <div class="panel-title-group">
@@ -77,7 +84,9 @@
         </div>
       }
     </section>
+    }
 
+    @if (canSeeAppointments) {
     <section class="panel">
       <div class="panel-header">
         <div class="panel-title-group">
@@ -120,6 +129,7 @@
         </div>
       }
     </section>
+    }
 
     <section class="panel panel-wide">
       <div class="panel-header">
@@ -129,27 +139,35 @@
         </div>
       </div>
       <div class="list-items">
-        <a routerLink="/admin/meal-plans" class="list-item" style="text-decoration:none;color:inherit">
-          <div class="list-avatar teal"><i class="bi bi-clipboard2-heart-fill"></i></div>
-          <div class="list-info">
-            <span class="list-primary">Planes de comida</span>
-            <span class="list-secondary">Crear y consultar planes nutricionales</span>
+        @if (canSeeProduction) {
+          <a routerLink="/admin/meal-plans" class="list-item" style="text-decoration:none;color:inherit">
+            <div class="list-avatar teal"><i class="bi bi-clipboard2-heart-fill"></i></div>
+            <div class="list-info">
+              <span class="list-primary">Planes de comida</span>
+              <span class="list-secondary">Crear y consultar planes nutricionales</span>
+            </div>
+          </a>
+          <a routerLink="/admin/recipes" class="list-item" style="text-decoration:none;color:inherit">
+            <div class="list-avatar blue"><i class="bi bi-journal-richtext"></i></div>
+            <div class="list-info">
+              <span class="list-primary">Recetas e ingredientes</span>
+              <span class="list-secondary">Catálogo base para los planes</span>
+            </div>
+          </a>
+          <a routerLink="/admin/production" class="list-item" style="text-decoration:none;color:inherit">
+            <div class="list-avatar blue"><i class="bi bi-diagram-3-fill"></i></div>
+            <div class="list-info">
+              <span class="list-primary">Producción</span>
+              <span class="list-secondary">Pipeline de órdenes y catálogos</span>
+            </div>
+          </a>
+        }
+        @if (!canSeePatients && !canSeeAppointments && !canSeeProduction) {
+          <div class="panel-empty">
+            <i class="bi bi-shield-lock"></i>
+            <span>Tu rol no tiene secciones asignadas. Contactá al administrador.</span>
           </div>
-        </a>
-        <a routerLink="/admin/recipes" class="list-item" style="text-decoration:none;color:inherit">
-          <div class="list-avatar blue"><i class="bi bi-journal-richtext"></i></div>
-          <div class="list-info">
-            <span class="list-primary">Recetas e ingredientes</span>
-            <span class="list-secondary">Catálogo base para los planes</span>
-          </div>
-        </a>
-        <a routerLink="/admin/production" class="list-item" style="text-decoration:none;color:inherit">
-          <div class="list-avatar blue"><i class="bi bi-diagram-3-fill"></i></div>
-          <div class="list-info">
-            <span class="list-primary">Producción</span>
-            <span class="list-secondary">Pipeline de órdenes y catálogos</span>
-          </div>
-        </a>
+        }
       </div>
     </section>
   </div>

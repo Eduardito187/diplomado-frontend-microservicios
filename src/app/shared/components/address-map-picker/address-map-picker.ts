@@ -1,15 +1,18 @@
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   ElementRef,
   EventEmitter,
   Input,
+  NgZone,
   OnChanges,
   OnDestroy,
   Output,
   SimpleChanges,
   ViewChild,
+  inject,
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -56,13 +59,15 @@ export class AddressMapPicker implements AfterViewInit, OnChanges, OnDestroy {
   protected readonly searching = signal(false);
   protected readonly resolvedAddress = signal<string | null>(null);
 
+  private readonly zone = inject(NgZone);
+  private readonly cdr = inject(ChangeDetectorRef);
   private map?: L.Map;
   private marker?: L.Marker;
   private readonly searchInput$ = new Subject<string>();
   private readonly destroy$ = new Subject<void>();
 
   ngAfterViewInit(): void {
-    this.initMap();
+    this.zone.runOutsideAngular(() => this.initMap());
     this.wireSearch();
   }
 
@@ -85,8 +90,8 @@ export class AddressMapPicker implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   protected useResult(result: NominatimResult): void {
-    const lat = parseFloat(result.lat);
-    const lng = parseFloat(result.lon);
+    const lat = Number.parseFloat(result.lat);
+    const lng = Number.parseFloat(result.lon);
     if (Number.isNaN(lat) || Number.isNaN(lng)) return;
     this.placeMarker(lat, lng, false);
     this.resolvedAddress.set(result.display_name);
@@ -125,7 +130,7 @@ export class AddressMapPicker implements AfterViewInit, OnChanges, OnDestroy {
     }
 
     this.map.on('click', (e: L.LeafletMouseEvent) => {
-      this.placeMarker(e.latlng.lat, e.latlng.lng, true);
+      this.zone.run(() => this.placeMarker(e.latlng.lat, e.latlng.lng, true));
     });
   }
 
@@ -147,8 +152,10 @@ export class AddressMapPicker implements AfterViewInit, OnChanges, OnDestroy {
       this.marker = L.marker([lat, lng], { icon, draggable: true }).addTo(this.map);
       this.marker.on('dragend', () => {
         const pos = this.marker!.getLatLng();
-        this.emitCoords(pos.lat, pos.lng);
-        this.reverseGeocode(pos.lat, pos.lng);
+        this.zone.run(() => {
+          this.emitCoords(pos.lat, pos.lng);
+          this.reverseGeocode(pos.lat, pos.lng);
+        });
       });
     }
 
@@ -162,6 +169,7 @@ export class AddressMapPicker implements AfterViewInit, OnChanges, OnDestroy {
       lat: Math.round(lat * 1e6) / 1e6,
       lng: Math.round(lng * 1e6) / 1e6,
     });
+    this.cdr.markForCheck();
   }
 
   private async reverseGeocode(lat: number, lng: number): Promise<void> {
@@ -170,9 +178,12 @@ export class AddressMapPicker implements AfterViewInit, OnChanges, OnDestroy {
       const res = await fetch(url, { headers: { Accept: 'application/json' } });
       if (!res.ok) return;
       const data = (await res.json()) as { display_name?: string };
-      if (!data?.display_name) return;
-      this.resolvedAddress.set(data.display_name);
-      this.addressFound.emit(data.display_name);
+      const display = data?.display_name;
+      if (!display) return;
+      this.zone.run(() => {
+        this.resolvedAddress.set(display);
+        this.addressFound.emit(display);
+      });
     } catch {
       // network errors are non-fatal — coordinates are still valid.
     }

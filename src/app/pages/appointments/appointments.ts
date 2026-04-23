@@ -1,8 +1,12 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { AppointmentService } from '../../core/services/appointment.service';
 import { PatientService } from '../../core/services/patient.service';
 import { ToastService } from '../../core/services/toast.service';
+import { Auth } from '../../core/services/auth';
+import { SECTION_ROLES } from '../../core/config/roles';
+import { ensureRole } from '../../core/utils/role-check';
 import {
   Nutritionist,
   ScheduledAppointment,
@@ -38,6 +42,8 @@ export class Appointments implements OnInit {
   private readonly patSvc = inject(PatientService);
   private readonly toast = inject(ToastService);
   private readonly fb = inject(FormBuilder);
+  private readonly auth = inject(Auth);
+  private readonly router = inject(Router);
 
   readonly loading = signal(true);
   readonly saving = signal(false);
@@ -85,6 +91,7 @@ export class Appointments implements OnInit {
   }));
 
   ngOnInit(): void {
+    if (!ensureRole(SECTION_ROLES.appointments, this.auth, this.router)) return;
     this.loadDirectory();
   }
 

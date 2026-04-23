@@ -18,8 +18,12 @@ function pastDateValidator(control: AbstractControl): ValidationErrors | null {
   return parsed < today ? null : { pastDate: true };
 }
 
+import { Router } from '@angular/router';
 import { PatientService } from '../../core/services/patient.service';
 import { ToastService } from '../../core/services/toast.service';
+import { Auth } from '../../core/services/auth';
+import { SECTION_ROLES } from '../../core/config/roles';
+import { ensureRole } from '../../core/utils/role-check';
 import { Patient, CreatePatientDto, CreateAddressDto } from '../../core/models/patient.model';
 import { BadgeStatus } from '../../shared/components/badge-status/badge-status';
 import { EmptyState } from '../../shared/components/empty-state/empty-state';
@@ -40,6 +44,8 @@ export class Patients implements OnInit {
   private readonly svc = inject(PatientService);
   private readonly toast = inject(ToastService);
   private readonly fb = inject(FormBuilder);
+  private readonly auth = inject(Auth);
+  private readonly router = inject(Router);
 
   readonly loading = signal(true);
   readonly saving = signal(false);
@@ -83,6 +89,7 @@ export class Patients implements OnInit {
   });
 
   ngOnInit(): void {
+    if (!ensureRole(SECTION_ROLES.patients, this.auth, this.router)) return;
     this.load();
   }
 
