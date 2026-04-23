@@ -1,0 +1,41 @@
+<div class="map-picker">
+  @if (searchable) {
+    <div class="map-search">
+      <div class="map-search-input">
+        <i class="bi bi-search"></i>
+        <input
+          type="text"
+          [value]="searchQuery()"
+          (input)="onSearchInput($any($event.target).value)"
+          placeholder="Buscar dirección, calle o lugar..."
+          aria-label="Buscar dirección"
+        />
+        <button type="button" class="btn-locate" (click)="useMyLocation()" title="Usar mi ubicación">
+          <i class="bi bi-geo-alt-fill"></i>
+        </button>
+      </div>
+      @if (searchResults().length > 0) {
+        <ul class="map-search-results">
+          @for (r of searchResults(); track r.display_name) {
+            <li>
+              <button type="button" (click)="useResult(r)">
+                <i class="bi bi-pin-map"></i>
+                <span>{{ r.display_name }}</span>
+              </button>
+            </li>
+          }
+        </ul>
+      } @else if (searching()) {
+        <div class="map-search-status">Buscando…</div>
+      }
+    </div>
+  }
+
+  <div #mapContainer class="map-canvas" [style.height]="height" role="application" aria-label="Mapa interactivo"></div>
+
+  @if (resolvedAddress(); as addr) {
+    <p class="map-resolved"><i class="bi bi-geo-alt"></i> {{ addr }}</p>
+  } @else {
+    <p class="map-hint">Hacé click en el mapa o arrastrá el marcador para seleccionar la ubicación.</p>
+  }
+</div>

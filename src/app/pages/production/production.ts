@@ -1,11 +1,15 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { FormBuilder, FormArray, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import {
   ProductionService,
   LaravelResource,
   ProductionResourceKey,
 } from '../../core/services/production.service';
 import { ToastService } from '../../core/services/toast.service';
+import { Auth } from '../../core/services/auth';
+import { SECTION_ROLES } from '../../core/config/roles';
+import { ensureRole } from '../../core/utils/role-check';
 import { GenerarOrdenDto } from '../../core/models/production.model';
 import { EmptyState } from '../../shared/components/empty-state/empty-state';
 import { RESOURCE_SCHEMAS, ResourceSchema } from './resource-schemas';
@@ -32,6 +36,8 @@ export class Production implements OnInit {
   private readonly svc = inject(ProductionService);
   private readonly toast = inject(ToastService);
   private readonly fb = inject(FormBuilder);
+  private readonly auth = inject(Auth);
+  private readonly router = inject(Router);
 
   readonly saving = signal(false);
   readonly loading = signal(false);
@@ -76,6 +82,7 @@ export class Production implements OnInit {
   }
 
   ngOnInit(): void {
+    if (!ensureRole(SECTION_ROLES.production, this.auth, this.router)) return;
     this.loadResource();
     this.loadPorciones();
   }
