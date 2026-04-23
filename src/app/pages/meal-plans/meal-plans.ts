@@ -1,7 +1,11 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { FormBuilder, FormArray, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { MealPlanService } from '../../core/services/meal-plan.service';
 import { ToastService } from '../../core/services/toast.service';
+import { Auth } from '../../core/services/auth';
+import { SECTION_ROLES } from '../../core/config/roles';
+import { ensureRole } from '../../core/utils/role-check';
 import { MealPlan, CreateMealPlanDto, TimeFoodType } from '../../core/models/meal-plan.model';
 import { EmptyState } from '../../shared/components/empty-state/empty-state';
 
@@ -11,10 +15,16 @@ import { EmptyState } from '../../shared/components/empty-state/empty-state';
   templateUrl: './meal-plans.html',
   styleUrl: './meal-plans.scss',
 })
-export class MealPlans {
+export class MealPlans implements OnInit {
   private readonly svc = inject(MealPlanService);
   private readonly toast = inject(ToastService);
   private readonly fb = inject(FormBuilder);
+  private readonly auth = inject(Auth);
+  private readonly router = inject(Router);
+
+  ngOnInit(): void {
+    ensureRole(SECTION_ROLES['meal-plans'], this.auth, this.router);
+  }
 
   readonly saving = signal(false);
   readonly lookupLoading = signal(false);

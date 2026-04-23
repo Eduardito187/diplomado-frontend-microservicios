@@ -1,7 +1,11 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { FormBuilder, FormArray, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { MealPlanService } from '../../core/services/meal-plan.service';
 import { ToastService } from '../../core/services/toast.service';
+import { Auth } from '../../core/services/auth';
+import { SECTION_ROLES } from '../../core/config/roles';
+import { ensureRole } from '../../core/utils/role-check';
 import {
   Recipe,
   Ingredient,
@@ -19,10 +23,16 @@ type ActiveTab = 'recipes' | 'ingredients';
   templateUrl: './recipes.html',
   styleUrl: './recipes.scss',
 })
-export class RecipesComponent {
+export class RecipesComponent implements OnInit {
   private readonly svc = inject(MealPlanService);
   private readonly toast = inject(ToastService);
   private readonly fb = inject(FormBuilder);
+  private readonly auth = inject(Auth);
+  private readonly router = inject(Router);
+
+  ngOnInit(): void {
+    ensureRole(SECTION_ROLES.recipes, this.auth, this.router);
+  }
 
   readonly activeTab = signal<ActiveTab>('recipes');
   readonly saving = signal(false);
