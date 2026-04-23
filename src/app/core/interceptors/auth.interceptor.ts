@@ -43,11 +43,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((err: HttpErrorResponse) => {
       if (err.status !== 401 || isAuth) return throwError(() => err);
       return auth.refresh().pipe(
-        switchMap((newToken) => next(withAuth(req, newToken))),
         catchError((refreshErr) => {
           auth.logout();
           return throwError(() => refreshErr);
-        })
+        }),
+        switchMap((newToken) => next(withAuth(req, newToken)))
       );
     })
   );
