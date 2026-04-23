@@ -292,13 +292,22 @@
             <label for="addr-label">Etiqueta</label>
             <input id="addr-label" type="text" formControlName="label" placeholder="Principal / Trabajo" />
           </div>
-          <div class="field">
-            <label for="addr-lat">Latitud</label>
-            <input id="addr-lat" type="number" step="any" formControlName="latitude" />
-          </div>
-          <div class="field">
-            <label for="addr-lon">Longitud</label>
-            <input id="addr-lon" type="number" step="any" formControlName="longitude" />
+          <div class="field field-full">
+            <p class="map-section-title">Ubicación en el mapa</p>
+            <app-address-map-picker
+              [latitude]="addressForm.controls.latitude.value"
+              [longitude]="addressForm.controls.longitude.value"
+              (coordsChange)="onMapCoords($event)"
+              (addressFound)="onMapAddressFound($event)"
+            />
+            <small class="map-coords">
+              @if (addressForm.controls.latitude.value !== null && addressForm.controls.longitude.value !== null) {
+                Lat: <strong>{{ addressForm.controls.latitude.value }}</strong> ·
+                Lng: <strong>{{ addressForm.controls.longitude.value }}</strong>
+              } @else {
+                Selecciona un punto en el mapa para fijar las coordenadas.
+              }
+            </small>
           </div>
         </div>
         <div class="modal-actions">

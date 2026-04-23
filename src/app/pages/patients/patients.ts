@@ -23,12 +23,16 @@ import { ToastService } from '../../core/services/toast.service';
 import { Patient, CreatePatientDto, CreateAddressDto } from '../../core/models/patient.model';
 import { BadgeStatus } from '../../shared/components/badge-status/badge-status';
 import { EmptyState } from '../../shared/components/empty-state/empty-state';
+import {
+  AddressMapPicker,
+  MapCoordinates,
+} from '../../shared/components/address-map-picker/address-map-picker';
 
 type ModalMode = 'create' | 'edit' | 'view' | 'address' | null;
 
 @Component({
   selector: 'app-patients',
-  imports: [ReactiveFormsModule, BadgeStatus, EmptyState],
+  imports: [ReactiveFormsModule, BadgeStatus, EmptyState, AddressMapPicker],
   templateUrl: './patients.html',
   styleUrl: './patients.scss',
 })
@@ -122,6 +126,21 @@ export class Patients implements OnInit {
     this.selected.set(p);
     this.addressForm.reset({ country: 'Bolivia', label: 'Principal' });
     this.modalMode.set('address');
+  }
+
+  onMapCoords(coords: MapCoordinates): void {
+    this.addressForm.patchValue({ latitude: coords.lat, longitude: coords.lng });
+  }
+
+  onMapAddressFound(displayName: string): void {
+    if (this.addressForm.controls.line1.value?.trim()) return;
+    const parts = displayName.split(',').map((s) => s.trim()).filter(Boolean);
+    if (parts.length === 0) return;
+    this.addressForm.patchValue({ line1: parts.slice(0, 2).join(', ') });
+    if (!this.addressForm.controls.city.value && parts.length >= 4) {
+      const city = parts.at(-4);
+      if (city) this.addressForm.patchValue({ city });
+    }
   }
 
   closeModal(): void {
