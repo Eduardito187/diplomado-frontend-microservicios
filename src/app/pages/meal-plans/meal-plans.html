@@ -2,16 +2,19 @@
   <div class="page-header">
     <div>
       <h2 class="page-h2">Planes de Comida</h2>
-      <p class="page-desc">Crear plan nutricional y consultar por ID (el backend no expone listado)</p>
+      <p class="page-desc">Planes nutricionales</p>
     </div>
   </div>
-
-  <div class="table-card">
-    <div class="toolbar">
-      <h3 class="page-h2" style="font-size:1rem;margin:0">Nuevo plan</h3>
+  <!-- MealPlan Create Modal -->
+  @if (modalMode() === 'create') {
+  <div class="modal-backdrop" (click)="closeCreate()" (keydown.escape)="closeCreate()" aria-hidden="true"></div>
+  <dialog class="modal-panel" open aria-modal="true" aria-labelledby="patient-modal-title"
+    style="width: 50% !important;">
+    <div class="modal-head">
+      <h3 id="patient-modal-title">{{ modalMode() === 'create' ? 'Nueva Receta' : 'Editar Receta' }}</h3>
+      <button class="btn-close-modal" (click)="closeCreate()" aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>
     </div>
-
-    <form [formGroup]="planForm" (ngSubmit)="submit()" novalidate class="p-3">
+    <form [formGroup]="planForm" novalidate class="p-3">
       <div class="form-grid">
         <div class="field">
           <label for="mp-nutri">Nutricionista ID *</label>
@@ -55,180 +58,198 @@
           </button>
         </div>
 
-        @for (dayCtrl of days.controls; track $index; let di = $index) {
-          <div class="table-card mb-3" [formGroup]="$any(dayCtrl)">
-            <div class="toolbar">
-              <div class="field" style="max-width:120px">
-                <label [attr.for]="'mp-day-' + di">Día #</label>
-                <input [id]="'mp-day-' + di" type="number" min="1" formControlName="day" />
-              </div>
-              <button type="button" class="btn-icon danger" title="Eliminar día" (click)="removeDay(di)">
-                <i class="bi bi-trash3-fill"></i>
-              </button>
-              <button type="button" class="btn btn-outline-secondary btn-sm ms-auto" (click)="addTimeFood(di)">
-                <i class="bi bi-plus-lg me-1"></i>Agregar comida
-              </button>
-            </div>
-
-            @for (tfCtrl of timeFoodsOf(di).controls; track $index; let ti = $index) {
-              <div class="p-2 border-top" [formGroup]="$any(tfCtrl)">
-                <div class="form-grid">
-                  <div class="field">
-                    <label [attr.for]="'mp-tf-type-' + di + '-' + ti">Tipo</label>
-                    <select [id]="'mp-tf-type-' + di + '-' + ti" formControlName="type">
-                      <option value="BREAKFAST">Desayuno</option>
-                      <option value="LUNCH">Almuerzo</option>
-                      <option value="DINNER">Cena</option>
-                      <option value="SNACK">Snack</option>
-                    </select>
-                  </div>
-                  <div class="field">
-                    <label [attr.for]="'mp-tf-order-' + di + '-' + ti">Orden</label>
-                    <input [id]="'mp-tf-order-' + di + '-' + ti" type="number" min="1" formControlName="order" />
-                  </div>
-                  <div class="field" style="align-self:end">
-                    <button type="button" class="btn-icon danger" title="Eliminar comida" (click)="removeTimeFood(di, ti)">
+        <div class="table-card">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Día</th>
+                <th># Comidas</th>
+                <th class="th-actions">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (dayCtrl of days.controls; track $index; let di = $index) {
+              <tr [formGroup]="$any(dayCtrl)">
+                <td>{{ di + 1 }}</td>
+                <td>{{ timeFoodsOf(di).length }}</td>
+                <td>
+                  <div class="action-btns">
+                    <button class="btn-icon" (click)="openTimeFoodsModal(di)">
+                      <i class="bi bi-eye-fill"></i>
+                    </button>
+                    <button class="btn-icon danger" (click)="removeDay(di)">
                       <i class="bi bi-trash3-fill"></i>
                     </button>
                   </div>
-                </div>
-
-                <div class="mt-2">
-                  <div class="d-flex justify-content-between align-items-center mb-2">
-                    <strong style="font-size:0.8rem">Recetas</strong>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" (click)="addRecipeRef(di, ti)">
-                      <i class="bi bi-plus-lg me-1"></i>Agregar receta
-                    </button>
-                  </div>
-                  @for (rCtrl of recipesOf(di, ti).controls; track $index; let ri = $index) {
-                    <div class="form-grid" [formGroup]="$any(rCtrl)">
-                      <div class="field">
-                        <label [attr.for]="'mp-r-id-' + di + '-' + ti + '-' + ri">Receta ID</label>
-                        <input [id]="'mp-r-id-' + di + '-' + ti + '-' + ri" type="text" formControlName="idRecipe" placeholder="UUID" />
-                      </div>
-                      <div class="field">
-                        <label [attr.for]="'mp-r-portion-' + di + '-' + ti + '-' + ri">Porción</label>
-                        <input [id]="'mp-r-portion-' + di + '-' + ti + '-' + ri" type="number" min="1" formControlName="portion" />
-                      </div>
-                      <div class="field" style="align-self:end">
-                        <button type="button" class="btn-icon danger" title="Eliminar receta" (click)="removeRecipeRef(di, ti, ri)">
-                          <i class="bi bi-trash3-fill"></i>
-                        </button>
-                      </div>
-                    </div>
-                  }
-                </div>
-              </div>
-            }
-          </div>
-        }
+                </td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div class="modal-actions">
-        <button type="submit" class="btn btn-brand" [disabled]="saving()">
+        <button type="button" class="btn btn-outline-secondary" (click)="closeCreate()">Cancelar</button>
+        <button type="submit" class="btn btn-brand" [disabled]="saving()" (click)="create()">
           @if (saving()) { <span class="spinner-border spinner-border-sm me-2"></span> }
           Crear plan
         </button>
       </div>
     </form>
-  </div>
+  </dialog>
+  }
 
-  <div class="table-card mt-4">
-    <div class="toolbar">
-      <h3 class="page-h2" style="font-size:1rem;margin:0">Consultar plan por ID</h3>
+  <!-- MealPlanDays Create Modal -->
+  @if (showTimeFoodsModal()) {
+  <div class="modal-backdrop" (click)="closeTimeFoodsModal()"></div>
+  <dialog class="modal-panel" open style="width: 40%">
+    <div class="modal-head">
+      <h3>Comidas del día {{ selectedDayIndex()! + 1 }}</h3>
+      <button class="btn-close-modal" (click)="closeTimeFoodsModal()">
+        <i class="bi bi-x-lg"></i>
+      </button>
     </div>
+
     <div class="p-3">
-      <div class="form-grid">
-        <div class="field field-full">
-          <label for="mp-lookup">ID del plan</label>
-          <div class="d-flex gap-2">
-            <input
-              id="mp-lookup"
-              type="text"
-              placeholder="UUID del plan"
-              [value]="lookupId()"
-              (input)="lookupId.set($any($event.target).value)"
-            />
-            <button type="button" class="btn btn-brand" [disabled]="lookupLoading() || !lookupId().trim()" (click)="lookup()">
-              @if (lookupLoading()) { <span class="spinner-border spinner-border-sm me-2"></span> }
-              Consultar
+      <button class="btn btn-outline-secondary btn-sm mb-2" (click)="addTimeFood(selectedDayIndex()!)">
+        <i class="bi bi-plus-lg me-1"></i>Agregar comida
+      </button>
+
+      @for (tfCtrl of currentTimeFoods().controls; track $index; let ti = $index) {
+      <div class="table-card p-2 mb-2" [formGroup]="$any(tfCtrl)">
+
+        <div class="form-grid">
+          <div class="field">
+            <label>Tipo</label>
+            <select formControlName="type">
+              <option value="BREAKFAST">Desayuno</option>
+              <option value="LUNCH">Almuerzo</option>
+              <option value="DINNER">Cena</option>
+              <option value="SNACK">Snack</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Orden</label>
+            <input type="number" formControlName="order" />
+          </div>
+
+          <div class="field" style="align-self:end">
+            <button class="btn-icon danger" (click)="removeTimeFood(selectedDayIndex()!, ti)">
+              <i class="bi bi-trash3-fill"></i>
             </button>
           </div>
         </div>
-      </div>
 
-      @if (lookupResult(); as plan) {
-        <div class="detail-grid mt-3">
-          <div class="detail-item">
-            <span class="detail-label">ID</span>
-            <span class="detail-value">{{ plan.id }}</span>
+        <!-- RECETAS -->
+        <div class="mt-2">
+          <strong>Recetas</strong>
+
+          <button class="btn btn-outline-secondary btn-sm mb-1" (click)="addRecipeRef(selectedDayIndex()!, ti)">
+            Agregar receta
+          </button>
+
+          @for (rCtrl of recipesOf(selectedDayIndex()!, ti).controls; track $index; let ri = $index) {
+          <div class="form-grid" [formGroup]="$any(rCtrl)">
+            <input type="text" formControlName="idRecipe" placeholder="ID receta" />
+            <input type="number" formControlName="portion" />
+
+            <button class="btn-icon danger" (click)="removeRecipeRef(selectedDayIndex()!, ti, ri)">
+              <i class="bi bi-trash3-fill"></i>
+            </button>
           </div>
-          <div class="detail-item">
-            <span class="detail-label">Paciente</span>
-            <span class="detail-value">{{ plan.idPatient }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Nutricionista</span>
-            <span class="detail-value">{{ plan.idNutricionist }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Total días</span>
-            <span class="detail-value">{{ plan.totalDays }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Calorías totales</span>
-            <span class="detail-value">{{ plan.totalCalories }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Rango</span>
-            <span class="detail-value">{{ plan.starDate }} → {{ plan.endDate }}</span>
-          </div>
+          }
         </div>
+
+      </div>
+      }
+
+    </div>
+  </dialog>
+  }
+
+  <!-- MealPlans List -->
+  <div class="table-card mt-4 p-2">
+    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+      <div class="toolbar">
+        <h3 class="page-h2" style="font-size:1rem;margin:0">Planes Alimentarios</h3>
+        <span class="count-badge">{{ filtered().length }} plan{{ filtered().length !== 1 ? 'es' : '' }}</span>
+      </div>
+      <button class="btn btn-brand" (click)="openCreate()">
+        <i class="bi bi-person-plus-fill me-2"></i>Plan Alimentario
+      </button>
+    </div>
+    @if (loading()) {
+    <div class="table-loading">
+      @for (i of [1,2,3,4,5]; track i) {
+      <div class="skeleton-row">
+        <div class="skeleton sk-avatar"></div>
+        <div class="skeleton-lines">
+          <div class="skeleton sk-line"></div>
+          <div class="skeleton sk-line-sm"></div>
+        </div>
+        <div class="skeleton sk-badge"></div>
+      </div>
       }
     </div>
-  </div>
-
-  <div class="table-card mt-4">
-    <div class="toolbar">
-      <h3 class="page-h2" style="font-size:1rem;margin:0">Planes creados en esta sesión</h3>
-      <span class="count-badge">{{ recentPlans().length }}</span>
-    </div>
-    @if (recentPlans().length === 0) {
-      <app-empty-state
-        icon="bi-clipboard2-heart"
-        title="Sin planes recientes"
-        description="Los planes creados en esta pestaña aparecerán aquí."
-      />
+    } @else if (filtered().length === 0) {
+    <app-empty-state icon="bi-people" title="No se encontraron planes alimentarios"
+      [description]="searchQuery() ? 'Intenta con otro término.' : 'Registra el primer plan alimentario.'"
+      [actionLabel]="searchQuery() ? '' : 'Nuevo Plan Alimentario'" (action)="openCreate()" />
     } @else {
-      <div class="table-responsive">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Resumen</th>
-              <th class="th-actions">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (p of recentPlans(); track p.id) {
-              <tr>
-                <td><code>{{ p.id }}</code></td>
-                <td>{{ p.summary }}</td>
-                <td>
-                  <div class="action-btns">
-                    <button class="btn-icon" title="Actualizar" (click)="refresh(p.id)">
-                      <i class="bi bi-arrow-clockwise"></i>
-                    </button>
-                    <button class="btn-icon danger" title="Cancelar" (click)="cancel(p.id)">
-                      <i class="bi bi-x-circle-fill"></i>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Plan</th>
+            <th>Nuricionista</th>
+            <th>Paciente</th>
+            <th>Suscripcion</th>
+            <th>Fechas</th>
+            <th class="th-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of filtered(); track item.id) {
+          <tr>
+            <td>
+              <div>
+                <span>{{ item.id }}</span>
+              </div>
+            </td>
+            <td>
+              <div>
+                <span>{{ item.idNutricionist }}</span>
+              </div>
+            </td>
+            <td>
+              <div>
+                <span>{{ item.idPatient }}</span>
+              </div>
+            </td>
+            <td>
+              <div>
+                <span>{{ item.idSubscription }}</span>
+              </div>
+            </td>
+            <td>
+              <div>
+                <span>{{ item.starDate }}- {{ item.endDate }}</span>
+              </div>
+            </td>
+            <td>
+              <div class="action-btns">
+                <button class="btn-icon" title="Ver detalles">
+                  <i class="bi bi-eye-fill"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
     }
   </div>
 </div>

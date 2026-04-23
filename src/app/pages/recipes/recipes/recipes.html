@@ -45,7 +45,9 @@
                 <div class="field">
                     <label [attr.for]="'r-ing-name-' + i">Ingrediente *</label>
                     <div class="ingredient-display">
-                         <input [id]="'r-ing-name-' + i" type="text" [value]="getIngredientName(ing.get('idIngredient')?.value)" readonly disabled class="form-control" />
+                        <input [id]="'r-ing-name-' + i" type="text"
+                            [value]="getIngredientName(ing.get('idIngredient')?.value)" readonly disabled
+                            class="form-control" />
                         <input type="hidden" formControlName="idIngredient" />
                     </div>
                 </div>
@@ -74,11 +76,13 @@
 }
 
 @if (modalMode() === 'select-ingredient') {
-<div class="modal-backdrop" (click)="closeModalSelectIngredients()" (keydown.escape)="closeModalSelectIngredients()" aria-hidden="true"></div>
+<div class="modal-backdrop" (click)="closeModalSelectIngredients()" (keydown.escape)="closeModalSelectIngredients()"
+    aria-hidden="true"></div>
 <dialog class="modal-panel" open aria-modal="true" aria-labelledby="select-ingredient-title">
     <div class="modal-head">
         <h3 id="select-ingredient-title">Seleccionar Ingrediente</h3>
-        <button class="btn-close-modal" (click)="closeModalSelectIngredients()" aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>
+        <button class="btn-close-modal" (click)="closeModalSelectIngredients()" aria-label="Cerrar"><i
+                class="bi bi-x-lg"></i></button>
     </div>
 
     <div class="p-3">
@@ -133,7 +137,7 @@
     </div>
 </dialog>
 }
-
+<!-- Recipes Created -->
 <div class="table-card mt-4 p-2">
     <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
         <div class="toolbar">

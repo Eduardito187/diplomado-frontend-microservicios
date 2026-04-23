@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { FormBuilder, FormArray, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MealPlanService } from '../../core/services/meal-plan.service';
@@ -8,6 +8,9 @@ import { SECTION_ROLES } from '../../core/config/roles';
 import { ensureRole } from '../../core/utils/role-check';
 import { MealPlan, CreateMealPlanDto, TimeFoodType } from '../../core/models/meal-plan.model';
 import { EmptyState } from '../../shared/components/empty-state/empty-state';
+import { finalize } from 'rxjs';
+
+type ModalMode = 'create' | 'view' | 'select-ingredient' | null;
 
 @Component({
   selector: 'app-meal-plans',
@@ -16,23 +19,27 @@ import { EmptyState } from '../../shared/components/empty-state/empty-state';
   styleUrl: './meal-plans.scss',
 })
 export class MealPlans implements OnInit {
+
   private readonly svc = inject(MealPlanService);
   private readonly toast = inject(ToastService);
   private readonly fb = inject(FormBuilder);
-  private readonly auth = inject(Auth);
-  private readonly router = inject(Router);
-
-  ngOnInit(): void {
-    ensureRole(SECTION_ROLES['meal-plans'], this.auth, this.router);
-  }
-
   readonly saving = signal(false);
   readonly lookupLoading = signal(false);
-  readonly lookupResult = signal<MealPlan | null>(null);
-  readonly lookupId = signal('');
+  readonly loading = signal(true);
+  readonly modalMode = signal<ModalMode>(null);
+  readonly selectedDayIndex = signal<number | null>(null);
+  readonly showTimeFoodsModal = signal(false);
 
-  readonly recentPlans = signal<Array<{ id: string; summary: string }>>([]);
-
+  readonly mealplans = signal<MealPlan[]>([]);
+  readonly searchQuery = signal('');
+  readonly filtered = computed(() => {
+    const q = this.searchQuery().toLowerCase().trim();
+    if (!q) return this.mealplans();
+    return this.mealplans().filter(
+      (item) =>
+        item.id?.toLowerCase().includes(q)
+    );
+  });
   readonly planForm = this.fb.nonNullable.group({
     idNutricionist: ['', Validators.required],
     idPatient: ['', Validators.required],
@@ -44,13 +51,22 @@ export class MealPlans implements OnInit {
     totalCalories: [2000, [Validators.required, Validators.min(0)]],
     days: this.fb.array<ReturnType<typeof this.buildDay>>([]),
   });
-
-  constructor() {
-    this.addDay();
-  }
-
   get days(): FormArray {
     return this.planForm.controls.days;
+  }
+
+  ngOnInit(): void {
+    this.load();
+  }
+
+  load(): void {
+    this.loading.set(true);
+    this.svc.getMealPlan()
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe({
+        next: (data) => this.mealplans.set(data ?? []),
+        error: () => this.toast.error('No se pudo cargar la lista de recetas.'),
+      });
   }
 
   private buildDay() {
@@ -73,6 +89,21 @@ export class MealPlans implements OnInit {
       idRecipe: ['', Validators.required],
       portion: [1, [Validators.required, Validators.min(1)]],
     });
+  }
+
+  private resetPlanForm(): void {
+    this.planForm.reset({
+      idNutricionist: '',
+      idPatient: '',
+      idAppointment: '',
+      idSubscription: '',
+      totalDays: 7,
+      starDate: '',
+      endDate: '',
+      totalCalories: 2000,
+    });
+    this.days.clear();
+    this.addDay();
   }
 
   addDay(): void {
@@ -107,7 +138,30 @@ export class MealPlans implements OnInit {
     this.recipesOf(dayIdx, tfIdx).removeAt(rIdx);
   }
 
-  submit(): void {
+  openCreate(): void {
+    this.modalMode.set('create');
+  }
+
+  closeCreate(): void {
+    this.modalMode.set(null);
+  }
+
+  openTimeFoodsModal(dayIndex: number): void {
+    this.selectedDayIndex.set(dayIndex);
+    this.showTimeFoodsModal.set(true);
+  }
+
+  closeTimeFoodsModal(): void {
+    this.selectedDayIndex.set(null);
+    this.showTimeFoodsModal.set(false);
+  }
+
+  currentTimeFoods(): FormArray {
+    const idx = this.selectedDayIndex();
+    return this.days.at(idx!).get('timeFoods') as FormArray;
+  }
+
+  create(): void {
     if (this.planForm.invalid) {
       this.planForm.markAllAsTouched();
       this.toast.error('Revisa los campos del formulario.');
@@ -135,7 +189,7 @@ export class MealPlans implements OnInit {
     };
     this.svc.createMealPlan(dto).subscribe({
       next: (id) => {
-        this.recentPlans.update((list) => [
+        this.mealplans.update((list) => [
           { id, summary: `${raw.totalDays}d · ${raw.totalCalories} kcal · ${raw.starDate} → ${raw.endDate}` },
           ...list,
         ]);
@@ -150,49 +204,4 @@ export class MealPlans implements OnInit {
     });
   }
 
-  private resetPlanForm(): void {
-    this.planForm.reset({
-      idNutricionist: '',
-      idPatient: '',
-      idAppointment: '',
-      idSubscription: '',
-      totalDays: 7,
-      starDate: '',
-      endDate: '',
-      totalCalories: 2000,
-    });
-    this.days.clear();
-    this.addDay();
-  }
-
-  lookup(): void {
-    const id = this.lookupId().trim();
-    if (!id) return;
-    this.lookupLoading.set(true);
-    this.lookupResult.set(null);
-    this.svc.getMealPlanById(id).subscribe({
-      next: (plan) => {
-        this.lookupResult.set(plan);
-        this.lookupLoading.set(false);
-      },
-      error: () => {
-        this.toast.error('Plan no encontrado.');
-        this.lookupLoading.set(false);
-      },
-    });
-  }
-
-  cancel(id: string): void {
-    this.svc.cancelMealPlan(id).subscribe({
-      next: () => this.toast.success('Plan cancelado.'),
-      error: () => this.toast.error('Error al cancelar el plan.'),
-    });
-  }
-
-  refresh(id: string): void {
-    this.svc.updateMealPlan(id).subscribe({
-      next: () => this.toast.success('Plan actualizado.'),
-      error: () => this.toast.error('Error al actualizar el plan.'),
-    });
-  }
 }
