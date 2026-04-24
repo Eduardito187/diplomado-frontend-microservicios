@@ -36,14 +36,20 @@ export interface UpdateNutritionistDto extends CreateNutritionistDto {
 }
 
 export interface MeasurementDto {
-  weightKg?: number;
-  heightCm?: number;
-  bodyFatPercent?: number;
+  weight?: number;
+  height?: number;
+  imc?: number;
+  bodyFat?: number;
+  muscleMass?: number;
 }
 
 export interface DiagnosisDto {
-  summary?: string;
+  description?: string;
+  nutritionalState?: string;
+  associatedRisks?: string;
   recommendations?: string;
+  goals?: string;
+  comments?: string;
 }
 
 export interface AttendAppointmentDto {
