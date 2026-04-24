@@ -2,7 +2,7 @@ import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { FormBuilder, FormArray, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { MealPlanService } from '../../core/services/meal-plan.service';
 import { ToastService } from '../../core/services/toast.service';
-import { MealPlan, CreateMealPlanDto, TimeFoodType, Recipe } from '../../core/models/meal-plan.model';
+import { MealPlan, CreateMealPlanDto, TimeFoodType, Recipe, NutritionistDto, PatientDto, AppointmentDto, SubscriptionTypeDto } from '../../core/models/meal-plan.model';
 import { EmptyState } from '../../shared/components/empty-state/empty-state';
 import { finalize } from 'rxjs';
 
@@ -76,6 +76,11 @@ export class MealPlans implements OnInit {
   get days(): FormArray {
     return this.planForm.controls.days;
   }
+  // Nutritionist, Patients, PatientAppointments
+  readonly nutritionists = signal<NutritionistDto[]>([]);
+  readonly patients = signal<PatientDto[]>([]);
+  readonly patientAppointments = signal<AppointmentDto[]>([]);
+  readonly subsctiptionTypes = signal<SubscriptionTypeDto[]>([]);
 
   ngOnInit(): void {
     this.load();
@@ -83,18 +88,33 @@ export class MealPlans implements OnInit {
 
   load(): void {
     this.loading.set(true);
+    this.svc.getNutritionist()
+      .subscribe({
+        next: (data) => this.nutritionists.set(data ?? []),
+        error: () => this.toast.error('No se pudo cargar la lista de nutricionistas.'),
+      });
+    this.svc.getPatients()
+      .subscribe({
+        next: (data) => this.patients.set(data ?? []),
+        error: () => this.toast.error('No se pudo cargar la lista de pacientes.'),
+      });
+    this.svc.getSubscriptionTypes()
+      .subscribe({
+        next: (data) => this.subsctiptionTypes.set(data ?? []),
+        error: () => this.toast.error('No se pudo cargar la lista de subsripciones.'),
+      });
     this.svc.getMealPlan()
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: (data) => this.mealplans.set(data ?? []),
-        error: () => this.toast.error('No se pudo cargar la lista de recetas.'),
+        error: () => this.toast.error('No se pudo cargar la lista de planes.'),
       });
   }
 
   private buildDay() {
     return this.fb.nonNullable.group({
       day: [this.days?.length ? this.days.length + 1 : 1, Validators.required],
-      timeFoods: this.fb.array<ReturnType<typeof this.buildTimeFood>>([this.buildTimeFood()]),
+      timeFoods: this.fb.array<ReturnType<typeof this.buildTimeFood>>([]),
     });
   }
 
@@ -237,6 +257,18 @@ export class MealPlans implements OnInit {
     recipesArray.push(recipeGroup);
     this.toast.success(`Receta "${recipe.name}" agregada`);
     this.closeSelectRecipes();
+  }
+
+  getNutritionistName(id: string): string {
+    return this.nutritionists().find(n => n.id === id)?.name ?? id;
+  }
+
+  getPatientName(id: string): string {
+    return this.patients().find(p => p.id === id)?.name ?? id;
+  }
+
+  getSubscriptionName(id: string): string {
+    return this.subsctiptionTypes().find(p => p.id === id)?.name ?? id;
   }
 
   create(): void {

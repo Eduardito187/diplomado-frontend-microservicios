@@ -45,6 +45,18 @@ export interface CreateMealPlanDto {
   mealPlanDays: MealPlanDay[];
 }
 
+export interface UpdateMealPlanDto {
+  idNutricionist: string;
+  idPatient: string;
+  idAppointment: string;
+  idSubscription: string;
+  totalDays: number;
+  starDate: string;
+  endDate: string;
+  totalCalories: number;
+  mealPlanDays: MealPlanDay[];
+}
+
 export interface Recipe {
   id: string;
   name: string;
@@ -82,4 +94,25 @@ export interface CreateIngredientDto {
   description?: string;
   unitMeasure: UnitMeasure;
   caloriesPerGram: number;
+}
+
+export interface NutritionistDto {
+  id: string,
+  name: string
+}
+
+export interface PatientDto {
+  id: string,
+  name: string
+}
+
+export interface AppointmentDto {
+  id: string,
+  idPatient: string,
+  status: string
+}
+
+export interface SubscriptionTypeDto {
+  id: string,
+  name: string
 }

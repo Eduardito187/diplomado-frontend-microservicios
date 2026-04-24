@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { API, ResultEnvelope } from '../config/api.config';
-import { MealPlan, Recipe, Ingredient, CreateMealPlanDto, CreateRecipeDto, CreateIngredientDto } from '../models/meal-plan.model';
+import { MealPlan, Recipe, Ingredient, CreateMealPlanDto, CreateRecipeDto, CreateIngredientDto, UpdateMealPlanDto, NutritionistDto, PatientDto, AppointmentDto, SubscriptionTypeDto } from '../models/meal-plan.model';
 
 function unwrap<T>(env: ResultEnvelope<T>): T {
   if (!env || env.success === false) {
@@ -20,7 +20,7 @@ export class MealPlanService {
       .get<ResultEnvelope<MealPlan[]>>(API.mealPlans.base)
       .pipe(map(unwrap<MealPlan[]>));
   }
-  
+
   getMealPlanById(id: string): Observable<MealPlan> {
     return this.http
       .get<ResultEnvelope<MealPlan>>(API.mealPlans.byId(id))
@@ -33,9 +33,9 @@ export class MealPlanService {
       .pipe(map(unwrap<string>));
   }
 
-  updateMealPlan(id: string): Observable<boolean> {
+  updateMealPlan(id: string, dto: UpdateMealPlanDto): Observable<boolean> {
     return this.http
-      .patch<ResultEnvelope<boolean>>(API.mealPlans.byId(id), {})
+      .patch<ResultEnvelope<boolean>>(API.mealPlans.byId(id), dto)
       .pipe(map(unwrap<boolean>));
   }
 
@@ -80,4 +80,29 @@ export class MealPlanService {
       .post<ResultEnvelope<string>>(API.ingredients.base, dto)
       .pipe(map(unwrap<string>));
   }
+
+  getNutritionist(): Observable<NutritionistDto[]> {
+    return this.http
+      .get<ResultEnvelope<NutritionistDto[]>>(API.mealPlansNutritionists.base)
+      .pipe(map(unwrap<NutritionistDto[]>));
+  }
+
+  getPatients(): Observable<PatientDto[]> {
+    return this.http
+      .get<ResultEnvelope<PatientDto[]>>(API.mealPlansPatients.base)
+      .pipe(map(unwrap<PatientDto[]>));
+  }
+
+  getPatientAppointments(id: string, status: string): Observable<AppointmentDto[]> {
+    return this.http
+      .get<ResultEnvelope<AppointmentDto[]>>(API.mealPlansPatients.appointmentsById(id, status))
+      .pipe(map(unwrap<AppointmentDto[]>));
+  }
+
+  getSubscriptionTypes(): Observable<SubscriptionTypeDto[]> {
+    return this.http
+      .get<ResultEnvelope<SubscriptionTypeDto[]>>(API.mealPlansSubscriptions.base)
+      .pipe(map(unwrap<SubscriptionTypeDto[]>));
+  }
+
 }

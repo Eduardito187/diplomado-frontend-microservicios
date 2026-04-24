@@ -101,7 +101,8 @@
 
   <!-- MealPlanDays Create Modal -->
   @if (showTimeFoodsModal()) {
-  <div class="modal-backdrop" (click)="closeTimeFoodsModal()"  (keydown.escape)="closeTimeFoodsModal()" aria-hidden="true"></div>
+  <div class="modal-backdrop" (click)="closeTimeFoodsModal()" (keydown.escape)="closeTimeFoodsModal()"
+    aria-hidden="true"></div>
   <dialog class="modal-panel modal-lg" open>
     <div class="modal-head">
       <h3>Comidas del día {{ selectedDayIndex()! + 1 }}</h3>
@@ -254,7 +255,6 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th>Plan</th>
             <th>Nuricionista</th>
             <th>Paciente</th>
             <th>Suscripcion</th>
@@ -268,27 +268,24 @@
           <tr>
             <td>
               <div>
-                <span>{{ item.id }}</span>
+                <span>{{ getNutritionistName(item.idNutricionist!) }}</span>
               </div>
             </td>
             <td>
               <div>
-                <span>{{ item.idNutricionist }}</span>
+                <span>{{ getPatientName(item.idPatient!) }}</span>
               </div>
             </td>
             <td>
               <div>
-                <span>{{ item.idPatient }}</span>
+                <span>{{ getSubscriptionName(item.idSubscription!) }}</span>
               </div>
             </td>
             <td>
               <div>
-                <span>{{ item.idSubscription }}</span>
-              </div>
-            </td>
-            <td>
-              <div>
-                <span>{{ item.starDate }}- {{ item.endDate }}</span>
+                <strong>Inicio:</strong> <span>{{ item.starDate }}</span><br>
+                <strong>Final:</strong> <span>{{ item.endDate }}</span><br>
+                <strong>Total Dias:</strong><span class="count-badge">{{ item.totalDays }}</span>
               </div>
             </td>
             <td>
@@ -298,6 +295,11 @@
             </td>
             <td>
               <div class="action-btns">
+                @if (item.status === 'CANCELADO') {
+                <button class="btn-icon" title="Ver Detalles">
+                  <i class="bi bi-eye-fill"></i>
+                </button>
+                }
                 @if (item.status === 'CREADO') {
                 <button class="btn-icon" title="Editar">
                   <i class="bi bi-pencil-fill"></i>
