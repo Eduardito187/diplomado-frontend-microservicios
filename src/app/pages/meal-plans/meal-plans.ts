@@ -84,6 +84,18 @@ export class MealPlans implements OnInit {
 
   ngOnInit(): void {
     this.load();
+    this.planForm.get('idPatient')?.valueChanges.subscribe((patientId) => {
+      this.patientAppointments.set([]);
+      this.planForm.patchValue({ idAppointment: '' });
+      if (!patientId) return;
+      this.lookupLoading.set(true);
+      this.svc.getPatientAppointments(patientId, 'ATENDIDO')
+        .pipe(finalize(() => this.lookupLoading.set(false)))
+        .subscribe({
+          next: (data) => this.patientAppointments.set(data ?? []),
+          error: () => this.toast.error('No se pudo cargar las citas.')
+        });
+    });
   }
 
   load(): void {

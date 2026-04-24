@@ -109,7 +109,8 @@ export interface PatientDto {
 export interface AppointmentDto {
   id: string,
   idPatient: string,
-  status: string
+  status: string,
+  date?: string
 }
 
 export interface SubscriptionTypeDto {

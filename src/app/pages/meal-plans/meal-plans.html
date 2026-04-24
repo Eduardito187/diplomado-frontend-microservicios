@@ -16,20 +16,45 @@
     <form [formGroup]="planForm" novalidate class="p-3">
       <div class="form-grid">
         <div class="field">
-          <label for="mp-nutri">Nutricionista ID *</label>
-          <input id="mp-nutri" type="text" formControlName="idNutricionist" placeholder="UUID" />
+          <label for="mp-nutri">Nutricionista *</label>
+          <select id="mp-nutri" formControlName="idNutricionist">
+            <option value="">Seleccione...</option>
+            @for (n of nutritionists(); track n.id) {
+            <option [value]="n.id">{{ n.name }}</option>
+            }
+          </select>
         </div>
         <div class="field">
-          <label for="mp-pat">Paciente ID *</label>
-          <input id="mp-pat" type="text" formControlName="idPatient" placeholder="UUID" />
+          <label for="mp-pat">Paciente *</label>
+          <select id="mp-pat" formControlName="idPatient">
+            <option value="">Seleccione...</option>
+            @for (p of patients(); track p.id) {
+            <option [value]="p.id">{{ p.name }}</option>
+            }
+          </select>
         </div>
         <div class="field">
-          <label for="mp-apt">Cita ID *</label>
-          <input id="mp-apt" type="text" formControlName="idAppointment" placeholder="UUID" />
+          <label for="mp-apt">Cita *</label>
+          <select id="mp-apt" formControlName="idAppointment" [disabled]="!planForm.value.idPatient || lookupLoading()">
+            <option value="">
+              {{ lookupLoading() ? 'Cargando...' : 'Seleccione...' }}
+            </option>
+
+            @for (a of patientAppointments(); track a.id) {
+            <option [value]="a.id">
+              {{ a.date }}
+            </option>
+            }
+          </select>
         </div>
         <div class="field">
-          <label for="mp-sub">Suscripción ID *</label>
-          <input id="mp-sub" type="text" formControlName="idSubscription" placeholder="UUID" />
+          <label for="mp-sub">Suscripción *</label>
+          <select id="mp-sub" formControlName="idSubscription">
+            <option value="">Seleccione...</option>
+            @for (s of subsctiptionTypes(); track s.id) {
+            <option [value]="s.id">{{ s.name }}</option>
+            }
+          </select>
         </div>
         <div class="field">
           <label for="mp-total">Total días *</label>
