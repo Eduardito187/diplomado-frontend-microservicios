@@ -8,8 +8,7 @@
   <!-- MealPlan Create Modal -->
   @if (modalMode() === 'create') {
   <div class="modal-backdrop" (click)="closeCreate()" (keydown.escape)="closeCreate()" aria-hidden="true"></div>
-  <dialog class="modal-panel" open aria-modal="true" aria-labelledby="patient-modal-title"
-    style="width: 50% !important;">
+  <dialog class="modal-panel modal-xl" open aria-modal="true" aria-labelledby="patient-modal-title">
     <div class="modal-head">
       <h3 id="patient-modal-title">{{ modalMode() === 'create' ? 'Nueva Receta' : 'Editar Receta' }}</h3>
       <button class="btn-close-modal" (click)="closeCreate()" aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>
@@ -103,7 +102,7 @@
   <!-- MealPlanDays Create Modal -->
   @if (showTimeFoodsModal()) {
   <div class="modal-backdrop" (click)="closeTimeFoodsModal()"></div>
-  <dialog class="modal-panel" open style="width: 40%">
+  <dialog class="modal-panel modal-lg" open>
     <div class="modal-head">
       <h3>Comidas del día {{ selectedDayIndex()! + 1 }}</h3>
       <button class="btn-close-modal" (click)="closeTimeFoodsModal()">
@@ -146,8 +145,8 @@
         <div class="mt-2">
           <strong>Recetas</strong>
 
-          <button class="btn btn-outline-secondary btn-sm mb-1" (click)="addRecipeRef(selectedDayIndex()!, ti)">
-            Agregar receta
+          <button class="btn btn-outline-secondary btn-sm mb-1" (click)="openSelectRecipes(selectedDayIndex()!, ti)">
+            Seleccionar receta
           </button>
 
           @for (rCtrl of recipesOf(selectedDayIndex()!, ti).controls; track $index; let ri = $index) {
@@ -165,6 +164,59 @@
       </div>
       }
 
+    </div>
+  </dialog>
+  }
+  @if (modalMode() === 'select-recipes') {
+  <div class="modal-backdrop" (click)="closeSelectRecipes()" (keydown.escape)="closeSelectRecipes()" aria-hidden="true">
+  </div>
+  <dialog class="modal-panel" open aria-modal="true" aria-labelledby="select-ingredient-title">
+    <div class="modal-head">
+      <h3 id="select-ingredient-title">Seleccionar Ingrediente</h3>
+      <button class="btn-close-modal" (click)="closeSelectRecipes()" aria-label="Cerrar"><i
+          class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="p-3">
+      <div class="search-box mb-3">
+        <i class="bi bi-search"></i>
+        <input type="text" placeholder="Buscar receta..." [(ngModel)]="recipeSearchQuery" class="form-control" />
+      </div>
+      <div class="table-card mt-4 p-2">
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Receta</th>
+                <th>Total Calorias</th>
+                <th class="th-actions">Agregar</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of filteredRecipes(); track item.id){
+              <tr>
+                <td>
+                  <div>
+                    <span>{{ item.name }}</span>
+                  </div>
+                </td>
+                <td>
+                  <div>
+                    <span>{{ item.totalCalories }}</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="action-btns">
+                    <button class="btn-icon" title="Ver detalles" (click)="selectRecipe(item)">
+                      <i class="bi bi-eye-fill"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </dialog>
   }

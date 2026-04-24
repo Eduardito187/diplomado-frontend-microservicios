@@ -1,20 +1,16 @@
 import { Component, OnInit, signal, inject, computed } from '@angular/core';
-import { FormBuilder, FormArray, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { FormBuilder, FormArray, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { MealPlanService } from '../../core/services/meal-plan.service';
 import { ToastService } from '../../core/services/toast.service';
-import { Auth } from '../../core/services/auth';
-import { SECTION_ROLES } from '../../core/config/roles';
-import { ensureRole } from '../../core/utils/role-check';
-import { MealPlan, CreateMealPlanDto, TimeFoodType } from '../../core/models/meal-plan.model';
+import { MealPlan, CreateMealPlanDto, TimeFoodType, Recipe } from '../../core/models/meal-plan.model';
 import { EmptyState } from '../../shared/components/empty-state/empty-state';
 import { finalize } from 'rxjs';
 
-type ModalMode = 'create' | 'view' | 'select-ingredient' | null;
+type ModalMode = 'create' | 'view' | 'select-recipes' | null;
 
 @Component({
   selector: 'app-meal-plans',
-  imports: [ReactiveFormsModule, EmptyState],
+  imports: [ReactiveFormsModule, EmptyState, FormsModule],
   templateUrl: './meal-plans.html',
   styleUrl: './meal-plans.scss',
 })
@@ -29,6 +25,32 @@ export class MealPlans implements OnInit {
   readonly modalMode = signal<ModalMode>(null);
   readonly selectedDayIndex = signal<number | null>(null);
   readonly showTimeFoodsModal = signal(false);
+
+  readonly recipes = signal<Recipe[]>([]);
+  readonly selectedRecipeIds = signal<Set<string>>(new Set());
+  readonly recipeSearchQuery = signal('');
+  readonly filteredRecipes = computed(() => {
+    const q = this.recipeSearchQuery().toLowerCase().trim();
+    const dayIdx = this.selectedDayForRecipe();
+    const tfIdx = this.selectedTimeFoodForRecipe();
+    let selectedIds = new Set<string>();
+    if (dayIdx !== null && tfIdx !== null) {
+      const recipes = this.recipesOf(dayIdx, tfIdx).controls;
+      recipes.forEach((rCtrl: any) => {
+        const id = rCtrl.get('idRecipe')?.value;
+        if (id) selectedIds.add(id);
+      });
+    }
+    let available = this.recipes().filter(r => !selectedIds.has(r.id!));
+    if (q) {
+      available = available.filter(r =>
+        r.name?.toLowerCase().includes(q)
+      );
+    }
+    return available;
+  });
+  readonly selectedDayForRecipe = signal<number | null>(null);
+  readonly selectedTimeFoodForRecipe = signal<number | null>(null);
 
   readonly mealplans = signal<MealPlan[]>([]);
   readonly searchQuery = signal('');
@@ -80,7 +102,7 @@ export class MealPlans implements OnInit {
     return this.fb.nonNullable.group({
       type: ['BREAKFAST' as TimeFoodType, Validators.required],
       order: [1, Validators.required],
-      recipes: this.fb.array<ReturnType<typeof this.buildRecipeRef>>([this.buildRecipeRef()]),
+      recipes: this.fb.array<ReturnType<typeof this.buildRecipeRef>>([]),
     });
   }
 
@@ -136,14 +158,32 @@ export class MealPlans implements OnInit {
 
   removeRecipeRef(dayIdx: number, tfIdx: number, rIdx: number): void {
     this.recipesOf(dayIdx, tfIdx).removeAt(rIdx);
+    this.updateSelectedRecipeIds();
   }
 
   openCreate(): void {
+    this.svc.getRecipe()
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe({
+        next: (data) => this.recipes.set(data ?? []),
+        error: () => this.toast.error('No se pudo cargar la lista de recetas.'),
+      });
     this.modalMode.set('create');
+  }
+
+  openSelectRecipes(dayIdx: number, tfIdx: number): void {
+    this.selectedDayForRecipe.set(dayIdx);
+    this.selectedTimeFoodForRecipe.set(tfIdx);
+    this.recipeSearchQuery.set('');
+    this.modalMode.set('select-recipes');
   }
 
   closeCreate(): void {
     this.modalMode.set(null);
+  }
+
+  closeSelectRecipes(): void {
+    this.modalMode.set('create');
   }
 
   openTimeFoodsModal(dayIndex: number): void {
@@ -202,6 +242,44 @@ export class MealPlans implements OnInit {
         this.saving.set(false);
       },
     });
+  }
+
+  private updateSelectedRecipeIds(): void {
+    const ids = new Set<string>();
+    this.days.controls.forEach((dayCtrl: any) => {
+      const timeFoods = dayCtrl.get('timeFoods') as FormArray;
+      timeFoods.controls.forEach((tfCtrl: any) => {
+        const recipes = tfCtrl.get('recipes') as FormArray;
+
+        recipes.controls.forEach((rCtrl: any) => {
+          const id = rCtrl.get('idRecipe')?.value;
+          if (id) ids.add(id);
+        });
+      });
+    });
+    this.selectedRecipeIds.set(ids);
+  }
+
+  selectRecipe(recipe: Recipe): void {
+    const dayIdx = this.selectedDayForRecipe();
+    const tfIdx = this.selectedTimeFoodForRecipe();
+    if (dayIdx === null || tfIdx === null) return;
+    const recipesArray = this.recipesOf(dayIdx, tfIdx);
+    const alreadyExists = recipesArray.controls.some((rCtrl: any) => {
+      return rCtrl.get('idRecipe')?.value === recipe.id;
+    });
+    if (alreadyExists) {
+      this.toast.error('Esta receta ya fue agregada a esta comida.');
+      return;
+    }
+    const recipeGroup = this.buildRecipeRef();
+    recipeGroup.patchValue({
+      idRecipe: recipe.id,
+      portion: 1
+    });
+    recipesArray.push(recipeGroup);
+    this.toast.success(`Receta "${recipe.name}" agregada`);
+    this.closeSelectRecipes();
   }
 
 }
