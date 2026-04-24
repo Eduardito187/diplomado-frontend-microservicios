@@ -9,6 +9,10 @@ export interface MealPlan {
   endDate?: string;
   totalCalories?: number;
   mealPlanDays?: MealPlanDay[];
+  transaction?: string,
+  status?: string,
+  createBy?: string,
+  createAt?: string
 }
 
 export interface MealPlanDay {

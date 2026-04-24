@@ -17,7 +17,7 @@ export class Recipes implements OnInit {
   private readonly svc = inject(MealPlanService);
   private readonly toast = inject(ToastService);
   private readonly fb = inject(FormBuilder);
-  readonly searchQuery = signal('');
+  
   readonly saving = signal(false);
   readonly lookupLoading = signal(false);
   readonly loading = signal(true);
@@ -42,6 +42,7 @@ export class Recipes implements OnInit {
   });
   // Recipes
   readonly recipes = signal<Recipe[]>([]);
+  readonly searchQuery = signal('');
   readonly filtered = computed(() => {
     const q = this.searchQuery().toLowerCase().trim();
     if (!q) return this.recipes();
