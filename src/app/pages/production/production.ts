@@ -1,5 +1,6 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { FormBuilder, FormArray, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TitleCasePipe } from '@angular/common';
 import { Router } from '@angular/router';
 import {
   ProductionService,
@@ -28,7 +29,7 @@ type ResourceView = 'list' | 'create' | 'edit';
 
 @Component({
   selector: 'app-production',
-  imports: [ReactiveFormsModule, EmptyState, ResourceForm],
+  imports: [ReactiveFormsModule, TitleCasePipe, EmptyState, ResourceForm],
   templateUrl: './production.html',
   styleUrl: './production.scss',
 })
@@ -49,6 +50,7 @@ export class Production implements OnInit {
   readonly items = signal<LaravelResource[]>([]);
   readonly view = signal<ResourceView>('list');
   readonly editingRow = signal<LaravelResource | null>(null);
+  readonly viewRow = signal<LaravelResource | null>(null);
 
   readonly selectedSchema = computed<ResourceSchema>(
     () => RESOURCE_SCHEMAS[this.selectedResource()],
@@ -128,8 +130,17 @@ export class Production implements OnInit {
   }
 
   openEdit(row: LaravelResource): void {
+    this.viewRow.set(null);
     this.editingRow.set(row);
     this.view.set('edit');
+  }
+
+  openView(row: LaravelResource): void {
+    this.viewRow.set(row);
+  }
+
+  closeView(): void {
+    this.viewRow.set(null);
   }
 
   cancelForm(): void {
@@ -282,9 +293,28 @@ export class Production implements OnInit {
   cellValue(row: LaravelResource, col: string): string {
     const v = row[col];
     if (v === null || v === undefined) return '—';
-    if (typeof v === 'object') return JSON.stringify(v);
+    if (typeof v === 'object') return JSON.stringify(v, null, 2);
     if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') return String(v);
     return JSON.stringify(v);
+  }
+
+  detailEntries(row: LaravelResource): Array<{ key: string; value: string; isJson: boolean }> {
+    return Object.entries(row).map(([key, val]) => {
+      const isObj = val !== null && typeof val === 'object';
+      const strVal = typeof val === 'string' ? val.trimStart() : '';
+      const isJson = isObj || strVal.startsWith('[') || strVal.startsWith('{');
+      let value: string;
+      if (val === null || val === undefined) {
+        value = '—';
+      } else if (isObj) {
+        value = JSON.stringify(val, null, 2);
+      } else if (typeof val === 'string' || typeof val === 'number' || typeof val === 'boolean') {
+        value = String(val);
+      } else {
+        value = JSON.stringify(val);
+      }
+      return { key, value, isJson };
+    });
   }
 
   private extractError(err: unknown): string | null {
