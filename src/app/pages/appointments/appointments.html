@@ -24,7 +24,7 @@
       >
         <option value="">— selecciona —</option>
         @for (n of nutritionists(); track n.id) {
-          <option [value]="n.id">{{ nutritionistFullName(n) }}@if (n.specialty) { — {{ n.specialty }}}</option>
+          <option [value]="n.id">{{ nutritionistFullName(n) }}@if (n.specialty) { — {{ getSpecialtyLabel(n.specialty) }}}</option>
         }
       </select>
     </div>
@@ -137,7 +137,7 @@
             @for (n of nutritionists(); track n.id) {
               <tr>
                 <td>{{ nutritionistFullName(n) }}</td>
-                <td>{{ n.specialty ?? '—' }}</td>
+                <td>{{ n.specialty ? getSpecialtyLabel(n.specialty) : '—' }}</td>
                 <td>{{ n.professionalLicense ?? '—' }}</td>
                 <td>
                   <div class="action-btns">
@@ -281,7 +281,12 @@
           </div>
           <div class="field field-full">
             <label for="nu-sp">Especialidad</label>
-            <input id="nu-sp" type="text" formControlName="specialty" />
+            <select id="nu-sp" formControlName="specialty">
+              <option value="">— selecciona —</option>
+              @for (spec of getSpecialties(); track spec.key) {
+                <option [value]="spec.key">{{ spec.label }}</option>
+              }
+            </select>
           </div>
           <div class="field field-full">
             <label for="nu-lic">Licencia profesional</label>

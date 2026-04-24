@@ -20,12 +20,48 @@ function toLocalYyyyMmDd(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
+function parseDdMmYyyyHms(dateInput: any): Date {
+  if (dateInput instanceof Date) return dateInput;
+  if (!dateInput) return new Date(Number.NaN);
+
+  // Parsea array [year, month, day, hour, minute]
+  if (Array.isArray(dateInput) && dateInput.length >= 3) {
+    const [y, m, d, h = 0, min = 0, s = 0] = dateInput;
+    return new Date(y, m - 1, d, h, min, s);
+  }
+
+  // Parsea string formato "dd-mm-yyyy hh:mm:ss"
+  if (typeof dateInput === 'string') {
+    const [datePart, timePart = '00:00:00'] = dateInput.split(' ');
+    const [d, m, y] = datePart.split('-');
+    const [h, min, s] = timePart.split(':');
+    return new Date(
+      Number.parseInt(y, 10),
+      Number.parseInt(m, 10) - 1,
+      Number.parseInt(d, 10),
+      Number.parseInt(h, 10),
+      Number.parseInt(min, 10),
+      Number.parseInt(s, 10)
+    );
+  }
+
+  return new Date(Number.NaN);
+}
+
 type ModalMode =
   | 'schedule'
   | 'attend'
   | 'nutritionist-create'
   | 'nutritionist-edit'
   | null;
+
+const SPECIALTIES: Record<string, string> = {
+  'Clinical Nutrition': 'Nutrición Clínica',
+  'Sports Nutrition': 'Nutrición Deportiva',
+  'Functional Nutrition': 'Nutrición Funcional',
+  'Geriatric Nutrition': 'Nutrición Geriátrica',
+  'Preventive Nutrition': 'Nutrición Preventiva',
+};
 
 @Component({
   selector: 'app-appointments',
@@ -296,13 +332,15 @@ export class Appointments implements OnInit {
 
   formatDate(date: string): string {
     if (!date) return '—';
+    const parsed = parseDdMmYyyyHms(date);
+    if (Number.isNaN(parsed.getTime())) return '—';
     return new Intl.DateTimeFormat('es-BO', {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-    }).format(new Date(date));
+    }).format(parsed);
   }
 
   patientName(id: string): string {
@@ -320,5 +358,13 @@ export class Appointments implements OnInit {
 
   isScheduled(a: ScheduledAppointment): boolean {
     return this.statusKey(a.status) === 'SCHEDULED';
+  }
+
+  getSpecialties(): Array<{ key: string; label: string }> {
+    return Object.entries(SPECIALTIES).map(([key, label]) => ({ key, label }));
+  }
+
+  getSpecialtyLabel(key: string): string {
+    return SPECIALTIES[key] ?? key;
   }
 }
