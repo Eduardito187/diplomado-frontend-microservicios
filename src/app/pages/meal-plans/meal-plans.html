@@ -101,7 +101,7 @@
 
   <!-- MealPlanDays Create Modal -->
   @if (showTimeFoodsModal()) {
-  <div class="modal-backdrop" (click)="closeTimeFoodsModal()"></div>
+  <div class="modal-backdrop" (click)="closeTimeFoodsModal()"  (keydown.escape)="closeTimeFoodsModal()" aria-hidden="true"></div>
   <dialog class="modal-panel modal-lg" open>
     <div class="modal-head">
       <h3>Comidas del día {{ selectedDayIndex()! + 1 }}</h3>
