@@ -1,5 +1,5 @@
 .resource-form {
-  padding: 1rem;
+  padding: 1.25rem;
 
   .req {
     color: #dc2626;
@@ -14,5 +14,54 @@
   textarea.mono {
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size: 0.8rem;
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    resize: vertical;
+  }
+
+  .field {
+    label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    input, textarea, select {
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 0.55rem 0.75rem;
+      font-size: 0.875rem;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      width: 100%;
+      background: #fff;
+
+      &:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+      }
+
+      &.ng-invalid.ng-touched {
+        border-color: #f87171;
+        box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.1);
+      }
+    }
+  }
+
+  .json-hint {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.72rem;
+    color: #6b7280;
+    margin-top: 0.25rem;
+
+    i { color: #9ca3af; }
+  }
+
+  .modal-actions {
+    border-top: 1px solid #f1f5f9;
+    padding-top: 1rem;
+    margin-top: 0.5rem;
   }
 }

@@ -26,9 +26,7 @@ export type ProductionResourceKey =
   | 'calendarioItems'
   | 'etiquetas'
   | 'porciones'
-  | 'ventanasEntrega'
-  | 'direcciones'
-  | 'pacientes';
+  | 'ventanasEntrega';
 
 @Injectable({ providedIn: 'root' })
 export class ProductionService {

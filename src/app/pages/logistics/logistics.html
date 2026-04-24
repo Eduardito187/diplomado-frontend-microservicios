@@ -15,18 +15,27 @@
     </div>
   </div>
 
-  <div class="toolbar">
-    <div class="field">
-      <label for="delivery-date">Fecha de entrega</label>
+  <div class="date-bar">
+    <div class="date-picker-wrap">
+      <label class="date-picker-label" for="delivery-date">
+        <i class="bi bi-calendar3"></i>
+        <span class="date-picker-text">Fecha de entrega</span>
+      </label>
       <input
         id="delivery-date"
+        class="date-picker-input"
         type="date"
         [value]="selectedDate()"
         (change)="onDateChange($any($event.target).value)"
         [disabled]="loading() || savingOrders()"
       />
     </div>
-    <span class="count-badge">{{ packages().length }} paquete{{ packages().length !== 1 ? 's' : '' }}</span>
+    <div class="date-bar-right">
+      <span class="pkg-count-chip">
+        <i class="bi bi-box-seam"></i>
+        {{ packages().length }} paquete{{ packages().length !== 1 ? 's' : '' }}
+      </span>
+    </div>
   </div>
 
   <div class="table-card">

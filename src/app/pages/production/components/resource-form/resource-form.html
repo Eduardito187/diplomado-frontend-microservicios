@@ -81,9 +81,9 @@
         }
 
         @if (hasError(f.name)) {
-          <small class="err">{{ errorMessage(f) }}</small>
+          <small class="err"><i class="bi bi-exclamation-circle me-1"></i>{{ errorMessage(f) }}</small>
         } @else if (f.hint) {
-          <small>{{ f.hint }}</small>
+          <span class="json-hint"><i class="bi bi-info-circle"></i>{{ f.hint }}</span>
         }
       </div>
     }
