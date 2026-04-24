@@ -61,11 +61,14 @@ export class BadgeStatus {
     CANCELLED:    { label: 'Cancelada',   css: 'cancelled',  icon: 'bi-x-circle' },
     ATTENDED:     { label: 'Atendida',    css: 'attended',   icon: 'bi-check-circle-fill' },
     NOT_ATTENDED: { label: 'No asistió',  css: 'no-show',    icon: 'bi-dash-circle' },
+    COMPLETED:    { label: 'Completada',  css: 'completed',  icon: 'bi-check2-circle' },
+    CLOSED:       { label: 'Cerrada',     css: 'cerrada',    icon: 'bi-check2-all' },
     Pending:      { label: 'Pendiente',   css: 'pending',    icon: 'bi-hourglass-split' },
     InTransit:    { label: 'En tránsito', css: 'in-transit', icon: 'bi-truck' },
     Completed:    { label: 'Completada',  css: 'completed',  icon: 'bi-check2-circle' },
     Failed:       { label: 'Fallida',     css: 'failed',     icon: 'bi-exclamation-circle' },
     Cancelled:    { label: 'Cancelada',   css: 'cancelled',  icon: 'bi-x-circle' },
+    Closed:       { label: 'Cerrada',     css: 'cerrada',    icon: 'bi-check2-all' },
   };
 
   label(): string {

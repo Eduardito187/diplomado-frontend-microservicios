@@ -24,12 +24,68 @@ function toLocalYyyyMmDd(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
+function parseDdMmYyyyHms(dateInput: any): Date {
+  if (dateInput instanceof Date) return dateInput;
+  if (!dateInput) return new Date(Number.NaN);
+
+  // Parsea array [year, month, day, hour, minute]
+  if (Array.isArray(dateInput) && dateInput.length >= 3) {
+    const [y, m, d, h = 0, min = 0, s = 0] = dateInput;
+    return new Date(y, m - 1, d, h, min, s);
+  }
+
+  // Parsea string formato "dd-mm-yyyy hh:mm:ss"
+  if (typeof dateInput === 'string') {
+    const [datePart, timePart = '00:00:00'] = dateInput.split(' ');
+    const [d, m, y] = datePart.split('-');
+    const [h, min, s] = timePart.split(':');
+    return new Date(
+      Number.parseInt(y, 10),
+      Number.parseInt(m, 10) - 1,
+      Number.parseInt(d, 10),
+      Number.parseInt(h, 10),
+      Number.parseInt(min, 10),
+      Number.parseInt(s, 10)
+    );
+  }
+
+  return new Date(Number.NaN);
+}
+
 type ModalMode =
   | 'schedule'
   | 'attend'
   | 'nutritionist-create'
   | 'nutritionist-edit'
+  | 'view-detail'
   | null;
+
+const SPECIALTIES: Record<string, string> = {
+  'Clinical Nutrition': 'Nutrición Clínica',
+  'Sports Nutrition': 'Nutrición Deportiva',
+  'Functional Nutrition': 'Nutrición Funcional',
+  'Geriatric Nutrition': 'Nutrición Geriátrica',
+  'Preventive Nutrition': 'Nutrición Preventiva',
+};
+
+const NUTRITIONAL_STATES: Record<string, string> = {
+  Underweight: 'Bajo peso',
+  'Normal weight': 'Peso normal',
+  Overweight: 'Sobrepeso',
+  Obesity: 'Obesidad',
+};
+
+const APPOINTMENT_STATUSES: Record<string, string> = {
+  Scheduled: 'Programada',
+  Completed: 'Completada',
+  Cancelled: 'Cancelada',
+  Closed: 'Cerrada',
+};
+
+const APPOINTMENT_TYPES: Record<string, string> = {
+  Initial: 'Inicial',
+  'Follow up': 'Seguimiento',
+};
 
 @Component({
   selector: 'app-appointments',
@@ -59,6 +115,8 @@ export class Appointments implements OnInit {
   readonly modalMode = signal<ModalMode>(null);
   readonly selectedAppointment = signal<ScheduledAppointment | null>(null);
   readonly selectedNutritionist = signal<Nutritionist | null>(null);
+  readonly appointmentDetail = signal<any>(null);
+  readonly detailLoading = signal(false);
 
   readonly scheduleForm = this.fb.nonNullable.group({
     patientId: ['', Validators.required],
@@ -71,9 +129,15 @@ export class Appointments implements OnInit {
     notes: [''],
     weightKg: [null as number | null],
     heightCm: [null as number | null],
+    imc: [null as number | null],
     bodyFatPercent: [null as number | null],
+    muscleMass: [null as number | null],
     diagnosisSummary: [''],
+    nutritionalState: [''],
+    associatedRisks: [''],
     recommendations: [''],
+    goals: [''],
+    comments: [''],
   });
 
   readonly nutritionistForm = this.fb.nonNullable.group({
@@ -176,6 +240,7 @@ export class Appointments implements OnInit {
     this.modalMode.set(null);
     this.selectedAppointment.set(null);
     this.selectedNutritionist.set(null);
+    this.appointmentDetail.set(null);
   }
 
   submitSchedule(): void {
@@ -208,13 +273,19 @@ export class Appointments implements OnInit {
         id: apt.id,
         notes: f.notes || undefined,
         measurementDto: {
-          weightKg: f.weightKg ?? undefined,
-          heightCm: f.heightCm ?? undefined,
-          bodyFatPercent: f.bodyFatPercent ?? undefined,
+          weight: f.weightKg ?? undefined,
+          height: f.heightCm ?? undefined,
+          imc: f.imc ?? undefined,
+          bodyFat: f.bodyFatPercent ?? undefined,
+          muscleMass: f.muscleMass ?? undefined,
         },
         diagnosisDto: {
-          summary: f.diagnosisSummary || undefined,
+          description: f.diagnosisSummary || undefined,
+          nutritionalState: f.nutritionalState || undefined,
+          associatedRisks: f.associatedRisks || undefined,
           recommendations: f.recommendations || undefined,
+          goals: f.goals || undefined,
+          comments: f.comments || undefined,
         },
       })
       .subscribe({
@@ -303,13 +374,15 @@ export class Appointments implements OnInit {
 
   formatDate(date: string): string {
     if (!date) return '—';
+    const parsed = parseDdMmYyyyHms(date);
+    if (Number.isNaN(parsed.getTime())) return '—';
     return new Intl.DateTimeFormat('es-BO', {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-    }).format(new Date(date));
+    }).format(parsed);
   }
 
   patientName(id: string): string {
@@ -327,5 +400,72 @@ export class Appointments implements OnInit {
 
   isScheduled(a: ScheduledAppointment): boolean {
     return this.statusKey(a.status) === 'SCHEDULED';
+  }
+
+  getSpecialties(): Array<{ key: string; label: string }> {
+    return Object.entries(SPECIALTIES).map(([key, label]) => ({ key, label }));
+  }
+
+  getSpecialtyLabel(key: string): string {
+    return SPECIALTIES[key] ?? key;
+  }
+
+  getNutritionalStates(): Array<{ key: string; label: string }> {
+    return Object.entries(NUTRITIONAL_STATES).map(([key, label]) => ({ key, label }));
+  }
+
+  getNutritionalStateLabel(key: string): string {
+    return NUTRITIONAL_STATES[key] ?? key;
+  }
+
+  openAppointmentDetail(apt: ScheduledAppointment): void {
+    this.detailLoading.set(true);
+    this.aptSvc.getAppointmentDetail(apt.id).subscribe({
+      next: (detail) => {
+        this.appointmentDetail.set(detail);
+        this.detailLoading.set(false);
+        this.modalMode.set('view-detail');
+      },
+      error: () => {
+        this.toast.error('Error al cargar el detalle de la cita.');
+        this.detailLoading.set(false);
+      },
+    });
+  }
+
+  private parseDecimalValue(value: any): number | null {
+    if (typeof value === 'number') return value;
+    if (typeof value === 'string') {
+      const match = /DecimalValue\[value=([\d.]+)\]/.exec(value);
+      return match ? Number.parseFloat(match[1]) : null;
+    }
+    return null;
+  }
+
+  getMeasurementValue(field: any): number | null {
+    if (!field) return null;
+    if (typeof field === 'number') return field;
+    if (field.value) return this.parseDecimalValue(field.value);
+    return this.parseDecimalValue(field);
+  }
+
+  getDiagnosisNutritionalState(state: string): string {
+    if (!state) return '—';
+    const stateMap: Record<string, string> = {
+      UNDERWEIGHT: 'Bajo peso',
+      NORMAL_WEIGHT: 'Peso normal',
+      OVERWEIGHT: 'Sobrepeso',
+      OBESITY: 'Obesidad',
+    };
+    return stateMap[state] ?? state;
+  }
+
+  getStatusLabel(status: string): string {
+    return APPOINTMENT_STATUSES[status] ?? status;
+  }
+
+  getAppointmentTypeLabel(type?: string): string {
+    if (!type) return '—';
+    return APPOINTMENT_TYPES[type] ?? type;
   }
 }

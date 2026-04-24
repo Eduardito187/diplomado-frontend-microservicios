@@ -32,10 +32,12 @@ export const API = {
   },
 
   appointments: {
+    base: `${GATEWAY_URL}/appointment`,
     schedule: `${GATEWAY_URL}/appointment/schedule`,
     attend: `${GATEWAY_URL}/appointment/attend`,
     cancel: `${GATEWAY_URL}/appointment/cancel`,
     notAttended: `${GATEWAY_URL}/appointment/notattended`,
+    byId: (id: string) => `${GATEWAY_URL}/appointment/${id}`,
   },
 
   nutritionists: {
