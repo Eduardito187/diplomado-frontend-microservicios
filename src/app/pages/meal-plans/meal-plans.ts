@@ -25,7 +25,7 @@ export class MealPlans implements OnInit {
   readonly modalMode = signal<ModalMode>(null);
   readonly selectedDayIndex = signal<number | null>(null);
   readonly showTimeFoodsModal = signal(false);
-
+  //Recipes
   readonly recipes = signal<Recipe[]>([]);
   readonly selectedRecipeIds = signal<Set<string>>(new Set());
   readonly recipeSearchQuery = signal('');
@@ -51,7 +51,7 @@ export class MealPlans implements OnInit {
   });
   readonly selectedDayForRecipe = signal<number | null>(null);
   readonly selectedTimeFoodForRecipe = signal<number | null>(null);
-
+  // MealPlan
   readonly mealplans = signal<MealPlan[]>([]);
   readonly searchQuery = signal('');
   readonly filtered = computed(() => {

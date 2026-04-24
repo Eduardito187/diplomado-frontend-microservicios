@@ -259,6 +259,7 @@
             <th>Paciente</th>
             <th>Suscripcion</th>
             <th>Fechas</th>
+            <th>Estado</th>
             <th class="th-actions">Acciones</th>
           </tr>
         </thead>
@@ -288,6 +289,11 @@
             <td>
               <div>
                 <span>{{ item.starDate }}- {{ item.endDate }}</span>
+              </div>
+            </td>
+            <td>
+              <div>
+                <span class="count-badge">{{ item.status }}</span>
               </div>
             </td>
             <td>
