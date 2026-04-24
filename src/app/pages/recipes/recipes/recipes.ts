@@ -62,8 +62,14 @@ export class Recipes implements OnInit {
     return this.recipeForm.controls.ingredients;
   }
 
+  readonly viewingRecipe = signal<Recipe | null>(null);
+
   ngOnInit(): void {
     this.load();
+    this.svc.getIngredient().subscribe({
+      next: (data) => this.ingredients.set(data ?? []),
+      error: () => {},
+    });
   }
 
   load(): void {
@@ -115,8 +121,14 @@ export class Recipes implements OnInit {
     this.closeModalSelectIngredients();
   }
 
+  openView(recipe: Recipe): void {
+    this.viewingRecipe.set(recipe);
+    this.modalMode.set('view');
+  }
+
   closeModal(): void {
     this.resetRecipeForm();
+    this.viewingRecipe.set(null);
     this.modalMode.set(null);
   }
 

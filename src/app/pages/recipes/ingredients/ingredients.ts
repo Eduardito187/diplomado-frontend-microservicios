@@ -58,12 +58,20 @@ export class Ingredients implements OnInit {
       });
   }
 
+  readonly viewingIngredient = signal<Ingredient | null>(null);
+
   openCreate(): void {
     this.ingredientForm.reset();
     this.modalMode.set('create');
   }
 
+  openView(ingredient: Ingredient): void {
+    this.viewingIngredient.set(ingredient);
+    this.modalMode.set('view');
+  }
+
   closeModal(): void {
+    this.viewingIngredient.set(null);
     this.modalMode.set(null);
   }
 
