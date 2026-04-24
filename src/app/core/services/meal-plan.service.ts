@@ -35,7 +35,7 @@ export class MealPlanService {
 
   updateMealPlan(id: string, dto: UpdateMealPlanDto): Observable<boolean> {
     return this.http
-      .patch<ResultEnvelope<boolean>>(API.mealPlans.byId(id), dto)
+      .put<ResultEnvelope<boolean>>(API.mealPlans.byId(id), dto)
       .pipe(map(unwrap<boolean>));
   }
 

@@ -5,12 +5,49 @@
       <p class="page-desc">Planes nutricionales</p>
     </div>
   </div>
+  <!-- MealPlan View Modal -->
+  @if (modalMode() === 'view') {
+  <div class="modal-backdrop" (click)="closeView()"></div>
+
+  <dialog class="modal-panel modal-lg" open>
+    <div class="modal-head">
+      <h3>Detalle del Plan</h3>
+      <button class="btn-close-modal" (click)="closeView()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="p-3" *ngIf="viewingMealPlan() as mp">
+
+      <p><strong>Nutricionista:</strong> {{ getNutritionistName(mp.idNutricionist!) }}</p>
+      <p><strong>Paciente:</strong> {{ getPatientName(mp.idPatient!) }}</p>
+      <p><strong>Suscripción:</strong> {{ getSubscriptionName(mp.idSubscription!) }}</p>
+      <p><strong>Fechas:</strong> {{ mp.starDate }} → {{ mp.endDate }}</p>
+
+      <div *ngFor="let d of mp.mealPlanDays">
+        <h5>Día {{ d.day }}</h5>
+
+        <div *ngFor="let tf of d.timeFoods">
+          <p><strong>{{ tf.type }}</strong> (Orden {{ tf.order }})</p>
+
+          <ul>
+            <li *ngFor="let r of tf.recipes">
+              {{ r.idRecipe }} - Porción: {{ r.portion }}
+            </li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </dialog>
+  }
   <!-- MealPlan Create Modal -->
-  @if (modalMode() === 'create') {
+  @if (modalMode() === 'create' || modalMode() === 'edit') {
   <div class="modal-backdrop" (click)="closeCreate()" (keydown.escape)="closeCreate()" aria-hidden="true"></div>
   <dialog class="modal-panel modal-xl" open aria-modal="true" aria-labelledby="patient-modal-title">
     <div class="modal-head">
-      <h3 id="patient-modal-title">{{ modalMode() === 'create' ? 'Nueva Receta' : 'Editar Receta' }}</h3>
+      <h3 id="patient-modal-title">{{ modalMode() === 'create' ? 'Nuevo Plan Alimentario' : 'Editar Plan Alimentario' }}
+      </h3>
       <button class="btn-close-modal" (click)="closeCreate()" aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>
     </div>
     <form [formGroup]="planForm" novalidate class="p-3">
@@ -115,10 +152,18 @@
 
       <div class="modal-actions">
         <button type="button" class="btn btn-outline-secondary" (click)="closeCreate()">Cancelar</button>
+        @if(modalMode() === 'create'){
         <button type="submit" class="btn btn-brand" [disabled]="saving()" (click)="create()">
           @if (saving()) { <span class="spinner-border spinner-border-sm me-2"></span> }
           Crear plan
         </button>
+        }
+        @if(modalMode() === 'edit'){
+        <button type="submit" class="btn btn-brand" [disabled]="saving()" (click)="edit()">
+          @if (saving()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+          Editar Plan
+        </button>
+        }
       </div>
     </form>
   </dialog>
@@ -321,12 +366,12 @@
             <td>
               <div class="action-btns">
                 @if (item.status === 'CANCELADO') {
-                <button class="btn-icon" title="Ver Detalles">
+                <button class="btn-icon" title="Ver Detalles" (click)="openView(item)">
                   <i class="bi bi-eye-fill"></i>
                 </button>
                 }
                 @if (item.status === 'CREADO') {
-                <button class="btn-icon" title="Editar">
+                <button class="btn-icon" title="Editar" (click)="openEdit(item)">
                   <i class="bi bi-pencil-fill"></i>
                 </button>
                 <button class="btn-icon danger" title="Cancel" (click)="cancel(item)">
