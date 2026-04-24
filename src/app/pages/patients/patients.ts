@@ -6,7 +6,7 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
-import { finalize } from 'rxjs';
+import { finalize, Observable } from 'rxjs';
 
 function pastDateValidator(control: AbstractControl): ValidationErrors | null {
   const v = control.value;
@@ -236,9 +236,9 @@ export class Patients implements OnInit {
     this.saving.set(true);
     const dto = this.addressForm.getRawValue() as CreateAddressDto;
     const existing = this.selectedAddress();
-    const request$ = existing
+    const request$ = (existing
       ? this.svc.updateAddress(patient.id, existing.id, dto)
-      : this.svc.addAddress(patient.id, dto);
+      : this.svc.addAddress(patient.id, dto)) as Observable<unknown>;
     request$.pipe(finalize(() => this.saving.set(false))).subscribe({
       next: () => {
         this.toast.success(existing ? 'Dirección actualizada.' : 'Dirección agregada.');

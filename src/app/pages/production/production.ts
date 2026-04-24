@@ -1,6 +1,6 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { FormBuilder, FormArray, ReactiveFormsModule, Validators } from '@angular/forms';
-import { TitleCasePipe } from '@angular/common';
+import { TitleCasePipe, SlicePipe } from '@angular/common';
 import { Router } from '@angular/router';
 import {
   ProductionService,
@@ -29,7 +29,7 @@ type ResourceView = 'list' | 'create' | 'edit';
 
 @Component({
   selector: 'app-production',
-  imports: [ReactiveFormsModule, TitleCasePipe, EmptyState, ResourceForm],
+  imports: [ReactiveFormsModule, TitleCasePipe, SlicePipe, EmptyState, ResourceForm],
   templateUrl: './production.html',
   styleUrl: './production.scss',
 })

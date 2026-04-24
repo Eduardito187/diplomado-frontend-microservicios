@@ -8,7 +8,6 @@ import {
   Paquete,
   Suscripcion,
   Calendario,
-  PacienteProd,
   GenerarOrdenDto,
 } from '../models/production.model';
 
@@ -104,7 +103,4 @@ export class ProductionService {
     return this.list<Calendario>('calendarios');
   }
 
-  getPacientes(): Observable<PacienteProd[]> {
-    return this.list<PacienteProd>('pacientes');
-  }
 }
