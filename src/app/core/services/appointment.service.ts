@@ -95,4 +95,10 @@ export class AppointmentService {
       })
       .pipe(map(unwrap<ScheduledAppointment[]>));
   }
+
+  getAppointmentDetail(id: string): Observable<any> {
+    return this.http
+      .get<ResultEnvelope<any>>(API.appointments.byId(id))
+      .pipe(map(unwrap<any>));
+  }
 }

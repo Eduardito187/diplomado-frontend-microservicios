@@ -137,7 +137,59 @@
     </div>
 </dialog>
 }
-<!-- Recipes Created -->
+
+@if (modalMode() === 'view' && viewingRecipe()) {
+<div class="modal-backdrop" (click)="closeModal()" (keydown.escape)="closeModal()" aria-hidden="true"></div>
+<dialog class="modal-panel modal-lg" open aria-modal="true" aria-labelledby="view-recipe-title">
+    <div class="modal-head">
+        <h3 id="view-recipe-title"><i class="bi bi-journal-richtext me-2"></i>{{ viewingRecipe()!.name }}</h3>
+        <button class="btn-close-modal" (click)="closeModal()" aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="modal-body">
+        <div class="detail-grid">
+            <div class="detail-item" style="grid-column: 1 / -1">
+                <span class="detail-label">Nombre</span>
+                <span class="detail-value">{{ viewingRecipe()!.name }}</span>
+            </div>
+            @if (viewingRecipe()!.description) {
+            <div class="detail-item" style="grid-column: 1 / -1">
+                <span class="detail-label">Descripción</span>
+                <span class="detail-value" style="white-space: pre-line; font-weight: 400">{{ viewingRecipe()!.description }}</span>
+            </div>
+            }
+            @if (viewingRecipe()!.instructions) {
+            <div class="detail-item" style="grid-column: 1 / -1">
+                <span class="detail-label">Instrucciones</span>
+                <span class="detail-value" style="white-space: pre-line; font-weight: 400">{{ viewingRecipe()!.instructions }}</span>
+            </div>
+            }
+            <div class="detail-item">
+                <span class="detail-label">Calorías totales</span>
+                <span class="detail-value">{{ viewingRecipe()!.totalCalories ?? '—' }}</span>
+            </div>
+        </div>
+        @if (viewingRecipe()!.ingredients && viewingRecipe()!.ingredients!.length > 0) {
+        <h4 style="font-size:0.85rem;font-weight:700;color:#374151;margin:1.25rem 0 0.5rem">Ingredientes</h4>
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr><th>Ingrediente</th><th>Cantidad</th></tr>
+                </thead>
+                <tbody>
+                    @for (ri of viewingRecipe()!.ingredients!; track ri.idIngredient) {
+                    <tr>
+                        <td>{{ getIngredientName(ri.idIngredient) }}</td>
+                        <td>{{ ri.quantity }}</td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        }
+    </div>
+</dialog>
+}
+
 <div class="table-card mt-4 p-2">
     <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
         <div class="toolbar">
@@ -196,7 +248,7 @@
                     </td>
                     <td>
                         <div class="action-btns">
-                            <button class="btn-icon" title="Ver detalles">
+                            <button class="btn-icon" title="Ver detalles" (click)="openView(item)">
                                 <i class="bi bi-eye-fill"></i>
                             </button>
                         </div>
