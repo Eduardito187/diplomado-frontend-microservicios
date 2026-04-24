@@ -359,7 +359,7 @@
             </div>
             <div class="detail-row">
               <span class="label">Tipo de cita:</span>
-              <span>{{ appointmentDetail().type ?? '—' }}</span>
+              <span>{{ getAppointmentTypeLabel(appointmentDetail().type) }}</span>
             </div>
             <div class="detail-row">
               <span class="label">Fecha programada:</span>
