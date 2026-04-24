@@ -201,6 +201,44 @@ export class MealPlans implements OnInit {
     return this.days.at(idx!).get('timeFoods') as FormArray;
   }
 
+  private updateSelectedRecipeIds(): void {
+    const ids = new Set<string>();
+    this.days.controls.forEach((dayCtrl: any) => {
+      const timeFoods = dayCtrl.get('timeFoods') as FormArray;
+      timeFoods.controls.forEach((tfCtrl: any) => {
+        const recipes = tfCtrl.get('recipes') as FormArray;
+
+        recipes.controls.forEach((rCtrl: any) => {
+          const id = rCtrl.get('idRecipe')?.value;
+          if (id) ids.add(id);
+        });
+      });
+    });
+    this.selectedRecipeIds.set(ids);
+  }
+
+  selectRecipe(recipe: Recipe): void {
+    const dayIdx = this.selectedDayForRecipe();
+    const tfIdx = this.selectedTimeFoodForRecipe();
+    if (dayIdx === null || tfIdx === null) return;
+    const recipesArray = this.recipesOf(dayIdx, tfIdx);
+    const alreadyExists = recipesArray.controls.some((rCtrl: any) => {
+      return rCtrl.get('idRecipe')?.value === recipe.id;
+    });
+    if (alreadyExists) {
+      this.toast.error('Esta receta ya fue agregada a esta comida.');
+      return;
+    }
+    const recipeGroup = this.buildRecipeRef();
+    recipeGroup.patchValue({
+      idRecipe: recipe.id,
+      portion: 1
+    });
+    recipesArray.push(recipeGroup);
+    this.toast.success(`Receta "${recipe.name}" agregada`);
+    this.closeSelectRecipes();
+  }
+
   create(): void {
     if (this.planForm.invalid) {
       this.planForm.markAllAsTouched();
@@ -244,42 +282,24 @@ export class MealPlans implements OnInit {
     });
   }
 
-  private updateSelectedRecipeIds(): void {
-    const ids = new Set<string>();
-    this.days.controls.forEach((dayCtrl: any) => {
-      const timeFoods = dayCtrl.get('timeFoods') as FormArray;
-      timeFoods.controls.forEach((tfCtrl: any) => {
-        const recipes = tfCtrl.get('recipes') as FormArray;
-
-        recipes.controls.forEach((rCtrl: any) => {
-          const id = rCtrl.get('idRecipe')?.value;
-          if (id) ids.add(id);
-        });
-      });
-    });
-    this.selectedRecipeIds.set(ids);
-  }
-
-  selectRecipe(recipe: Recipe): void {
-    const dayIdx = this.selectedDayForRecipe();
-    const tfIdx = this.selectedTimeFoodForRecipe();
-    if (dayIdx === null || tfIdx === null) return;
-    const recipesArray = this.recipesOf(dayIdx, tfIdx);
-    const alreadyExists = recipesArray.controls.some((rCtrl: any) => {
-      return rCtrl.get('idRecipe')?.value === recipe.id;
-    });
-    if (alreadyExists) {
-      this.toast.error('Esta receta ya fue agregada a esta comida.');
+  cancel(mealplan: MealPlan): void {
+    if (mealplan.status != 'CREADO') {
+      this.planForm.markAllAsTouched();
+      this.toast.error('No se puede cancelar el plan.');
       return;
     }
-    const recipeGroup = this.buildRecipeRef();
-    recipeGroup.patchValue({
-      idRecipe: recipe.id,
-      portion: 1
+    this.svc.cancelMealPlan(mealplan.id).subscribe({
+      next: (id) => {
+        mealplan.status = "CANCELADO";
+        this.toast.success(`Plan cancelado (${id}).`);
+        this.resetPlanForm();
+        this.saving.set(false);
+      },
+      error: (err) => {
+        this.toast.error(err?.message ?? 'Error al crear el plan.');
+        this.saving.set(false);
+      },
     });
-    recipesArray.push(recipeGroup);
-    this.toast.success(`Receta "${recipe.name}" agregada`);
-    this.closeSelectRecipes();
   }
 
 }
