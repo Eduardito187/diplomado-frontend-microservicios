@@ -71,6 +71,18 @@ const NUTRITIONAL_STATES: Record<string, string> = {
   Obesity: 'Obesidad',
 };
 
+const APPOINTMENT_STATUSES: Record<string, string> = {
+  Scheduled: 'Programada',
+  Completed: 'Completada',
+  Cancelled: 'Cancelada',
+  Closed: 'Cerrada',
+};
+
+const APPOINTMENT_TYPES: Record<string, string> = {
+  Initial: 'Inicial',
+  'Follow up': 'Seguimiento',
+};
+
 @Component({
   selector: 'app-appointments',
   imports: [ReactiveFormsModule, BadgeStatus, EmptyState],
@@ -439,5 +451,14 @@ export class Appointments implements OnInit {
       OBESITY: 'Obesidad',
     };
     return stateMap[state] ?? state;
+  }
+
+  getStatusLabel(status: string): string {
+    return APPOINTMENT_STATUSES[status] ?? status;
+  }
+
+  getAppointmentTypeLabel(type?: string): string {
+    if (!type) return '—';
+    return APPOINTMENT_TYPES[type] ?? type;
   }
 }

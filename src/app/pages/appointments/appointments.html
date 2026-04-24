@@ -84,7 +84,7 @@
             @for (a of appointments(); track a.id) {
               <tr>
                 <td>{{ patientName(a.patientId) }}</td>
-                <td>{{ a.type ?? '—' }}</td>
+                <td>{{ getAppointmentTypeLabel(a.type) }}</td>
                 <td>{{ formatDate(a.scheduleDate) }}</td>
                 <td><app-badge-status [status]="statusKey(a.status)" /></td>
                 <td>
