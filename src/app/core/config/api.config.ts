@@ -12,6 +12,7 @@ export const KEYCLOAK = {
 const resource = (name: string) => ({
   base: `${GATEWAY_URL}/production/${name}`,
   byId: (id: string) => `${GATEWAY_URL}/production/${name}/${id}`,
+  nested: (id: string, sub: string) => `${GATEWAY_URL}/production/${name}/${id}/${sub}`,
 });
 
 export const API = {
@@ -55,14 +56,29 @@ export const API = {
     productos: resource('productos'),
     paquetes: resource('paquetes'),
     recetas: resource('recetas'),
-    suscripciones: resource('suscripciones'),
-    calendarios: resource('calendarios'),
+    suscripciones: {
+      ...resource('suscripciones'),
+      calendarios: (id: string) => `${GATEWAY_URL}/production/suscripciones/${id}/calendarios`,
+    },
+    calendarios: {
+      ...resource('calendarios'),
+      pacientes: (id: string) => `${GATEWAY_URL}/production/calendarios/${id}/pacientes`,
+      ventanasEntrega: (id: string) => `${GATEWAY_URL}/production/calendarios/${id}/ventanas-entrega`,
+    },
     calendarioItems: resource('calendario-items'),
     etiquetas: resource('etiquetas'),
     porciones: resource('porciones'),
-    ventanasEntrega: resource('ventanas-entrega'),
+    ventanasEntrega: {
+      ...resource('ventanas-entrega'),
+      pacientes: (id: string) => `${GATEWAY_URL}/production/ventanas-entrega/${id}/pacientes`,
+      calendarios: (id: string) => `${GATEWAY_URL}/production/ventanas-entrega/${id}/calendarios`,
+    },
     direcciones: resource('direcciones'),
-    pacientes: resource('pacientes'),
+    pacientes: {
+      ...resource('pacientes'),
+      calendarios: (id: string) => `${GATEWAY_URL}/production/pacientes/${id}/calendarios`,
+      ventanasEntrega: (id: string) => `${GATEWAY_URL}/production/pacientes/${id}/ventanas-entrega`,
+    },
   },
 
   mealPlans: {
