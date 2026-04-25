@@ -623,7 +623,7 @@
               </thead>
               <tbody>
                 @for (row of items(); track row.id) {
-                  @let paq = $any(row)
+                  @let paq = $any(row);
                   <tr class="clickable-row" (click)="openPaqueteDetail(paq)" (keydown.enter)="openPaqueteDetail(paq)" tabindex="0">
                     <td>
                       <div class="paq-cell-main">{{ paq.etiqueta?.paciente?.nombre ?? '—' }}</div>
@@ -676,7 +676,7 @@
               </thead>
               <tbody>
                 @for (row of items(); track row.id) {
-                  @let etq = $any(row)
+                  @let etq = $any(row);
                   <tr class="clickable-row" (click)="openEtiquetaDetail(etq)" (keydown.enter)="openEtiquetaDetail(etq)" tabindex="0">
                     <td>
                       <div class="paq-cell-main">{{ etq.paciente?.nombre ?? '—' }}</div>
@@ -749,7 +749,7 @@
 
   <!-- ── Modal detalle paquete ── -->
   @if (selectedPaquete()) {
-    @let pq = selectedPaquete()!
+    @let pq = selectedPaquete()!;
     <dialog class="orden-detail-dialog" open>
       <div class="orden-detail-panel">
         <div class="orden-detail-header">
@@ -923,7 +923,7 @@
 
   <!-- ── Modal detalle etiqueta ── -->
   @if (selectedEtiqueta()) {
-    @let eq = selectedEtiqueta()!
+    @let eq = selectedEtiqueta()!;
     <dialog class="orden-detail-dialog" open>
       <div class="orden-detail-panel">
         <div class="orden-detail-header">
