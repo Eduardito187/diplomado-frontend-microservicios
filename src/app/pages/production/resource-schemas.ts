@@ -57,53 +57,6 @@ export const RESOURCE_SCHEMAS: Record<ProductionResourceKey, ResourceSchema> = {
       { name: 'direccionId', label: 'Dirección', type: 'uuid', hint: 'UUID de dirección' },
     ],
   },
-  recetas: {
-    key: 'recetas',
-    label: 'Recetas (cocina)',
-    icon: 'bi-egg-fried',
-    singular: 'receta',
-    primaryColumns: ['nombre', 'totalCalories', 'description'],
-    fields: [
-      { name: 'nombre', label: 'Nombre', type: 'text', maxLength: 150, placeholder: 'Receta de quinua' },
-      { name: 'description', label: 'Descripción', type: 'textarea' },
-      { name: 'instructions', label: 'Instrucciones', type: 'textarea' },
-      { name: 'totalCalories', label: 'Calorías totales', type: 'integer', min: 0 },
-      { name: 'nutrientes', label: 'Nutrientes', type: 'json', hint: 'Array JSON — ej. [{"name":"proteina","value":20}]' },
-      { name: 'ingredientes', label: 'Ingredientes', type: 'json', hint: 'Array JSON' },
-    ],
-  },
-  suscripciones: {
-    key: 'suscripciones',
-    label: 'Suscripciones',
-    icon: 'bi-bookmark-star',
-    singular: 'suscripción',
-    primaryColumns: ['nombre'],
-    fields: [
-      { name: 'id', label: 'ID (opcional)', type: 'uuid', hint: 'UUID para creación con ID fijo — dejar vacío para autogenerar' },
-      { name: 'nombre', label: 'Nombre', type: 'text', required: true, maxLength: 150, placeholder: 'Plan semanal' },
-    ],
-  },
-  calendarios: {
-    key: 'calendarios',
-    label: 'Calendarios',
-    icon: 'bi-calendar3',
-    singular: 'calendario',
-    primaryColumns: ['fecha'],
-    fields: [
-      { name: 'fecha', label: 'Fecha', type: 'date', required: true },
-    ],
-  },
-  calendarioItems: {
-    key: 'calendarioItems',
-    label: 'Calendario items',
-    icon: 'bi-calendar-event',
-    singular: 'item de calendario',
-    primaryColumns: ['calendarioId', 'itemDespachoId'],
-    fields: [
-      { name: 'calendarioId', label: 'Calendario', type: 'uuid', required: true, hint: 'UUID de calendario existente' },
-      { name: 'itemDespachoId', label: 'Item de despacho', type: 'uuid', required: true, hint: 'UUID de item de despacho' },
-    ],
-  },
   etiquetas: {
     key: 'etiquetas',
     label: 'Etiquetas',

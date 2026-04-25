@@ -14,13 +14,71 @@ export interface CreateProductoDto {
   specialPrice?: number;
 }
 
+export interface PaqueteEtiqueta {
+  id: string;
+  qr_payload?: Record<string, unknown>;
+  paciente?: { id: string; nombre: string; documento: string } | null;
+  suscripcion?: { id: string; nombre: string } | null;
+}
+export interface PaqueteVentana {
+  id: string;
+  desde: string;
+  hasta: string;
+  estado: number;
+  entrega_id?: string | null;
+  contrato_id?: string | null;
+}
+export interface PaqueteDespacho {
+  id: string;
+  op_id?: string;
+  delivery_status: string;
+  delivery_occurred_on?: string | null;
+  driver_id?: string | null;
+  entrega_id?: string | null;
+  contrato_id?: string | null;
+}
+export interface PaqueteTracking {
+  status: string;
+  completed_at?: string | null;
+  driver_id?: string | null;
+  foto_url?: string | null;
+  incident_type?: string | null;
+  incident_description?: string | null;
+}
 export interface Paquete {
   id: string;
+  etiqueta?: PaqueteEtiqueta | null;
+  ventana_entrega?: PaqueteVentana | null;
+  direccion?: DespachoDireccion | null;
+  ruta?: DespachoRuta | null;
+  despacho?: PaqueteDespacho | null;
+  tracking?: PaqueteTracking | null;
+  created_at?: string;
   [k: string]: unknown;
 }
 
 export interface Suscripcion {
   id: string;
+  nombre?: string;
+  [k: string]: unknown;
+}
+
+export interface EtiquetaPaquete {
+  id: string;
+  ventana_entrega?: PaqueteVentana | null;
+  direccion?: DespachoDireccion | null;
+  ruta?: DespachoRuta | null;
+  despacho?: PaqueteDespacho | null;
+  tracking?: PaqueteTracking | null;
+}
+
+export interface Etiqueta {
+  id: string;
+  qr_payload?: unknown;
+  paciente?: { id: string; nombre: string; documento: string } | null;
+  suscripcion?: { id: string; nombre: string } | null;
+  paquete?: EtiquetaPaquete | null;
+  created_at?: string;
   [k: string]: unknown;
 }
 

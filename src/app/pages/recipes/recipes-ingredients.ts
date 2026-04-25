@@ -1,5 +1,4 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { EmptyState } from '../../shared/components/empty-state/empty-state';
 import { Ingredients } from './ingredients/ingredients';
 import { Recipes } from './recipes/recipes';
 import { ensureRole } from '../../core/utils/role-check';
@@ -11,7 +10,7 @@ type ActiveTab = 'recipes' | 'ingredients';
 
 @Component({
   selector: 'recipes-ingredients',
-  imports: [EmptyState, Ingredients, Recipes],
+  imports: [Ingredients, Recipes],
   templateUrl: './recipes-ingredients.html',
   styleUrl: './recipes-ingredients.scss',
 })

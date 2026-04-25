@@ -18,6 +18,8 @@ import {
   AgendaEntrada,
   OrdenConsolidada,
   SuscripcionOrdenes,
+  Paquete,
+  Etiqueta,
 } from '../../core/models/production.model';
 import { EmptyState } from '../../shared/components/empty-state/empty-state';
 import { RESOURCE_SCHEMAS, ResourceSchema } from './resource-schemas';
@@ -152,6 +154,8 @@ export class Production implements OnInit, OnDestroy {
   readonly suscripcionOrdenesData = signal<SuscripcionOrdenes | null>(null);
   readonly despachoEnriched = signal<Record<string, { paciente?: Record<string, unknown>; direccion?: Record<string, unknown>; ventana?: Record<string, unknown> }>>({});
   readonly despachoEnrichLoading = signal(false);
+  readonly selectedPaquete = signal<Paquete | null>(null);
+  readonly selectedEtiqueta = signal<Etiqueta | null>(null);
 
   readonly productos = signal<import('../../core/models/production.model').Producto[]>([]);
   readonly productosLoading = signal(false);
@@ -621,6 +625,22 @@ export class Production implements OnInit, OnDestroy {
 
   closeOrdenDetail(): void {
     this.selectedOrden.set(null);
+  }
+
+  openPaqueteDetail(p: Paquete): void {
+    this.selectedPaquete.set(p);
+  }
+
+  closePaqueteDetail(): void {
+    this.selectedPaquete.set(null);
+  }
+
+  openEtiquetaDetail(e: Etiqueta): void {
+    this.selectedEtiqueta.set(e);
+  }
+
+  closeEtiquetaDetail(): void {
+    this.selectedEtiqueta.set(null);
   }
 
   ordenStatusClass(estado: string): string {

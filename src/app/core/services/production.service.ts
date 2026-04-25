@@ -22,10 +22,6 @@ export interface LaravelResource {
 export type ProductionResourceKey =
   | 'productos'
   | 'paquetes'
-  | 'recetas'
-  | 'suscripciones'
-  | 'calendarios'
-  | 'calendarioItems'
   | 'etiquetas'
   | 'porciones'
   | 'ventanasEntrega';
@@ -99,11 +95,11 @@ export class ProductionService {
   }
 
   getSuscripciones(): Observable<Suscripcion[]> {
-    return this.list<Suscripcion>('suscripciones');
+    return this.http.get<Suscripcion[]>(API.production.suscripciones.base);
   }
 
   getCalendarios(): Observable<Calendario[]> {
-    return this.list<Calendario>('calendarios');
+    return this.http.get<Calendario[]>(API.production.calendarios.base);
   }
 
   getPacientes(): Observable<LaravelResource[]> {
