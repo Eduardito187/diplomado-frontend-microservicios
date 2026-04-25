@@ -1219,15 +1219,15 @@
           <h4><i class="bi bi-speedometer2"></i>Progreso de entrega</h4>
           <div class="progreso-summary">
             <div class="prog-cell">
-              <div class="prog-num">{{ selectedOrden()!.progreso_entrega.total_paquetes }}</div>
+              <div class="prog-num">{{ selectedOrden()!.progreso_entrega!.total_paquetes }}</div>
               <div class="prog-lbl">Total</div>
             </div>
             <div class="prog-cell prog-comp">
-              <div class="prog-num">{{ selectedOrden()!.progreso_entrega.completados }}</div>
+              <div class="prog-num">{{ selectedOrden()!.progreso_entrega!.completados }}</div>
               <div class="prog-lbl">Completados</div>
             </div>
             <div class="prog-cell prog-pend">
-              <div class="prog-num">{{ selectedOrden()!.progreso_entrega.pendientes }}</div>
+              <div class="prog-num">{{ selectedOrden()!.progreso_entrega!.pendientes }}</div>
               <div class="prog-lbl">Pendientes</div>
             </div>
             <div class="prog-cell">
@@ -1248,9 +1248,9 @@
       <!-- Items -->
       @if (selectedOrden()!.items?.length) {
         <div class="orden-detail-section">
-          <h4><i class="bi bi-box-seam"></i>Items ({{ selectedOrden()!.items.length }})</h4>
+          <h4><i class="bi bi-box-seam"></i>Items ({{ selectedOrden()!.items!.length }})</h4>
           <div class="orden-items-grid">
-            @for (item of selectedOrden()!.items; track $index) {
+            @for (item of selectedOrden()!.items!; track $index) {
               <div class="orden-item-row">
                 <span class="item-sku">{{ item.producto.sku }}</span>
                 <span class="item-nombre">{{ item.producto.nombre }}</span>
@@ -1265,9 +1265,9 @@
       <!-- Batches -->
       @if (selectedOrden()!.batches?.length) {
         <div class="orden-detail-section">
-          <h4><i class="bi bi-layers"></i>Batches de producción ({{ selectedOrden()!.batches.length }})</h4>
+          <h4><i class="bi bi-layers"></i>Batches de producción ({{ selectedOrden()!.batches!.length }})</h4>
           <div class="batch-list">
-            @for (b of selectedOrden()!.batches; track $index) {
+            @for (b of selectedOrden()!.batches!; track $index) {
               <div class="batch-row">
                 <span class="batch-estado" [style]="batchStatusClass(b.estado)">{{ b.estado }}</span>
                 <div class="batch-detail-grid">
@@ -1295,9 +1295,9 @@
       <!-- Despacho -->
       @if (selectedOrden()!.despacho?.length) {
         <div class="orden-detail-section">
-          <h4><i class="bi bi-truck"></i>Despacho ({{ selectedOrden()!.despacho.length }})</h4>
+          <h4><i class="bi bi-truck"></i>Despacho ({{ selectedOrden()!.despacho!.length }})</h4>
           <div class="despacho-list">
-            @for (d of selectedOrden()!.despacho; track $index) {
+            @for (d of selectedOrden()!.despacho!; track $index) {
               <div class="despacho-card">
                 <div class="despacho-card-head">
                   <span class="batch-estado" [style]="batchStatusClass(d.delivery_status)">{{ d.delivery_status }}</span>
