@@ -70,14 +70,30 @@ export const API = {
     byId: (id: string) => `${GATEWAY_URL}/meal-plans/${id}`,
     cancel: (id: string) => `${GATEWAY_URL}/meal-plans/${id}/cancel`,
   },
+
+  mealPlansNutritionists: {
+    base: `${GATEWAY_URL}/meal-plans/nutritionists`
+  },
+
+  mealPlansPatients: {
+    base: `${GATEWAY_URL}/meal-plans/patients`,
+    appointmentsById: (id: string, status: string) => `${GATEWAY_URL}/meal-plans/patients/${id}/appointments?status=${status}`,
+  },
+
+  mealPlansSubscriptions: {
+    base: `${GATEWAY_URL}/meal-plans/subscription-types`
+  },
+
   recipes: {
     base: `${GATEWAY_URL}/recipes`,
     byId: (id: string) => `${GATEWAY_URL}/recipes/${id}`,
   },
+
   ingredients: {
     base: `${GATEWAY_URL}/ingredients`,
     byId: (id: string) => `${GATEWAY_URL}/ingredients/${id}`,
   },
+  
   logistics: {
     base: `${GATEWAY_URL}/logistics`,
     getPackage: `${GATEWAY_URL}/logistics/Package/getPackage`,

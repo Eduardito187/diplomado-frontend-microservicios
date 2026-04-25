@@ -5,31 +5,134 @@
       <p class="page-desc">Planes nutricionales</p>
     </div>
   </div>
+  <!-- MealPlan View Modal -->
+  @if (modalMode() === 'view') {
+  <div class="modal-backdrop" (click)="closeView()"></div>
+
+  <dialog class="modal-panel modal-lg" open *ngIf="selectedMealPlan() as mp">
+    <div class="modal-head">
+      <div style="display: flex; justify-content: end;">
+        <h3 style="padding-top: 2px;">Detalle del Plan</h3>
+        <span class="count-badge"> {{mp.status}} </span>
+      </div>
+      <button class="btn-close-modal" (click)="closeView()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="p-3" *ngIf="selectedMealPlan() as mp">
+      <div>
+        <p><strong>Nutricionista:</strong> {{ getNutritionistName(mp.idNutricionist!) }}</p>
+        <p><strong>Paciente:</strong> {{ getPatientName(mp.idPatient!) }}</p>
+        <p><strong>Suscripción:</strong> {{ getSubscriptionName(mp.idSubscription!) }}</p>
+        <p><strong>Fechas:</strong> {{ mp.starDate }} → {{ mp.endDate }}</p>
+      </div>
+
+      <div *ngFor="let d of mp.mealPlanDays" class="mb-3">
+
+        <!-- CARD DEL DÍA -->
+        <div class="table-card p-3">
+
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h4 class="page-h2" style="font-size:0.95rem;margin:0">
+              Día {{ d.day }}
+            </h4>
+            <span class="count-badge">{{ d.timeFoods.length }} comidas</span>
+          </div>
+
+          <!-- TABLA -->
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width: 80px;">Orden</th>
+                  <th style="width: 150px;">Tipo</th>
+                  <th>Recetas</th>
+                </tr>
+              </thead>
+              <tbody>
+
+                <tr *ngFor="let tf of d.timeFoods">
+                  <!-- ORDEN -->
+                  <td>
+                    <span class="count-badge">{{ tf.order }}</span>
+                  </td>
+
+                  <!-- TIPO -->
+                  <td>
+                    <strong>{{ tf.type }}</strong>
+                  </td>
+
+                  <!-- RECETAS -->
+                  <td>
+                    <ul style="margin:0; padding-left: 16px;">
+                      <li *ngFor="let r of tf.recipes">
+                        {{ r.idRecipe }}
+                        <span class="text-muted">x{{ r.portion }}</span>
+                      </li>
+                    </ul>
+                  </td>
+                </tr>
+
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </dialog>
+  }
   <!-- MealPlan Create Modal -->
-  @if (modalMode() === 'create') {
+  @if (modalMode() === 'create' || modalMode() === 'edit') {
   <div class="modal-backdrop" (click)="closeCreate()" (keydown.escape)="closeCreate()" aria-hidden="true"></div>
   <dialog class="modal-panel modal-xl" open aria-modal="true" aria-labelledby="patient-modal-title">
     <div class="modal-head">
-      <h3 id="patient-modal-title">{{ modalMode() === 'create' ? 'Nueva Receta' : 'Editar Receta' }}</h3>
+      <h3 id="patient-modal-title">{{ modalMode() === 'create' ? 'Nuevo Plan Alimentario' : 'Editar Plan Alimentario' }}
+      </h3>
       <button class="btn-close-modal" (click)="closeCreate()" aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>
     </div>
     <form [formGroup]="planForm" novalidate class="p-3">
       <div class="form-grid">
         <div class="field">
-          <label for="mp-nutri">Nutricionista ID *</label>
-          <input id="mp-nutri" type="text" formControlName="idNutricionist" placeholder="UUID" />
+          <label for="mp-nutri">Nutricionista *</label>
+          <select id="mp-nutri" formControlName="idNutricionist">
+            <option value="">Seleccione...</option>
+            @for (n of nutritionists(); track n.id) {
+            <option [value]="n.id">{{ n.name }}</option>
+            }
+          </select>
         </div>
         <div class="field">
-          <label for="mp-pat">Paciente ID *</label>
-          <input id="mp-pat" type="text" formControlName="idPatient" placeholder="UUID" />
+          <label for="mp-pat">Paciente *</label>
+          <select id="mp-pat" formControlName="idPatient">
+            <option value="">Seleccione...</option>
+            @for (p of patients(); track p.id) {
+            <option [value]="p.id">{{ p.name }}</option>
+            }
+          </select>
         </div>
         <div class="field">
-          <label for="mp-apt">Cita ID *</label>
-          <input id="mp-apt" type="text" formControlName="idAppointment" placeholder="UUID" />
+          <label for="mp-apt">Cita *</label>
+          <select id="mp-apt" formControlName="idAppointment" [disabled]="!planForm.value.idPatient || lookupLoading()">
+            <option value="">
+              {{ lookupLoading() ? 'Cargando...' : 'Seleccione...' }}
+            </option>
+
+            @for (a of patientAppointments(); track a.id) {
+            <option [value]="a.id">
+              {{ a.schedule }}
+            </option>
+            }
+          </select>
         </div>
         <div class="field">
-          <label for="mp-sub">Suscripción ID *</label>
-          <input id="mp-sub" type="text" formControlName="idSubscription" placeholder="UUID" />
+          <label for="mp-sub">Suscripción *</label>
+          <select id="mp-sub" formControlName="idSubscription">
+            <option value="">Seleccione...</option>
+            @for (s of subsctiptionTypes(); track s.id) {
+            <option [value]="s.id">{{ s.name }}</option>
+            }
+          </select>
         </div>
         <div class="field">
           <label for="mp-total">Total días *</label>
@@ -90,10 +193,18 @@
 
       <div class="modal-actions">
         <button type="button" class="btn btn-outline-secondary" (click)="closeCreate()">Cancelar</button>
+        @if(modalMode() === 'create'){
         <button type="submit" class="btn btn-brand" [disabled]="saving()" (click)="create()">
           @if (saving()) { <span class="spinner-border spinner-border-sm me-2"></span> }
           Crear plan
         </button>
+        }
+        @if(modalMode() === 'edit'){
+        <button type="submit" class="btn btn-brand" [disabled]="saving()" (click)="edit()">
+          @if (saving()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+          Editar Plan
+        </button>
+        }
       </div>
     </form>
   </dialog>
@@ -101,7 +212,8 @@
 
   <!-- MealPlanDays Create Modal -->
   @if (showTimeFoodsModal()) {
-  <div class="modal-backdrop" (click)="closeTimeFoodsModal()"></div>
+  <div class="modal-backdrop" (click)="closeTimeFoodsModal()" (keydown.escape)="closeTimeFoodsModal()"
+    aria-hidden="true"></div>
   <dialog class="modal-panel modal-lg" open>
     <div class="modal-head">
       <h3>Comidas del día {{ selectedDayIndex()! + 1 }}</h3>
@@ -254,7 +366,6 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th>Plan</th>
             <th>Nuricionista</th>
             <th>Paciente</th>
             <th>Suscripcion</th>
@@ -268,27 +379,24 @@
           <tr>
             <td>
               <div>
-                <span>{{ item.id }}</span>
+                <span>{{ getNutritionistName(item.idNutricionist!) }}</span>
               </div>
             </td>
             <td>
               <div>
-                <span>{{ item.idNutricionist }}</span>
+                <span>{{ getPatientName(item.idPatient!) }}</span>
               </div>
             </td>
             <td>
               <div>
-                <span>{{ item.idPatient }}</span>
+                <span>{{ getSubscriptionName(item.idSubscription!) }}</span>
               </div>
             </td>
             <td>
               <div>
-                <span>{{ item.idSubscription }}</span>
-              </div>
-            </td>
-            <td>
-              <div>
-                <span>{{ item.starDate }}- {{ item.endDate }}</span>
+                <strong>Inicio:</strong> <span>{{ item.starDate }}</span><br>
+                <strong>Final:</strong> <span>{{ item.endDate }}</span><br>
+                <strong>Total Dias:</strong><span class="count-badge">{{ item.totalDays }}</span>
               </div>
             </td>
             <td>
@@ -298,8 +406,13 @@
             </td>
             <td>
               <div class="action-btns">
+                @if (item.status === 'CANCELADO') {
+                <button class="btn-icon" title="Ver Detalles" (click)="openView(item)">
+                  <i class="bi bi-eye-fill"></i>
+                </button>
+                }
                 @if (item.status === 'CREADO') {
-                <button class="btn-icon" title="Editar">
+                <button class="btn-icon" title="Editar" (click)="openEdit(item)">
                   <i class="bi bi-pencil-fill"></i>
                 </button>
                 <button class="btn-icon danger" title="Cancel" (click)="cancel(item)">
