@@ -42,7 +42,10 @@
               "node_modules/bootstrap/dist/css/bootstrap.min.css",
               "node_modules/bootstrap-icons/font/bootstrap-icons.css",
               "node_modules/leaflet/dist/leaflet.css",
-              "src/styles.scss"
+              "src/styles.scss",
+              "src/app/pages/production/production-relaciones.scss",
+              "src/app/pages/production/production-agenda.scss",
+              "src/app/pages/production/production-ordenes.scss"
             ]
           },
           "configurations": {
