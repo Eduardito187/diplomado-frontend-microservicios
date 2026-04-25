@@ -5,12 +5,13 @@ import { ToastService } from '../../core/services/toast.service';
 import { MealPlan, CreateMealPlanDto, TimeFoodType, Recipe, NutritionistDto, PatientDto, AppointmentDto, SubscriptionTypeDto, UpdateMealPlanDto } from '../../core/models/meal-plan.model';
 import { EmptyState } from '../../shared/components/empty-state/empty-state';
 import { finalize } from 'rxjs';
+import { CommonModule } from '@angular/common';
 
 type ModalMode = 'create' | 'edit' | 'view' | 'select-recipes' | null;
 
 @Component({
   selector: 'app-meal-plans',
-  imports: [ReactiveFormsModule, EmptyState, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, EmptyState, FormsModule],
   templateUrl: './meal-plans.html',
   styleUrl: './meal-plans.scss',
 })
@@ -195,6 +196,7 @@ export class MealPlans implements OnInit {
   }
 
   openView(mealplan: MealPlan): void {
+    console.log(mealplan);
     this.selectedMealPlan.set(mealplan);
     this.modalMode.set('view');
   }

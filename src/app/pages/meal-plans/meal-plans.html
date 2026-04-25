@@ -9,35 +9,76 @@
   @if (modalMode() === 'view') {
   <div class="modal-backdrop" (click)="closeView()"></div>
 
-  <dialog class="modal-panel modal-lg" open>
+  <dialog class="modal-panel modal-lg" open *ngIf="selectedMealPlan() as mp">
     <div class="modal-head">
-      <h3>Detalle del Plan</h3>
+      <div style="display: flex; justify-content: end;">
+        <h3 style="padding-top: 2px;">Detalle del Plan</h3>
+        <span class="count-badge"> {{mp.status}} </span>
+      </div>
       <button class="btn-close-modal" (click)="closeView()">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
 
-    <div class="p-3" *ngIf="viewingMealPlan() as mp">
-
-      <p><strong>Nutricionista:</strong> {{ getNutritionistName(mp.idNutricionist!) }}</p>
-      <p><strong>Paciente:</strong> {{ getPatientName(mp.idPatient!) }}</p>
-      <p><strong>Suscripción:</strong> {{ getSubscriptionName(mp.idSubscription!) }}</p>
-      <p><strong>Fechas:</strong> {{ mp.starDate }} → {{ mp.endDate }}</p>
-
-      <div *ngFor="let d of mp.mealPlanDays">
-        <h5>Día {{ d.day }}</h5>
-
-        <div *ngFor="let tf of d.timeFoods">
-          <p><strong>{{ tf.type }}</strong> (Orden {{ tf.order }})</p>
-
-          <ul>
-            <li *ngFor="let r of tf.recipes">
-              {{ r.idRecipe }} - Porción: {{ r.portion }}
-            </li>
-          </ul>
-        </div>
+    <div class="p-3" *ngIf="selectedMealPlan() as mp">
+      <div>
+        <p><strong>Nutricionista:</strong> {{ getNutritionistName(mp.idNutricionist!) }}</p>
+        <p><strong>Paciente:</strong> {{ getPatientName(mp.idPatient!) }}</p>
+        <p><strong>Suscripción:</strong> {{ getSubscriptionName(mp.idSubscription!) }}</p>
+        <p><strong>Fechas:</strong> {{ mp.starDate }} → {{ mp.endDate }}</p>
       </div>
 
+      <div *ngFor="let d of mp.mealPlanDays" class="mb-3">
+
+        <!-- CARD DEL DÍA -->
+        <div class="table-card p-3">
+
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h4 class="page-h2" style="font-size:0.95rem;margin:0">
+              Día {{ d.day }}
+            </h4>
+            <span class="count-badge">{{ d.timeFoods.length }} comidas</span>
+          </div>
+
+          <!-- TABLA -->
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width: 80px;">Orden</th>
+                  <th style="width: 150px;">Tipo</th>
+                  <th>Recetas</th>
+                </tr>
+              </thead>
+              <tbody>
+
+                <tr *ngFor="let tf of d.timeFoods">
+                  <!-- ORDEN -->
+                  <td>
+                    <span class="count-badge">{{ tf.order }}</span>
+                  </td>
+
+                  <!-- TIPO -->
+                  <td>
+                    <strong>{{ tf.type }}</strong>
+                  </td>
+
+                  <!-- RECETAS -->
+                  <td>
+                    <ul style="margin:0; padding-left: 16px;">
+                      <li *ngFor="let r of tf.recipes">
+                        {{ r.idRecipe }}
+                        <span class="text-muted">x{{ r.portion }}</span>
+                      </li>
+                    </ul>
+                  </td>
+                </tr>
+
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   </dialog>
   }
@@ -79,7 +120,7 @@
 
             @for (a of patientAppointments(); track a.id) {
             <option [value]="a.id">
-              {{ a.date }}
+              {{ a.schedule }}
             </option>
             }
           </select>
