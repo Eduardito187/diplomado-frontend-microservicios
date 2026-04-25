@@ -50,7 +50,7 @@
                     <input
                       [id]="'gen-prod-' + i"
                       type="text"
-                      [value]="productSearch()[i]"
+                      [value]="productSearch()[i] ?? ''"
                       (input)="onProductSearchInput(i, $any($event.target).value)"
                       (focus)="openProductDropdown.set(i)"
                       (blur)="closeProductDropdown()"
@@ -515,7 +515,7 @@
                 <span class="orden-id">{{ o.id | slice:0:18 }}…</span>
               </div>
               <span class="orden-items-cnt">
-                <i class="bi bi-box-seam me-1"></i>{{ o.items.length }} items
+                <i class="bi bi-box-seam me-1"></i>{{ o.items?.length ?? 0 }} items
               </span>
               <span class="orden-status-chip" [ngClass]="ordenStatusClass(o.estado)">{{ o.estado }}</span>
               <div class="orden-prog-wrap">
@@ -526,7 +526,7 @@
                     [style.width.%]="pct">
                   </div>
                 </div>
-                <span class="orden-prog-label">{{ o.progreso_entrega.completados }}/{{ o.progreso_entrega.total_paquetes }}</span>
+                <span class="orden-prog-label">{{ o.progreso_entrega?.completados ?? 0 }}/{{ o.progreso_entrega?.total_paquetes ?? 0 }}</span>
               </div>
             </button>
           }
@@ -750,21 +750,34 @@
   <!-- ── Modal detalle paquete ── -->
   @if (selectedPaquete()) {
     @let pq = selectedPaquete()!;
-    <dialog class="orden-detail-dialog" open>
-      <div class="orden-detail-panel">
-        <div class="orden-detail-header">
-          <div>
-            <h3><i class="bi bi-boxes me-2"></i>Detalle de paquete</h3>
-            <p class="orden-meta-bar">
-              <span><i class="bi bi-calendar3 me-1"></i>{{ formatDate(pq.created_at ?? '') }}</span>
-              @if (pq.despacho?.delivery_occurred_on) {
-                <span><i class="bi bi-calendar-check me-1"></i>Entregado: {{ formatDate(pq.despacho!.delivery_occurred_on!) }}</span>
-              }
-            </p>
+    <div class="modal-backdrop" (click)="closePaqueteDetail()" (keydown.escape)="closePaqueteDetail()" aria-hidden="true"></div>
+    <dialog class="modal-panel orden-detail-modal" open aria-modal="true" aria-labelledby="paquete-detail-title">
+      <div class="modal-head">
+        <div class="detail-modal-title">
+          <div class="detail-modal-icon" style="background:#eff6ff;color:#2563eb">
+            <i class="bi bi-boxes"></i>
           </div>
-          <button class="btn btn-outline-secondary btn-sm" (click)="closePaqueteDetail()">
-            <i class="bi bi-x-lg"></i>
-          </button>
+          <div>
+            <h3 id="paquete-detail-title">Paquete</h3>
+            <span class="uuid-full">{{ pq.id }}</span>
+          </div>
+        </div>
+        <button class="btn-close-modal" (click)="closePaqueteDetail()" aria-label="Cerrar">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="orden-meta-bar">
+          <div class="orden-meta-item">
+            <span class="orden-meta-lbl"><i class="bi bi-calendar-event"></i>Creado</span>
+            <span class="orden-meta-val">{{ formatDate(pq.created_at ?? '') }}</span>
+          </div>
+          @if (pq.despacho?.delivery_occurred_on) {
+            <div class="orden-meta-item orden-meta-done">
+              <span class="orden-meta-lbl"><i class="bi bi-check2-circle"></i>Entregado</span>
+              <span class="orden-meta-val">{{ formatDate(pq.despacho!.delivery_occurred_on!) }}</span>
+            </div>
+          }
         </div>
 
         <!-- Paciente & Suscripción -->
@@ -922,20 +935,37 @@
   }
 
   <!-- ── Modal detalle etiqueta ── -->
+
   @if (selectedEtiqueta()) {
     @let eq = selectedEtiqueta()!;
-    <dialog class="orden-detail-dialog" open>
-      <div class="orden-detail-panel">
-        <div class="orden-detail-header">
-          <div>
-            <h3><i class="bi bi-tags me-2"></i>Detalle de etiqueta</h3>
-            <p class="orden-meta-bar">
-              <span><i class="bi bi-calendar3 me-1"></i>{{ formatDate(eq.created_at ?? '') }}</span>
-            </p>
+    <div class="modal-backdrop" (click)="closeEtiquetaDetail()" (keydown.escape)="closeEtiquetaDetail()" aria-hidden="true"></div>
+    <dialog class="modal-panel orden-detail-modal" open aria-modal="true" aria-labelledby="etiqueta-detail-title">
+      <div class="modal-head">
+        <div class="detail-modal-title">
+          <div class="detail-modal-icon" style="background:#fef9c3;color:#a16207">
+            <i class="bi bi-tags"></i>
           </div>
-          <button class="btn btn-outline-secondary btn-sm" (click)="closeEtiquetaDetail()">
-            <i class="bi bi-x-lg"></i>
-          </button>
+          <div>
+            <h3 id="etiqueta-detail-title">Etiqueta</h3>
+            <span class="uuid-full">{{ eq.id }}</span>
+          </div>
+        </div>
+        <button class="btn-close-modal" (click)="closeEtiquetaDetail()" aria-label="Cerrar">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="orden-meta-bar">
+          <div class="orden-meta-item">
+            <span class="orden-meta-lbl"><i class="bi bi-calendar-event"></i>Creado</span>
+            <span class="orden-meta-val">{{ formatDate(eq.created_at ?? '') }}</span>
+          </div>
+          @if (eq.paquete?.despacho?.delivery_occurred_on) {
+            <div class="orden-meta-item orden-meta-done">
+              <span class="orden-meta-lbl"><i class="bi bi-check2-circle"></i>Entregado</span>
+              <span class="orden-meta-val">{{ formatDate(eq.paquete!.despacho!.delivery_occurred_on!) }}</span>
+            </div>
+          }
         </div>
 
         <!-- Paciente & Suscripción -->
@@ -1098,6 +1128,7 @@
   }
 </div>
 
+
 <!-- Detail modal -->
 @if (viewRow()) {
   <div class="modal-backdrop" (click)="closeView()" (keydown.escape)="closeView()" aria-hidden="true"></div>
@@ -1215,7 +1246,7 @@
       }
 
       <!-- Items -->
-      @if (selectedOrden()!.items.length) {
+      @if (selectedOrden()!.items?.length) {
         <div class="orden-detail-section">
           <h4><i class="bi bi-box-seam"></i>Items ({{ selectedOrden()!.items.length }})</h4>
           <div class="orden-items-grid">
@@ -1232,7 +1263,7 @@
       }
 
       <!-- Batches -->
-      @if (selectedOrden()!.batches.length) {
+      @if (selectedOrden()!.batches?.length) {
         <div class="orden-detail-section">
           <h4><i class="bi bi-layers"></i>Batches de producción ({{ selectedOrden()!.batches.length }})</h4>
           <div class="batch-list">
@@ -1262,7 +1293,7 @@
       }
 
       <!-- Despacho -->
-      @if (selectedOrden()!.despacho.length) {
+      @if (selectedOrden()!.despacho?.length) {
         <div class="orden-detail-section">
           <h4><i class="bi bi-truck"></i>Despacho ({{ selectedOrden()!.despacho.length }})</h4>
           <div class="despacho-list">
