@@ -110,8 +110,7 @@
         <div class="form-grid">
           <div class="field field-full">
             <label for="stg-id">ID de la orden</label>
-            <input id="stg-id" type="text" formControlName="id" placeholder="UUID de la orden"
-              (change)="onOrdenIdChange($any($event.target).value)" />
+            <input id="stg-id" type="text" formControlName="id" placeholder="UUID de la orden" />
             @if (generatedOrderId()) {
               <small>Última orden generada: <code>{{ generatedOrderId() }}</code></small>
             }
@@ -158,8 +157,7 @@
           <div class="form-grid">
             <div class="field">
               <label for="stg-paciente">Paciente *</label>
-              <select id="stg-paciente" formControlName="pacienteId"
-                (change)="onDespacharPacienteChange($any($event.target).value)">
+              <select id="stg-paciente" formControlName="pacienteId">
                 <option value="">Selecciona un paciente…</option>
                 @for (p of pacientesList(); track p.id) {
                   <option [value]="p.id">{{ p['nombre'] ?? p['name'] ?? p.id }}</option>
