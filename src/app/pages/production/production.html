@@ -7,20 +7,16 @@
   </div>
 
   <div class="toolbar">
-    <button
-      class="btn"
-      [class.btn-brand]="activeTab() === 'workflow'"
-      [class.btn-outline-secondary]="activeTab() !== 'workflow'"
-      (click)="setTab('workflow')"
-    >
+    <button class="btn" [class.btn-brand]="activeTab() === 'workflow'" [class.btn-outline-secondary]="activeTab() !== 'workflow'" (click)="setTab('workflow')">
       <i class="bi bi-diagram-3-fill me-2"></i>Pipeline
     </button>
-    <button
-      class="btn"
-      [class.btn-brand]="activeTab() === 'resources'"
-      [class.btn-outline-secondary]="activeTab() !== 'resources'"
-      (click)="setTab('resources')"
-    >
+    <button class="btn" [class.btn-brand]="activeTab() === 'agenda'" [class.btn-outline-secondary]="activeTab() !== 'agenda'" (click)="setTab('agenda')">
+      <i class="bi bi-calendar-week me-2"></i>Agenda
+    </button>
+    <button class="btn" [class.btn-brand]="activeTab() === 'ordenes'" [class.btn-outline-secondary]="activeTab() !== 'ordenes'" (click)="setTab('ordenes')">
+      <i class="bi bi-receipt me-2"></i>Órdenes
+    </button>
+    <button class="btn" [class.btn-brand]="activeTab() === 'resources'" [class.btn-outline-secondary]="activeTab() !== 'resources'" (click)="setTab('resources')">
       <i class="bi bi-collection me-2"></i>Recursos
     </button>
   </div>
@@ -114,7 +110,8 @@
         <div class="form-grid">
           <div class="field field-full">
             <label for="stg-id">ID de la orden</label>
-            <input id="stg-id" type="text" formControlName="id" placeholder="UUID de la orden" />
+            <input id="stg-id" type="text" formControlName="id" placeholder="UUID de la orden"
+              (change)="onOrdenIdChange($any($event.target).value)" />
             @if (generatedOrderId()) {
               <small>Última orden generada: <code>{{ generatedOrderId() }}</code></small>
             }
@@ -161,7 +158,8 @@
           <div class="form-grid">
             <div class="field">
               <label for="stg-paciente">Paciente *</label>
-              <select id="stg-paciente" formControlName="pacienteId">
+              <select id="stg-paciente" formControlName="pacienteId"
+                (change)="onDespacharPacienteChange($any($event.target).value)">
                 <option value="">Selecciona un paciente…</option>
                 @for (p of pacientesList(); track p.id) {
                   <option [value]="p.id">{{ p['nombre'] ?? p['name'] ?? p.id }}</option>
@@ -178,30 +176,74 @@
               </select>
             </div>
             <div class="field field-full">
-              <label for="stg-dir">Dirección ID *</label>
-              <input id="stg-dir" type="text" formControlName="direccionId" placeholder="UUID de dirección" />
+              <label for="stg-dir">
+                Dirección *
+                @if (direccionesLoading()) {
+                  <span class="spinner-border spinner-border-sm ms-2" style="width:0.8rem;height:0.8rem"></span>
+                }
+              </label>
+              @if (pacienteDirecciones().length > 0) {
+                <select id="stg-dir" formControlName="direccionId">
+                  <option value="">Selecciona una dirección…</option>
+                  @for (d of pacienteDirecciones(); track $any(d)['id']) {
+                    <option [value]="$any(d)['id']">
+                      {{ $any(d)['street'] ?? $any(d)['direccion'] ?? $any(d)['address'] ?? $any(d)['id'] }}
+                      @if ($any(d)['city']) { — {{ $any(d)['city'] }} }
+                    </option>
+                  }
+                </select>
+              } @else {
+                <input id="stg-dir" type="text" formControlName="direccionId"
+                  [placeholder]="stageForm.controls.pacienteId.value ? 'Sin direcciones registradas — ingresa UUID manual' : 'Selecciona un paciente primero'" />
+              }
             </div>
           </div>
 
+          <!-- Items de despacho -->
           <div class="items-block">
             <div class="items-block-header">
-              <strong>Items de despacho *</strong>
-              <button type="button" class="btn btn-outline-secondary btn-sm" (click)="addItemDespacho()">
-                <i class="bi bi-plus-lg me-1"></i>Agregar item
-              </button>
+              <strong>
+                Items de despacho *
+                @if (ordenItemsLoading()) {
+                  <span class="spinner-border spinner-border-sm ms-2" style="width:0.8rem;height:0.8rem"></span>
+                }
+              </strong>
+              @if (!stageForm.controls.id.value) {
+                <small style="font-size:0.72rem;color:#94a3b8">Ingresa el ID de la orden para cargar items</small>
+              }
             </div>
-            @for (ctrl of itemsDespachoArray.controls; track $index; let i = $index) {
-              <div class="item-row-grid">
-                <div class="field" style="grid-column:1/-2">
-                  <input type="text" [formControl]="$any(ctrl)" placeholder="UUID del item de despacho" />
-                </div>
-                <button type="button" class="btn-icon danger" (click)="removeItemDespacho(i)">
-                  <i class="bi bi-trash3-fill"></i>
-                </button>
+
+            @if (ordenItems().length > 0) {
+              <div style="display:flex;flex-direction:column;gap:0.4rem">
+                @for (item of ordenItems(); track $any(item)['id']) {
+                  <label class="item-row-grid" style="cursor:pointer;user-select:none;margin:0">
+                    <div class="field" style="grid-column:1/-2;margin:0;display:flex;align-items:center;gap:0.6rem">
+                      <input type="checkbox"
+                        [checked]="selectedItemIds().includes($any(item)['id'])"
+                        (change)="toggleItemId($any(item)['id'])"
+                        style="width:1rem;height:1rem;flex-shrink:0" />
+                      <span style="font-size:0.82rem;color:#1e293b">
+                        {{ $any(item)['nombre'] ?? $any(item)['sku'] ?? $any(item)['descripcion'] ?? $any(item)['id'] }}
+                      </span>
+                      @if ($any(item)['sku'] && $any(item)['nombre']) {
+                        <span class="prod-sku-badge">{{ $any(item)['sku'] }}</span>
+                      }
+                    </div>
+                    <span class="uuid-chip" style="font-size:0.65rem">{{ $any(item)['id'] | slice:0:8 }}…</span>
+                  </label>
+                }
               </div>
-            }
-            @if (itemsDespachoArray.length === 0) {
-              <p style="font-size:0.78rem;color:#94a3b8;margin:0">Agrega al menos un item.</p>
+              <small style="font-size:0.72rem;color:#64748b;margin-top:0.25rem;display:block">
+                {{ selectedItemIds().length }} de {{ ordenItems().length }} seleccionados
+              </small>
+            } @else if (!ordenItemsLoading() && stageForm.controls.id.value) {
+              <p style="font-size:0.78rem;color:#94a3b8;margin:0">
+                <i class="bi bi-inbox me-1"></i>Sin items para esta orden. Verifica el ID.
+              </p>
+            } @else if (!stageForm.controls.id.value) {
+              <p style="font-size:0.78rem;color:#94a3b8;margin:0">
+                <i class="bi bi-arrow-up me-1"></i>Ingresa el ID de la orden arriba para cargar los items automáticamente.
+              </p>
             }
           </div>
         }
@@ -219,78 +261,66 @@
     </div>
 
     <!-- Consultar relaciones -->
-    <div class="table-card mt-4">
-      <div class="toolbar">
-        <h3 class="page-h2" style="font-size:1rem;margin:0">3. Consultar relaciones</h3>
+    <div class="rel-card mt-4">
+      <div class="rel-card-head">
+        <h3><i class="bi bi-diagram-2 me-2" style="color:#2563eb"></i>3. Consultar relaciones</h3>
         @if (relLoading()) {
-          <span class="spinner-border spinner-border-sm text-secondary"></span>
+          <span class="spinner-border spinner-border-sm text-primary"></span>
         }
       </div>
-      <div class="card-form">
-        <!-- Entity type selector -->
-        <div class="stage-btns">
-          <button type="button" class="btn btn-sm"
-            [class.btn-brand]="relEntityType() === 'paciente'"
-            [class.btn-outline-secondary]="relEntityType() !== 'paciente'"
-            (click)="setRelEntityType('paciente')">
-            <i class="bi bi-person me-1"></i>Paciente
-          </button>
-          <button type="button" class="btn btn-sm"
-            [class.btn-brand]="relEntityType() === 'calendario'"
-            [class.btn-outline-secondary]="relEntityType() !== 'calendario'"
-            (click)="setRelEntityType('calendario')">
-            <i class="bi bi-calendar3 me-1"></i>Calendario
-          </button>
-          <button type="button" class="btn btn-sm"
-            [class.btn-brand]="relEntityType() === 'ventana'"
-            [class.btn-outline-secondary]="relEntityType() !== 'ventana'"
-            (click)="setRelEntityType('ventana')">
-            <i class="bi bi-clock-history me-1"></i>Ventana de entrega
-          </button>
-          <button type="button" class="btn btn-sm"
-            [class.btn-brand]="relEntityType() === 'suscripcion'"
-            [class.btn-outline-secondary]="relEntityType() !== 'suscripcion'"
-            (click)="setRelEntityType('suscripcion')">
-            <i class="bi bi-bookmark-star me-1"></i>Suscripción
-          </button>
-        </div>
 
-        <div style="display:flex;gap:0.75rem;align-items:flex-end">
-          <div class="field" style="flex:1;margin:0">
-            <label for="rel-entity">Selecciona un elemento</label>
-            <select id="rel-entity" [value]="relSelectedId()" (change)="relSelectedId.set($any($event.target).value)">
-              <option value="">Elige…</option>
-              @for (e of relEntities(); track e.id) {
-                <option [value]="e.id">{{ e['nombre'] ?? e['name'] ?? e['fecha'] ?? e['desde'] ?? e.id }}</option>
-              }
-            </select>
-          </div>
-          <button type="button" class="btn btn-brand btn-sm" style="white-space:nowrap" (click)="loadRelaciones()">
-            <i class="bi bi-search me-1"></i>Consultar
-          </button>
-        </div>
+      <!-- Selector de tipo -->
+      <div class="rel-pills">
+        <button type="button" class="rel-pill" [class.active]="relEntityType() === 'paciente'" (click)="setRelEntityType('paciente')">
+          <i class="bi bi-person-fill"></i>Paciente
+        </button>
+        <button type="button" class="rel-pill" [class.active]="relEntityType() === 'calendario'" (click)="setRelEntityType('calendario')">
+          <i class="bi bi-calendar3"></i>Calendario
+        </button>
+        <button type="button" class="rel-pill" [class.active]="relEntityType() === 'ventana'" (click)="setRelEntityType('ventana')">
+          <i class="bi bi-clock-history"></i>Ventana de entrega
+        </button>
+        <button type="button" class="rel-pill" [class.active]="relEntityType() === 'suscripcion'" (click)="setRelEntityType('suscripcion')">
+          <i class="bi bi-bookmark-star-fill"></i>Suscripción
+        </button>
+      </div>
 
-        <!-- Result 1: Calendarios / Pacientes -->
-        @if (relResult1().length > 0 || (!relLoading() && relSelectedId())) {
-          <div>
-            @if (relEntityType() === 'paciente' || relEntityType() === 'ventana') {
-              <p class="cal-section-label"><i class="bi bi-calendar3 me-1"></i>Calendarios</p>
-            } @else if (relEntityType() === 'calendario') {
-              <p class="cal-section-label"><i class="bi bi-person me-1"></i>Pacientes</p>
-            } @else {
-              <p class="cal-section-label"><i class="bi bi-calendar3 me-1"></i>Calendarios</p>
+      <!-- Selector de entidad + botón -->
+      <div class="rel-query">
+        <div class="field">
+          <label for="rel-entity">Selecciona {{ relEntityType() === 'paciente' ? 'un paciente' : relEntityType() === 'calendario' ? 'un calendario' : relEntityType() === 'ventana' ? 'una ventana' : 'una suscripción' }}</label>
+          <select id="rel-entity" [value]="relSelectedId()" (change)="relSelectedId.set($any($event.target).value)">
+            <option value="">— Elige —</option>
+            @for (e of relEntities(); track e.id) {
+              <option [value]="e.id">{{ e['nombre'] ?? e['name'] ?? e['fecha'] ?? e['desde'] ?? (e.id | slice:0:18) + '…' }}</option>
             }
+          </select>
+        </div>
+        <button type="button" class="rel-query-btn" [disabled]="relLoading()" (click)="loadRelaciones()">
+          <i class="bi bi-search"></i>Consultar
+        </button>
+      </div>
+
+      <!-- Resultados -->
+      @if (relResult1().length > 0 || relResult2().length > 0 || (!relLoading() && relSelectedId())) {
+        <div class="rel-results">
+
+          <!-- Result 1 -->
+          <div class="rel-result-block">
+            <div class="rel-result-head">
+              @if (relEntityType() === 'calendario') {
+                <i class="bi bi-person-fill"></i><span>Pacientes</span>
+              } @else {
+                <i class="bi bi-calendar3"></i><span>Calendarios</span>
+              }
+              <span class="rel-count">{{ relResult1().length }}</span>
+            </div>
             @if (relResult1().length === 0) {
-              <p class="cal-empty">Sin resultados.</p>
+              <div class="rel-empty"><i class="bi bi-inbox"></i>Sin registros relacionados.</div>
             } @else {
               <div class="table-responsive">
                 <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      @for (k of relResult1Keys(); track k) { <th>{{ k }}</th> }
-                    </tr>
-                  </thead>
+                  <thead><tr><th>ID</th>@for (k of relResult1Keys(); track k) {<th>{{ k }}</th>}</tr></thead>
                   <tbody>
                     @for (row of relResult1(); track $index) {
                       <tr>
@@ -303,43 +333,185 @@
               </div>
             }
           </div>
-        }
 
-        <!-- Result 2: Ventanas / Calendarios (not shown for suscripcion) -->
-        @if (relEntityType() !== 'suscripcion' && (relResult2().length > 0 || (!relLoading() && relSelectedId()))) {
-          <div>
-            @if (relEntityType() === 'calendario') {
-              <p class="cal-section-label"><i class="bi bi-clock-history me-1"></i>Ventanas de entrega</p>
-            } @else if (relEntityType() === 'ventana') {
-              <p class="cal-section-label"><i class="bi bi-calendar3 me-1"></i>Calendarios</p>
-            } @else {
-              <p class="cal-section-label"><i class="bi bi-clock-history me-1"></i>Ventanas de entrega</p>
-            }
-            @if (relResult2().length === 0) {
-              <p class="cal-empty">Sin resultados.</p>
-            } @else {
-              <div class="table-responsive">
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      @for (k of relResult2Keys(); track k) { <th>{{ k }}</th> }
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (row of relResult2(); track $index) {
-                      <tr>
-                        <td><span class="uuid-chip">{{ $any(row)['id'] | slice:0:8 }}…</span></td>
-                        @for (k of relResult2Keys(); track k) { <td>{{ $any(row)[k] ?? '—' }}</td> }
-                      </tr>
-                    }
-                  </tbody>
-                </table>
+          <!-- Result 2 (no aplica a suscripcion) -->
+          @if (relEntityType() !== 'suscripcion') {
+            <div class="rel-result-block">
+              <div class="rel-result-head">
+                @if (relEntityType() === 'ventana') {
+                  <i class="bi bi-calendar3"></i><span>Calendarios</span>
+                } @else {
+                  <i class="bi bi-clock-history"></i><span>Ventanas de entrega</span>
+                }
+                <span class="rel-count">{{ relResult2().length }}</span>
               </div>
-            }
+              @if (relResult2().length === 0) {
+                <div class="rel-empty"><i class="bi bi-inbox"></i>Sin registros relacionados.</div>
+              } @else {
+                <div class="table-responsive">
+                  <table class="data-table">
+                    <thead><tr><th>ID</th>@for (k of relResult2Keys(); track k) {<th>{{ k }}</th>}</tr></thead>
+                    <tbody>
+                      @for (row of relResult2(); track $index) {
+                        <tr>
+                          <td><span class="uuid-chip">{{ $any(row)['id'] | slice:0:8 }}…</span></td>
+                          @for (k of relResult2Keys(); track k) { <td>{{ $any(row)[k] ?? '—' }}</td> }
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              }
+            </div>
+          }
+
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ══════════════════ AGENDA ══════════════════ -->
+  @if (activeTab() === 'agenda') {
+    <div class="table-card" style="overflow:hidden">
+      <div class="agenda-controls">
+        <div class="field">
+          <label for="ag-ini">Desde</label>
+          <input id="ag-ini" type="date" [value]="agendaFechaInicio()" (change)="agendaFechaInicio.set($any($event.target).value)" />
+        </div>
+        <div class="field">
+          <label for="ag-fin">Hasta</label>
+          <input id="ag-fin" type="date" [value]="agendaFechaFin()" (change)="agendaFechaFin.set($any($event.target).value)" />
+        </div>
+        <button type="button" class="agenda-load-btn" [disabled]="agendaLoading()" (click)="loadAgenda()">
+          @if (agendaLoading()) { <span class="spinner-border spinner-border-sm"></span> }
+          @else { <i class="bi bi-search"></i> }
+          Cargar agenda
+        </button>
+      </div>
+
+      @if (agendaDias().length === 0 && !agendaLoading()) {
+        <div class="agenda-empty-state">
+          <i class="bi bi-calendar3"></i>
+          <p>Selecciona un rango y haz clic en <strong>Cargar agenda</strong>.</p>
+        </div>
+      } @else {
+        <div class="agenda-strip">
+          @for (dia of agendaDias(); track dia) {
+            @let hd = formatAgendaDay(dia);
+            @let entries = agendaEntries(dia);
+            <div class="agenda-day" [class.is-today]="dia === today">
+              <div class="agenda-day-hd">
+                <span class="agenda-day-wd">{{ hd.wd }}</span>
+                <span class="agenda-day-num">{{ hd.num }}</span>
+                <span class="agenda-day-mon">{{ hd.mon }}</span>
+                @if (entries.length > 0) {
+                  <span class="agenda-day-cnt">{{ entries.length }}</span>
+                }
+              </div>
+              <div class="agenda-day-body">
+                @if (entries.length === 0) {
+                  <div class="agenda-day-empty">Sin entregas</div>
+                }
+                @for (entry of entries; track entry.calendario_id) {
+                  <div class="agenda-entry">
+                    <div style="display:flex;align-items:flex-start;gap:0.4rem">
+                      <span class="agenda-entry-estado" [class.estado-1]="entry.estado === 1" [class.estado-0]="entry.estado === 0"></span>
+                      <div>
+                        <div class="agenda-entry-name">{{ entry.paciente.nombre }}</div>
+                        <div class="agenda-entry-doc">{{ entry.paciente.documento }}</div>
+                      </div>
+                    </div>
+                    <div class="agenda-entry-sub">
+                      <i class="bi bi-bookmark-star-fill"></i>
+                      {{ entry.suscripcion.nombre }}
+                    </div>
+                    <div class="agenda-entry-ventana">
+                      <i class="bi bi-clock"></i>
+                      {{ formatWindow(entry.ventana_entrega.desde, entry.ventana_entrega.hasta) }}
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ══════════════════ ÓRDENES CONSOLIDADAS ══════════════════ -->
+  @if (activeTab() === 'ordenes') {
+    <div class="table-card" style="overflow:hidden">
+      <div class="ordenes-toolbar">
+        <div class="ordenes-mode-pills">
+          <button type="button" class="ordenes-mode-pill" [class.active]="ordenesMode() === 'all'" (click)="ordenesMode.set('all')">
+            <i class="bi bi-list-ul"></i>Todas
+          </button>
+          <button type="button" class="ordenes-mode-pill" [class.active]="ordenesMode() === 'suscripcion'" (click)="ordenesMode.set('suscripcion')">
+            <i class="bi bi-bookmark-star"></i>Por suscripción
+          </button>
+        </div>
+
+        @if (ordenesMode() === 'suscripcion') {
+          <div class="ordenes-sub-input">
+            <input type="text" placeholder="UUID de la suscripción"
+              [value]="ordenSuscripcionId()"
+              (input)="ordenSuscripcionId.set($any($event.target).value)" />
+            <button type="button" class="ordenes-load-btn" [disabled]="ordenesLoading()" (click)="loadSuscripcionOrdenes()">
+              @if (ordenesLoading()) { <span class="spinner-border spinner-border-sm"></span> }
+              @else { <i class="bi bi-search"></i> }
+              Buscar
+            </button>
           </div>
+        } @else {
+          <button type="button" class="ordenes-load-btn" [disabled]="ordenesLoading()" (click)="loadOrdenesConsolidadas()">
+            @if (ordenesLoading()) { <span class="spinner-border spinner-border-sm"></span> }
+            @else { <i class="bi bi-arrow-clockwise"></i> }
+            Cargar órdenes
+          </button>
         }
       </div>
+
+      @if (ordenesMode() === 'suscripcion' && suscripcionOrdenesData()) {
+        <div class="ordenes-sub-banner">
+          <i class="bi bi-bookmark-star-fill"></i>
+          {{ suscripcionOrdenesData()!.suscripcion.nombre }}
+          <span>{{ suscripcionOrdenesData()!.suscripcion.id }}</span>
+        </div>
+      }
+
+      @if (ordenesData().length === 0 && !ordenesLoading()) {
+        <div class="agenda-empty-state">
+          <i class="bi bi-receipt"></i>
+          <p>No hay órdenes para mostrar. Usa los botones de arriba para cargar.</p>
+        </div>
+      } @else {
+        <div class="ordenes-list">
+          @for (o of ordenesData(); track o.id) {
+            @let pct = ordenProgreso(o);
+            <button type="button" class="orden-row" (click)="openOrdenDetail(o)">
+              <div class="orden-row-left">
+                <span class="orden-fecha">{{ o.fecha }}</span>
+                <span class="orden-id">{{ o.id | slice:0:18 }}…</span>
+              </div>
+              <span class="orden-items-cnt">
+                <i class="bi bi-box-seam me-1"></i>{{ o.items?.length ?? 0 }} items
+              </span>
+              <span class="orden-status-chip" [ngClass]="ordenStatusClass(o.estado)">{{ o.estado }}</span>
+              <div class="orden-prog-wrap">
+                <div class="orden-prog-bar-track">
+                  <div class="orden-prog-bar-fill"
+                    [class.fill-partial]="pct > 0 && pct < 100"
+                    [class.fill-zero]="pct === 0"
+                    [style.width.%]="pct">
+                  </div>
+                </div>
+                <span class="orden-prog-label">{{ o.progreso_entrega?.completados ?? 0 }}/{{ o.progreso_entrega?.total_paquetes ?? 0 }}</span>
+              </div>
+            </button>
+          }
+        </div>
+      }
     </div>
   }
 
@@ -493,6 +665,114 @@
         <button class="btn btn-brand" (click)="openEdit(viewRow()!)">
           <i class="bi bi-pencil-fill me-2"></i>Editar
         </button>
+      </div>
+    </div>
+  </dialog>
+}
+
+<!-- Orden detail modal -->
+@if (selectedOrden()) {
+  <div class="modal-backdrop" (click)="closeOrdenDetail()" (keydown.escape)="closeOrdenDetail()" aria-hidden="true"></div>
+  <dialog class="modal-panel orden-detail-modal" open aria-modal="true" aria-labelledby="orden-detail-title">
+    <div class="modal-head">
+      <div class="detail-modal-title">
+        <div class="detail-modal-icon" style="background:#eff6ff;color:#2563eb">
+          <i class="bi bi-receipt"></i>
+        </div>
+        <div>
+          <h3 id="orden-detail-title" style="display:flex;align-items:center;gap:0.5rem">
+            Orden
+            <span class="orden-status-chip" [ngClass]="ordenStatusClass(selectedOrden()!.estado)">{{ selectedOrden()!.estado }}</span>
+          </h3>
+          <span class="uuid-full">{{ selectedOrden()!.id }}</span>
+        </div>
+      </div>
+      <button class="btn-close-modal" (click)="closeOrdenDetail()" aria-label="Cerrar">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Progreso -->
+      @if (selectedOrden()!.progreso_entrega) {
+        <div class="orden-detail-section">
+          <h4><i class="bi bi-speedometer2"></i>Progreso de entrega</h4>
+          <div class="progreso-summary">
+            <div class="prog-cell">
+              <div class="prog-num">{{ selectedOrden()!.progreso_entrega.total_paquetes }}</div>
+              <div class="prog-lbl">Total paquetes</div>
+            </div>
+            <div class="prog-cell prog-comp">
+              <div class="prog-num">{{ selectedOrden()!.progreso_entrega.completados }}</div>
+              <div class="prog-lbl">Completados</div>
+            </div>
+            <div class="prog-cell prog-pend">
+              <div class="prog-num">{{ selectedOrden()!.progreso_entrega.pendientes }}</div>
+              <div class="prog-lbl">Pendientes</div>
+            </div>
+          </div>
+          <div class="orden-prog-bar-track mt-2" style="height:8px">
+            <div class="orden-prog-bar-fill"
+              [class.fill-partial]="ordenProgreso(selectedOrden()!) > 0 && ordenProgreso(selectedOrden()!) < 100"
+              [class.fill-zero]="ordenProgreso(selectedOrden()!) === 0"
+              [style.width.%]="ordenProgreso(selectedOrden()!)">
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Items -->
+      @if (selectedOrden()!.items?.length) {
+        <div class="orden-detail-section">
+          <h4><i class="bi bi-box-seam"></i>Items ({{ selectedOrden()!.items.length }})</h4>
+          <div class="orden-items-grid">
+            @for (item of selectedOrden()!.items; track $index) {
+              <div class="orden-item-row">
+                <span class="item-sku">{{ item.producto?.sku ?? '—' }}</span>
+                <span class="item-nombre">{{ item.producto?.nombre ?? '—' }}</span>
+                <span class="item-qty">× {{ item.qty }}</span>
+                <span class="item-price">Bs {{ item.price }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Batches -->
+      @if (selectedOrden()!.batches?.length) {
+        <div class="orden-detail-section">
+          <h4><i class="bi bi-layers"></i>Batches de producción ({{ selectedOrden()!.batches.length }})</h4>
+          <div style="display:flex;flex-direction:column;gap:0.35rem">
+            @for (b of selectedOrden()!.batches; track $index) {
+              <div class="batch-row">
+                <span class="batch-estado" [style]="batchStatusClass(b.estado)">{{ b.estado }}</span>
+                <span class="batch-nums">Planificado: <strong>{{ b.cant_planificada }}</strong> · Producido: <strong>{{ b.cant_producida }}</strong></span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Despacho -->
+      @if (selectedOrden()!.despacho?.length) {
+        <div class="orden-detail-section">
+          <h4><i class="bi bi-truck"></i>Despacho ({{ selectedOrden()!.despacho.length }})</h4>
+          <div style="display:flex;flex-direction:column;gap:0.4rem">
+            @for (d of selectedOrden()!.despacho; track $index) {
+              <div class="batch-row">
+                <span class="batch-estado" [style]="batchStatusClass(d.delivery_status)">{{ d.delivery_status }}</span>
+                <span class="batch-nums">Paciente: <span class="uuid-chip">{{ d.paciente_id | slice:0:8 }}…</span></span>
+                @if (d.tracking?.historial?.length) {
+                  <span class="batch-nums">{{ d.tracking.historial.length }} eventos</span>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <div class="modal-actions">
+        <button class="btn btn-outline-secondary" (click)="closeOrdenDetail()">Cerrar</button>
       </div>
     </div>
   </dialog>

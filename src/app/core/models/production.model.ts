@@ -40,6 +40,54 @@ export interface GenerarOrdenDto {
   items: { sku: string; qty: number }[];
 }
 
+// ── Agenda ────────────────────────────────────────────────────────────────────
+export interface AgendaEntrada {
+  calendario_id: string;
+  estado: number;
+  entrega_id: string;
+  contrato_id: string;
+  paciente: { id: string; nombre: string; documento: string };
+  suscripcion: { id: string; nombre: string };
+  ventana_entrega: { id: string; desde: string; hasta: string };
+}
+export type AgendaResponse = Record<string, AgendaEntrada[]>;
+
+// ── Órdenes consolidadas ──────────────────────────────────────────────────────
+export interface OrdenConsolidadaItem {
+  qty: number;
+  price: number;
+  producto: { sku: string; nombre: string };
+}
+export interface OrdenConsolidadaBatch {
+  cant_planificada: number;
+  cant_producida: number;
+  estado: string;
+}
+export interface OrdenConsolidadaDespacho {
+  delivery_status: string;
+  paciente_id: string;
+  tracking: { historial: unknown[] };
+}
+export interface OrdenConsolidadaProgreso {
+  total_paquetes: number;
+  completados: number;
+  pendientes: number;
+}
+export interface OrdenConsolidada {
+  id: string;
+  fecha: string;
+  estado: string;
+  entrega_completada_at: string | null;
+  items: OrdenConsolidadaItem[];
+  batches: OrdenConsolidadaBatch[];
+  despacho: OrdenConsolidadaDespacho[];
+  progreso_entrega: OrdenConsolidadaProgreso;
+}
+export interface SuscripcionOrdenes {
+  suscripcion: { id: string; nombre: string };
+  ordenes: OrdenConsolidada[];
+}
+
 export type OrdenAccion = 'generar' | 'planificar' | 'procesar' | 'despachar';
 
 export const ORDEN_ACCION_MAP: Record<

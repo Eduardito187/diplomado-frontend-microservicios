@@ -52,6 +52,7 @@ export const API = {
       planificar: `${GATEWAY_URL}/production/produccion/ordenes/planificar`,
       procesar: `${GATEWAY_URL}/production/produccion/ordenes/procesar`,
       despachar: `${GATEWAY_URL}/production/produccion/ordenes/despachar`,
+      items: (id: string) => `${GATEWAY_URL}/production/produccion/ordenes/${id}/items`,
     },
     productos: resource('productos'),
     paquetes: resource('paquetes'),
@@ -73,6 +74,10 @@ export const API = {
       pacientes: (id: string) => `${GATEWAY_URL}/production/ventanas-entrega/${id}/pacientes`,
       calendarios: (id: string) => `${GATEWAY_URL}/production/ventanas-entrega/${id}/calendarios`,
     },
+    agenda: `${GATEWAY_URL}/production/agenda`,
+    ordenesConsolidadas: `${GATEWAY_URL}/production/produccion/ordenes`,
+    ordenConsolidada: (id: string) => `${GATEWAY_URL}/production/produccion/ordenes/${id}`,
+    suscripcionOrdenes: (id: string) => `${GATEWAY_URL}/production/suscripciones/${id}/ordenes`,
     direcciones: resource('direcciones'),
     pacientes: {
       ...resource('pacientes'),

@@ -1,6 +1,6 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { FormBuilder, FormArray, ReactiveFormsModule, Validators } from '@angular/forms';
-import { TitleCasePipe, SlicePipe } from '@angular/common';
+import { TitleCasePipe, SlicePipe, NgClass } from '@angular/common';
 import { Router } from '@angular/router';
 import {
   ProductionService,
@@ -11,7 +11,13 @@ import { ToastService } from '../../core/services/toast.service';
 import { Auth } from '../../core/services/auth';
 import { SECTION_ROLES } from '../../core/config/roles';
 import { ensureRole } from '../../core/utils/role-check';
-import { GenerarOrdenDto } from '../../core/models/production.model';
+import {
+  GenerarOrdenDto,
+  AgendaResponse,
+  AgendaEntrada,
+  OrdenConsolidada,
+  SuscripcionOrdenes,
+} from '../../core/models/production.model';
 import { EmptyState } from '../../shared/components/empty-state/empty-state';
 import { RESOURCE_SCHEMAS, ResourceSchema } from './resource-schemas';
 import { ResourceForm } from './components/resource-form/resource-form';
@@ -24,12 +30,21 @@ function toLocalYyyyMmDd(d: Date): string {
 }
 
 type WorkflowStage = 'generar' | 'planificar' | 'procesar' | 'despachar';
-type ActiveTab = 'workflow' | 'resources';
+type ActiveTab = 'workflow' | 'resources' | 'agenda' | 'ordenes';
 type ResourceView = 'list' | 'create' | 'edit';
+type OrdenesMode = 'all' | 'suscripcion';
+
+function firstOfMonth(): string {
+  const d = new Date(); d.setDate(1); return toLocalYyyyMmDd(d);
+}
+function lastOfMonth(): string {
+  const d = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+  return toLocalYyyyMmDd(d);
+}
 
 @Component({
   selector: 'app-production',
-  imports: [ReactiveFormsModule, TitleCasePipe, SlicePipe, EmptyState, ResourceForm],
+  imports: [ReactiveFormsModule, TitleCasePipe, SlicePipe, NgClass, EmptyState, ResourceForm],
   templateUrl: './production.html',
   styleUrl: './production.scss',
 })
@@ -128,6 +143,28 @@ export class Production implements OnInit {
     if (!list.length) return [];
     return Object.keys(list[0] as object).filter(k => k !== 'id').slice(0, 5);
   });
+  readonly pacienteDirecciones = signal<unknown[]>([]);
+  readonly direccionesLoading = signal(false);
+  readonly ordenItems = signal<unknown[]>([]);
+  readonly ordenItemsLoading = signal(false);
+  readonly selectedItemIds = signal<string[]>([]);
+
+  // ── Agenda ──────────────────────────────────────────────────────────────────
+  readonly agendaData = signal<AgendaResponse>({});
+  readonly agendaLoading = signal(false);
+  readonly agendaFechaInicio = signal(firstOfMonth());
+  readonly agendaFechaFin = signal(lastOfMonth());
+  readonly agendaDias = computed(() => Object.keys(this.agendaData()).sort((a, b) => a.localeCompare(b)));
+  readonly today = toLocalYyyyMmDd(new Date());
+
+  // ── Órdenes consolidadas ─────────────────────────────────────────────────────
+  readonly ordenesMode = signal<OrdenesMode>('all');
+  readonly ordenesData = signal<OrdenConsolidada[]>([]);
+  readonly ordenesLoading = signal(false);
+  readonly selectedOrden = signal<OrdenConsolidada | null>(null);
+  readonly ordenSuscripcionId = signal('');
+  readonly suscripcionOrdenesData = signal<SuscripcionOrdenes | null>(null);
+
   readonly productos = signal<import('../../core/models/production.model').Producto[]>([]);
   readonly productosLoading = signal(false);
   readonly productSearch = signal<Record<number, string>>({});
@@ -177,6 +214,38 @@ export class Production implements OnInit {
       next: (list) => this.suscripcionesList.set((list ?? []) as LaravelResource[]),
       error: () => this.suscripcionesList.set([]),
     });
+  }
+
+  onDespacharPacienteChange(id: string): void {
+    this.stageForm.patchValue({ direccionId: '' });
+    this.pacienteDirecciones.set([]);
+    if (!id) return;
+    this.direccionesLoading.set(true);
+    this.svc.getPacienteAddresses(id).subscribe({
+      next: (list) => { this.pacienteDirecciones.set(list ?? []); this.direccionesLoading.set(false); },
+      error: () => { this.pacienteDirecciones.set([]); this.direccionesLoading.set(false); this.toast.error('No se pudieron cargar las direcciones.'); },
+    });
+  }
+
+  onOrdenIdChange(id: string): void {
+    this.ordenItems.set([]);
+    this.selectedItemIds.set([]);
+    if (!id || id.trim().length < 36) return;
+    this.ordenItemsLoading.set(true);
+    this.svc.getOrdenItems(id.trim()).subscribe({
+      next: (list) => {
+        this.ordenItems.set(list ?? []);
+        this.selectedItemIds.set((list ?? []).map((i: any) => String(i['id'] ?? '')).filter(Boolean));
+        this.ordenItemsLoading.set(false);
+      },
+      error: () => { this.ordenItems.set([]); this.selectedItemIds.set([]); this.ordenItemsLoading.set(false); },
+    });
+  }
+
+  toggleItemId(id: string): void {
+    this.selectedItemIds.update(ids =>
+      ids.includes(id) ? ids.filter(i => i !== id) : [...ids, id]
+    );
   }
 
   setRelEntityType(type: 'paciente' | 'calendario' | 'ventana' | 'suscripcion'): void {
@@ -420,9 +489,7 @@ export class Production implements OnInit {
       const pacienteId = this.stageForm.controls.pacienteId.value.trim();
       const direccionId = this.stageForm.controls.direccionId.value.trim();
       const ventanaEntrega = this.stageForm.controls.ventanaEntrega.value.trim();
-      const itemsDespacho = this.itemsDespachoArray.controls
-        .map((c: any) => c.value as string)
-        .filter(Boolean);
+      const itemsDespacho = this.selectedItemIds();
       if (!pacienteId || !direccionId || !ventanaEntrega || !itemsDespacho.length) {
         this.toast.error('Completa todos los campos de despacho.');
         return;
@@ -498,6 +565,91 @@ export class Production implements OnInit {
       }
       return { key, value, isJson };
     });
+  }
+
+  // ── Agenda methods ────────────────────────────────────────────────────────────
+  loadAgenda(): void {
+    this.agendaLoading.set(true);
+    this.agendaData.set({});
+    this.svc.getAgenda(this.agendaFechaInicio(), this.agendaFechaFin()).subscribe({
+      next: (data) => { this.agendaData.set(data ?? {}); this.agendaLoading.set(false); },
+      error: () => { this.agendaLoading.set(false); this.toast.error('No se pudo cargar la agenda.'); },
+    });
+  }
+
+  agendaEntries(dia: string): AgendaEntrada[] {
+    return this.agendaData()[dia] ?? [];
+  }
+
+  formatAgendaDay(dateStr: string): { wd: string; num: string; mon: string } {
+    const d = new Date(dateStr + 'T12:00:00');
+    return {
+      wd: d.toLocaleDateString('es-BO', { weekday: 'short' }).toUpperCase().replace('.', ''),
+      num: String(d.getDate()),
+      mon: d.toLocaleDateString('es-BO', { month: 'short' }).toUpperCase().replace('.', ''),
+    };
+  }
+
+  formatWindow(desde: string, hasta: string): string {
+    return `${(desde ?? '').slice(11, 16)} – ${(hasta ?? '').slice(11, 16)}`;
+  }
+
+  // ── Órdenes methods ──────────────────────────────────────────────────────────
+  loadOrdenesConsolidadas(): void {
+    this.ordenesLoading.set(true);
+    this.ordenesData.set([]);
+    this.suscripcionOrdenesData.set(null);
+    this.svc.getOrdenesConsolidadas().subscribe({
+      next: (list) => { this.ordenesData.set(list ?? []); this.ordenesLoading.set(false); },
+      error: () => { this.ordenesLoading.set(false); this.toast.error('No se pudo cargar las órdenes.'); },
+    });
+  }
+
+  loadSuscripcionOrdenes(): void {
+    const id = this.ordenSuscripcionId().trim();
+    if (!id) { this.toast.error('Ingresa el ID de la suscripción.'); return; }
+    this.ordenesLoading.set(true);
+    this.ordenesData.set([]);
+    this.suscripcionOrdenesData.set(null);
+    this.svc.getSuscripcionOrdenes(id).subscribe({
+      next: (data) => {
+        this.suscripcionOrdenesData.set(data);
+        this.ordenesData.set(data?.ordenes ?? []);
+        this.ordenesLoading.set(false);
+      },
+      error: () => { this.ordenesLoading.set(false); this.toast.error('No se pudo cargar las órdenes de la suscripción.'); },
+    });
+  }
+
+  openOrdenDetail(o: OrdenConsolidada): void {
+    this.selectedOrden.set(o);
+  }
+
+  closeOrdenDetail(): void {
+    this.selectedOrden.set(null);
+  }
+
+  ordenStatusClass(estado: string): string {
+    const e = (estado ?? '').toUpperCase();
+    if (e === 'CERRADA') return 'chip-cerrada';
+    if (e === 'DESPACHADO' || e === 'DESPACHADA') return 'chip-cerrada';
+    if (e.includes('PROCESO') || e.includes('PROCESAD')) return 'chip-proceso';
+    if (e === 'ABIERTA') return 'chip-abierta';
+    return 'chip-default';
+  }
+
+  ordenProgreso(o: OrdenConsolidada): number {
+    const p = o?.progreso_entrega;
+    if (!p?.total_paquetes) return 0;
+    return Math.round((p.completados / p.total_paquetes) * 100);
+  }
+
+  batchStatusClass(estado: string): string {
+    const e = (estado ?? '').toUpperCase();
+    if (e === 'DESPACHADO') return 'background:#dcfce7;color:#15803d';
+    if (e === 'PRODUCIDO') return 'background:#dbeafe;color:#1d4ed8';
+    if (e.includes('PROCESO')) return 'background:#fef9c3;color:#a16207';
+    return 'background:#f1f5f9;color:#475569';
   }
 
   private extractError(err: unknown): string | null {
