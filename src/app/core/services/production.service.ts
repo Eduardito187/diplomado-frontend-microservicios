@@ -103,6 +103,10 @@ export class ProductionService {
     return this.list<Calendario>('calendarios');
   }
 
+  getPacientes(): Observable<LaravelResource[]> {
+    return this.http.get<LaravelResource[]>(API.production.pacientes.base);
+  }
+
   getSuscripcionCalendarios(id: string): Observable<Calendario[]> {
     return this.http.get<Calendario[]>(API.production.suscripciones.calendarios(id));
   }

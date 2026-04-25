@@ -119,8 +119,34 @@
               <small>Última orden generada: <code>{{ generatedOrderId() }}</code></small>
             }
           </div>
+        </div>
+
+        <!-- Selector de etapa -->
+        <div class="stage-btns">
+          <button type="button" class="btn"
+            [class.btn-brand]="activeStage() === 'planificar'"
+            [class.btn-outline-secondary]="activeStage() !== 'planificar'"
+            (click)="selectStage('planificar')">
+            <i class="bi bi-diagram-3 me-2"></i>Planificar
+          </button>
+          <button type="button" class="btn"
+            [class.btn-brand]="activeStage() === 'procesar'"
+            [class.btn-outline-secondary]="activeStage() !== 'procesar'"
+            (click)="selectStage('procesar')">
+            <i class="bi bi-gear-wide-connected me-2"></i>Procesar
+          </button>
+          <button type="button" class="btn"
+            [class.btn-brand]="activeStage() === 'despachar'"
+            [class.btn-outline-secondary]="activeStage() !== 'despachar'"
+            (click)="selectStage('despachar')">
+            <i class="bi bi-truck me-2"></i>Despachar
+          </button>
+        </div>
+
+        <!-- Campos: Planificar -->
+        @if (activeStage() === 'planificar') {
           <div class="field field-full">
-            <label for="stg-porcion">Porción (solo para Planificar)</label>
+            <label for="stg-porcion">Porción *</label>
             <select id="stg-porcion" formControlName="porcionId">
               <option value="">Selecciona una porción…</option>
               @for (p of porciones(); track p.id) {
@@ -128,46 +154,192 @@
               }
             </select>
           </div>
-        </div>
-        <div class="stage-btns">
-          <button type="button" class="btn btn-outline-secondary" [disabled]="saving()" (click)="runStage('planificar')">
-            <i class="bi bi-diagram-3 me-2"></i>Planificar
-          </button>
-          <button type="button" class="btn btn-outline-secondary" [disabled]="saving()" (click)="runStage('procesar')">
-            <i class="bi bi-gear-wide-connected me-2"></i>Procesar
-          </button>
-          <button type="button" class="btn btn-outline-secondary" [disabled]="saving()" (click)="runStage('despachar')">
-            <i class="bi bi-truck me-2"></i>Despachar
-          </button>
-        </div>
+        }
+
+        <!-- Campos: Despachar -->
+        @if (activeStage() === 'despachar') {
+          <div class="form-grid">
+            <div class="field">
+              <label for="stg-paciente">Paciente *</label>
+              <select id="stg-paciente" formControlName="pacienteId">
+                <option value="">Selecciona un paciente…</option>
+                @for (p of pacientesList(); track p.id) {
+                  <option [value]="p.id">{{ p['nombre'] ?? p['name'] ?? p.id }}</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label for="stg-ventana">Ventana de entrega *</label>
+              <select id="stg-ventana" formControlName="ventanaEntrega">
+                <option value="">Selecciona una ventana…</option>
+                @for (v of ventanasForDespacho(); track v.id) {
+                  <option [value]="v.id">{{ v['desde'] ?? v['nombre'] ?? v.id }}</option>
+                }
+              </select>
+            </div>
+            <div class="field field-full">
+              <label for="stg-dir">Dirección ID *</label>
+              <input id="stg-dir" type="text" formControlName="direccionId" placeholder="UUID de dirección" />
+            </div>
+          </div>
+
+          <div class="items-block">
+            <div class="items-block-header">
+              <strong>Items de despacho *</strong>
+              <button type="button" class="btn btn-outline-secondary btn-sm" (click)="addItemDespacho()">
+                <i class="bi bi-plus-lg me-1"></i>Agregar item
+              </button>
+            </div>
+            @for (ctrl of itemsDespachoArray.controls; track $index; let i = $index) {
+              <div class="item-row-grid">
+                <div class="field" style="grid-column:1/-2">
+                  <input type="text" [formControl]="$any(ctrl)" placeholder="UUID del item de despacho" />
+                </div>
+                <button type="button" class="btn-icon danger" (click)="removeItemDespacho(i)">
+                  <i class="bi bi-trash3-fill"></i>
+                </button>
+              </div>
+            }
+            @if (itemsDespachoArray.length === 0) {
+              <p style="font-size:0.78rem;color:#94a3b8;margin:0">Agrega al menos un item.</p>
+            }
+          </div>
+        }
+
+        <!-- Botón ejecutar -->
+        @if (activeStage()) {
+          <div>
+            <button type="button" class="btn btn-brand" [disabled]="saving()" (click)="runStage(activeStage()!)">
+              @if (saving()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+              <i class="bi bi-play-fill me-2"></i>Ejecutar {{ stageLabel(activeStage()!) }}
+            </button>
+          </div>
+        }
       </form>
     </div>
 
+    <!-- Consultar relaciones -->
     <div class="table-card mt-4">
       <div class="toolbar">
-        <h3 class="page-h2" style="font-size:1rem;margin:0">Bitácora de la sesión</h3>
-        <span class="count-badge">{{ workflowLog().length }}</span>
+        <h3 class="page-h2" style="font-size:1rem;margin:0">3. Consultar relaciones</h3>
+        @if (relLoading()) {
+          <span class="spinner-border spinner-border-sm text-secondary"></span>
+        }
       </div>
-      @if (workflowLog().length === 0) {
-        <app-empty-state icon="bi-journal-text" title="Sin actividad" description="Las etapas ejecutadas aparecerán aquí." />
-      } @else {
-        <div class="table-responsive">
-          <table class="data-table">
-            <thead>
-              <tr><th>Cuándo</th><th>Etapa</th><th>Detalle</th></tr>
-            </thead>
-            <tbody>
-              @for (l of workflowLog(); track l.at) {
-                <tr>
-                  <td>{{ formatDate(l.at) }}</td>
-                  <td>{{ stageLabel(l.stage) }}</td>
-                  <td>{{ l.detail }}</td>
-                </tr>
-              }
-            </tbody>
-          </table>
+      <div class="card-form">
+        <!-- Entity type selector -->
+        <div class="stage-btns">
+          <button type="button" class="btn btn-sm"
+            [class.btn-brand]="relEntityType() === 'paciente'"
+            [class.btn-outline-secondary]="relEntityType() !== 'paciente'"
+            (click)="setRelEntityType('paciente')">
+            <i class="bi bi-person me-1"></i>Paciente
+          </button>
+          <button type="button" class="btn btn-sm"
+            [class.btn-brand]="relEntityType() === 'calendario'"
+            [class.btn-outline-secondary]="relEntityType() !== 'calendario'"
+            (click)="setRelEntityType('calendario')">
+            <i class="bi bi-calendar3 me-1"></i>Calendario
+          </button>
+          <button type="button" class="btn btn-sm"
+            [class.btn-brand]="relEntityType() === 'ventana'"
+            [class.btn-outline-secondary]="relEntityType() !== 'ventana'"
+            (click)="setRelEntityType('ventana')">
+            <i class="bi bi-clock-history me-1"></i>Ventana de entrega
+          </button>
+          <button type="button" class="btn btn-sm"
+            [class.btn-brand]="relEntityType() === 'suscripcion'"
+            [class.btn-outline-secondary]="relEntityType() !== 'suscripcion'"
+            (click)="setRelEntityType('suscripcion')">
+            <i class="bi bi-bookmark-star me-1"></i>Suscripción
+          </button>
         </div>
-      }
+
+        <div style="display:flex;gap:0.75rem;align-items:flex-end">
+          <div class="field" style="flex:1;margin:0">
+            <label for="rel-entity">Selecciona un elemento</label>
+            <select id="rel-entity" [value]="relSelectedId()" (change)="relSelectedId.set($any($event.target).value)">
+              <option value="">Elige…</option>
+              @for (e of relEntities(); track e.id) {
+                <option [value]="e.id">{{ e['nombre'] ?? e['name'] ?? e['fecha'] ?? e['desde'] ?? e.id }}</option>
+              }
+            </select>
+          </div>
+          <button type="button" class="btn btn-brand btn-sm" style="white-space:nowrap" (click)="loadRelaciones()">
+            <i class="bi bi-search me-1"></i>Consultar
+          </button>
+        </div>
+
+        <!-- Result 1: Calendarios / Pacientes -->
+        @if (relResult1().length > 0 || (!relLoading() && relSelectedId())) {
+          <div>
+            @if (relEntityType() === 'paciente' || relEntityType() === 'ventana') {
+              <p class="cal-section-label"><i class="bi bi-calendar3 me-1"></i>Calendarios</p>
+            } @else if (relEntityType() === 'calendario') {
+              <p class="cal-section-label"><i class="bi bi-person me-1"></i>Pacientes</p>
+            } @else {
+              <p class="cal-section-label"><i class="bi bi-calendar3 me-1"></i>Calendarios</p>
+            }
+            @if (relResult1().length === 0) {
+              <p class="cal-empty">Sin resultados.</p>
+            } @else {
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      @for (k of relResult1Keys(); track k) { <th>{{ k }}</th> }
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (row of relResult1(); track $index) {
+                      <tr>
+                        <td><span class="uuid-chip">{{ $any(row)['id'] | slice:0:8 }}…</span></td>
+                        @for (k of relResult1Keys(); track k) { <td>{{ $any(row)[k] ?? '—' }}</td> }
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Result 2: Ventanas / Calendarios (not shown for suscripcion) -->
+        @if (relEntityType() !== 'suscripcion' && (relResult2().length > 0 || (!relLoading() && relSelectedId()))) {
+          <div>
+            @if (relEntityType() === 'calendario') {
+              <p class="cal-section-label"><i class="bi bi-clock-history me-1"></i>Ventanas de entrega</p>
+            } @else if (relEntityType() === 'ventana') {
+              <p class="cal-section-label"><i class="bi bi-calendar3 me-1"></i>Calendarios</p>
+            } @else {
+              <p class="cal-section-label"><i class="bi bi-clock-history me-1"></i>Ventanas de entrega</p>
+            }
+            @if (relResult2().length === 0) {
+              <p class="cal-empty">Sin resultados.</p>
+            } @else {
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      @for (k of relResult2Keys(); track k) { <th>{{ k }}</th> }
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (row of relResult2(); track $index) {
+                      <tr>
+                        <td><span class="uuid-chip">{{ $any(row)['id'] | slice:0:8 }}…</span></td>
+                        @for (k of relResult2Keys(); track k) { <td>{{ $any(row)[k] ?? '—' }}</td> }
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        }
+      </div>
     </div>
   }
 
