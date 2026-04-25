@@ -45,10 +45,10 @@ export interface AgendaEntrada {
   calendario_id: string;
   estado: number;
   entrega_id: string;
-  contrato_id: string;
-  paciente: { id: string; nombre: string; documento: string };
-  suscripcion: { id: string; nombre: string };
-  ventana_entrega: { id: string; desde: string; hasta: string };
+  contrato_id: string | null;
+  paciente: { id: string; nombre: string; documento: string } | null;
+  suscripcion: { id: string; nombre: string } | null;
+  ventana_entrega: { id: string; desde: string; hasta: string } | null;
 }
 export type AgendaResponse = Record<string, AgendaEntrada[]>;
 
@@ -63,10 +63,19 @@ export interface OrdenConsolidadaBatch {
   cant_producida: number;
   estado: string;
 }
+export interface TrackingEvento {
+  estado: string;
+  timestamp?: string;
+  fecha?: string;
+  nota?: string;
+  [k: string]: unknown;
+}
 export interface OrdenConsolidadaDespacho {
   delivery_status: string;
   paciente_id: string;
-  tracking: { historial: unknown[] };
+  direccion_id?: string;
+  ventana_entrega_id?: string;
+  tracking: { historial: TrackingEvento[] } | null;
 }
 export interface OrdenConsolidadaProgreso {
   total_paquetes: number;

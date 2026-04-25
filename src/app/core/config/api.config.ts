@@ -71,6 +71,7 @@ export const API = {
     porciones: resource('porciones'),
     ventanasEntrega: {
       ...resource('ventanas-entrega'),
+      proxima: `${GATEWAY_URL}/production/ventanas-entrega/proxima`,
       pacientes: (id: string) => `${GATEWAY_URL}/production/ventanas-entrega/${id}/pacientes`,
       calendarios: (id: string) => `${GATEWAY_URL}/production/ventanas-entrega/${id}/calendarios`,
     },
