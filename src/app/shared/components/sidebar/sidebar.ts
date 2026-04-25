@@ -30,6 +30,20 @@ export class Sidebar {
       roles: SECTION_ROLES.dashboard,
     },
     {
+      label: 'Contratos y Suscripciones',
+      icon: 'bi-file-earmark-text-fill',
+      route: '/admin/contratos-suscripciones',
+      color: '#1d4ed8',
+      roles: [],
+    },
+    {
+      label: 'Suscripciones',
+      icon: 'bi-journal-text',
+      route: '/admin/suscripciones',
+      color: '#0f766e',
+      roles: [],
+    },
+    {
       label: 'Pacientes',
       icon: 'bi-people-fill',
       route: '/admin/patients',
@@ -105,3 +119,13 @@ export class Sidebar {
       .toUpperCase();
   }
 }
+
+
+
+
+
+
+
+
+
+

@@ -86,7 +86,8 @@
               "buildTarget": "frontend-microservicios:build:production"
             },
             "development": {
-              "buildTarget": "frontend-microservicios:build:development"
+              "buildTarget": "frontend-microservicios:build:development",
+              "proxyConfig": "proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"

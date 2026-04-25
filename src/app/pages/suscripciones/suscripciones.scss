@@ -1,0 +1,60 @@
+﻿@use '../../shared/styles/page-shared' as *;
+@use '../../shared/styles/modal-shared' as *;
+
+.toolbar-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.5rem 0.25rem;
+  flex-wrap: wrap;
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cell-id {
+  max-width: 210px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.field-full {
+  grid-column: 1 / -1;
+}
+
+.form-grid label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.35rem;
+}
+
+.form-grid input,
+.form-grid textarea {
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  color: #1f2f45;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  background: #fff;
+  width: 100%;
+}
+
+.form-grid input:focus,
+.form-grid textarea:focus {
+  border-color: #2f4f87;
+  box-shadow: 0 0 0 3px rgba(47, 79, 135, 0.12);
+}
+
+.form-grid textarea {
+  resize: vertical;
+  min-height: 88px;
+}

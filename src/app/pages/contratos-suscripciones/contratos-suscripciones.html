@@ -1,0 +1,290 @@
+﻿<div class="page">
+<div class="page-header">
+<div>
+<h2 class="page-h2">Contratos y Suscripciones</h2>
+<p class="page-desc">Gestion de contratos del microservicio</p>
+</div>
+</div>
+
+<div class="table-card p-2">
+<div class="toolbar-wrap">
+<div class="toolbar">
+<h3 class="page-h2" style="font-size:1rem;margin:0">Listado de contratos</h3>
+<span class="count-badge">{{ contratos().length }} contrato{{ contratos().length !== 1 ? 's' : '' }}</span>
+<span class="count-badge estado-activo">{{ totalActivos() }} activo{{ totalActivos() !== 1 ? 's' : '' }}</span>
+</div>
+<button class="btn btn-outline-secondary btn-sm" type="button" (click)="load()" [disabled]="loading()">
+@if (loading()) {
+<span class="spinner-border spinner-border-sm me-2"></span>
+}
+<i class="bi bi-arrow-repeat me-1"></i>Actualizar
+</button>
+</div>
+
+@if (loading()) {
+<div class="table-loading">
+@for (i of [1,2,3,4,5]; track i) {
+<div class="skeleton-row">
+<div class="skeleton sk-avatar"></div>
+<div class="skeleton-lines">
+<div class="skeleton sk-line"></div>
+<div class="skeleton sk-line-sm"></div>
+</div>
+<div class="skeleton sk-badge"></div>
+</div>
+}
+</div>
+} @else if (contratos().length === 0) {
+<app-empty-state
+icon="bi-file-earmark-text"
+title="No hay contratos para mostrar"
+description="Verifica el endpoint o recarga la informacion." />
+} @else {
+<div class="table-responsive">
+<table class="data-table">
+<thead>
+<tr>
+<th>Contrato ID</th>
+<th>Paciente</th>
+<th>Suscripcion</th>
+<th>Plan</th>
+<th>Horario</th>
+<th>Periodo</th>
+<th>Entregas</th>
+<th>Precio Total</th>
+<th>Estado</th>
+<th>Actualizado</th>
+<th class="th-actions">Acciones</th>
+</tr>
+</thead>
+<tbody>
+@for (item of contratos(); track item.id) {
+<tr>
+<td class="cell-id">{{ item.id }}</td>
+<td>{{ item.pacienteId }}</td>
+<td>{{ item.suscripcionId }}</td>
+<td>{{ item.planId }}</td>
+<td>{{ item.hora }}</td>
+<td>{{ item.inicio }} - {{ item.fin }}</td>
+<td>
+{{ item.cantidadEntregas }}
+<span class="meta-text">{{ item.incluyeFinDeSemana ? 'con fin de semana' : 'sin fin de semana' }}</span>
+</td>
+<td>Bs {{ item.precioTotal }}</td>
+<td>
+<span [class]="estadoClass(item.estado)">{{ estadoLabel(item.estado) }}</span>
+</td>
+<td>{{ item.updateAt | date:'short' }}</td>
+<td>
+<div class="action-btns">
+<button class="btn-icon" type="button" title="Ver entregas" (click)="openEntregasModal(item)">
+<i class="bi bi-calendar3"></i>
+</button>
+<button class="btn-icon btn-danger" type="button" title="Cancelar contrato" [disabled]="item.estado === 1" (click)="openCancelarContratoModal(item)">
+<i class="bi bi-trash"></i>
+</button>
+</div>
+</td>
+</tr>
+}
+</tbody>
+</table>
+</div>
+}
+</div>
+
+@if (showEntregasModal()) {
+<div class="modal-backdrop" (click)="closeEntregasModal()" (keydown.escape)="closeEntregasModal()" aria-hidden="true"></div>
+<dialog class="modal-panel modal-xl" open aria-modal="true" aria-labelledby="entregas-modal-title">
+<div class="modal-head">
+<h3 id="entregas-modal-title">Entregas Calendario</h3>
+<button class="btn-close-modal" (click)="closeEntregasModal()" aria-label="Cerrar">
+<i class="bi bi-x-lg"></i>
+</button>
+</div>
+
+<div class="modal-body">
+<p class="modal-subtext">Contrato: {{ contratoSeleccionado()?.id }}</p>
+
+@if (loadingEntregas()) {
+<div class="table-loading">
+@for (i of [1,2,3,4]; track i) {
+<div class="skeleton-row">
+<div class="skeleton sk-avatar"></div>
+<div class="skeleton-lines">
+<div class="skeleton sk-line"></div>
+<div class="skeleton sk-line-sm"></div>
+</div>
+<div class="skeleton sk-badge"></div>
+</div>
+}
+</div>
+} @else if (entregasCalendario().length === 0) {
+<app-empty-state
+icon="bi-calendar-x"
+title="Sin entregas registradas"
+description="Este contrato no tiene entregas de calendario." />
+} @else {
+<div class="table-card">
+<div class="table-responsive">
+<table class="data-table">
+<thead>
+<tr>
+<th>ID Entrega</th>
+<th>Contrato</th>
+<th>Fecha</th>
+<th>Hora</th>
+<th>Estado</th>
+<th>Actualizado</th>
+<th class="th-actions">Acciones</th>
+</tr>
+</thead>
+<tbody>
+@for (entrega of entregasCalendario(); track entrega.id) {
+<tr>
+<td class="cell-id">{{ entrega.id }}</td>
+<td class="cell-id">{{ entrega.contratoId }}</td>
+<td>{{ entrega.fecha | date:'mediumDate' }}</td>
+<td>{{ entrega.hora }}</td>
+<td>
+<span [class]="estadoEntregaClass(entrega.estado)">{{ estadoEntregaLabel(entrega.estado) }}</span>
+</td>
+<td>{{ entrega.updateAt ? (entrega.updateAt | date:'short') : '--' }}</td>
+<td>
+<div class="action-btns">
+@if (entrega.estado !== 3) {
+<button class="btn-icon" type="button" title="Cambiar hora" (click)="openAccionModal(entrega, 'cambiar-hora')">
+<i class="bi bi-clock"></i>
+</button>
+<button class="btn-icon" type="button" title="Reprogramar" (click)="openAccionModal(entrega, 'reprogramar')">
+<i class="bi bi-arrow-repeat"></i>
+</button>
+<button class="btn-icon danger" type="button" title="Cancelar" (click)="openAccionModal(entrega, 'cancelar')">
+<i class="bi bi-x-circle"></i>
+</button>
+}
+</div>
+</td>
+</tr>
+}
+</tbody>
+</table>
+</div>
+</div>
+}
+</div>
+</dialog>
+}
+
+@if (showAccionModal()) {
+<div class="modal-backdrop" (click)="closeAccionModal()" (keydown.escape)="closeAccionModal()" aria-hidden="true"></div>
+<dialog class="modal-panel modal-sm" open aria-modal="true" aria-labelledby="accion-modal-title">
+<div class="modal-head" [class.danger]="accionSeleccionada() === 'cancelar'">
+<h3 id="accion-modal-title">
+@if (accionSeleccionada() === 'cambiar-hora') {
+Cambiar Hora
+} @else if (accionSeleccionada() === 'reprogramar') {
+Reprogramar Entrega
+} @else if (accionSeleccionada() === 'cancelar') {
+Cancelar Entrega
+}
+</h3>
+<button class="btn-close-modal" (click)="closeAccionModal()" aria-label="Cerrar">
+<i class="bi bi-x-lg"></i>
+</button>
+</div>
+
+<div class="modal-body">
+@if (accionSeleccionada() === 'cancelar') {
+<div class="confirm-content">
+<div class="confirm-icon">
+<i class="bi bi-exclamation-triangle"></i>
+</div>
+<p>¿Estas seguro de que deseas cancelar esta entrega? Esta accion no se puede deshacer.</p>
+</div>
+} @else if (accionSeleccionada() === 'cambiar-hora') {
+<form [formGroup]="accionForm" (ngSubmit)="confirmarAccion()">
+<div class="form-grid field-full">
+<label for="nueva-hora">Nueva Hora</label>
+<input type="time" id="nueva-hora" formControlName="nuevaHora" required />
+</div>
+</form>
+} @else if (accionSeleccionada() === 'reprogramar') {
+<div class="confirm-content">
+<div class="confirm-icon">
+<i class="bi bi-arrow-repeat"></i>
+</div>
+<p>La entrega se reprogramara al final de la cola manteniendo la misma hora actual.</p>
+</div>
+}
+
+<div class="modal-actions">
+<button type="button" class="btn btn-outline-secondary" (click)="closeAccionModal()" [disabled]="updatingEntrega()">
+Cancelar
+</button>
+<button type="button" [class]="accionSeleccionada() === 'cancelar' ? 'btn btn-danger' : 'btn btn-brand'" (click)="confirmarAccion()" [disabled]="updatingEntrega()">
+@if (updatingEntrega()) {
+<span class="spinner-border spinner-border-sm me-2"></span>
+}
+@if (accionSeleccionada() === 'cambiar-hora') {
+Actualizar Hora
+} @else if (accionSeleccionada() === 'reprogramar') {
+Reprogramar
+} @else if (accionSeleccionada() === 'cancelar') {
+Cancelar Entrega
+}
+</button>
+</div>
+</div>
+</dialog>
+}
+
+@if (showCancelarModal()) {
+<div class="modal-backdrop" (click)="closeCancelarContratoModal()" (keydown.escape)="closeCancelarContratoModal()" aria-hidden="true"></div>
+<dialog class="modal-panel" open aria-modal="true" aria-labelledby="cancelar-contrato-modal-title">
+<div class="modal-head">
+<h3 id="cancelar-contrato-modal-title">Cancelar Contrato</h3>
+<button class="btn-close-modal" (click)="closeCancelarContratoModal()" aria-label="Cerrar">
+<i class="bi bi-x-lg"></i>
+</button>
+</div>
+
+<div class="modal-body">
+@if (contratoParaCancelar(); as contrato) {
+<div class="confirm-content">
+<div class="confirm-icon danger">
+<i class="bi bi-exclamation-triangle"></i>
+</div>
+<div class="form-grid field-full">
+<label>ID del Contrato</label>
+<p class="modal-subtext">{{ contrato.id }}</p>
+</div>
+<div class="form-grid field-full">
+<label>Paciente</label>
+<p class="modal-subtext">{{ contrato.pacienteId }}</p>
+</div>
+<div class="form-grid field-full">
+<label>Suscripción</label>
+<p class="modal-subtext">{{ contrato.suscripcionId }}</p>
+</div>
+<p style="margin-top: 1rem; color: var(--danger-color);">
+<strong>⚠ Advertencia:</strong> Esta acción cancelará permanentemente el contrato y no se puede deshacer.
+</p>
+</div>
+}
+</div>
+
+<div class="modal-actions">
+<button type="button" class="btn btn-outline-secondary" (click)="closeCancelarContratoModal()" [disabled]="cancelingContrato()">
+Cancelar
+</button>
+<button type="button" class="btn btn-danger" (click)="confirmarCancelarContrato()" [disabled]="cancelingContrato()">
+@if (cancelingContrato()) {
+<span class="spinner-border spinner-border-sm me-2"></span>
+}
+Cancelar Contrato
+</button>
+</div>
+</dialog>
+}
+</div>

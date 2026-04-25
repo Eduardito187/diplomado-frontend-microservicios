@@ -44,7 +44,7 @@ export class Login {
 
     this.auth.login(username, password).subscribe({
       next: () => {
-        this.router.navigateByUrl('/admin/dashboard');
+        this.router.navigateByUrl('/admin/contratos-suscripciones');
       },
       error: (err: Error) => {
         this.errorMessage.set(err.message ?? 'No fue posible iniciar sesión.');

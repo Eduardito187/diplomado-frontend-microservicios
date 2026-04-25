@@ -1,0 +1,10 @@
+{
+  "/contratos-api": {
+    "target": "http://213.136.90.174:6670",
+    "secure": false,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/contratos-api": "/api"
+    }
+  }
+}
