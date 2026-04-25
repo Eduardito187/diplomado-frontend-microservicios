@@ -117,6 +117,10 @@ export class Appointments implements OnInit {
   readonly selectedNutritionist = signal<Nutritionist | null>(null);
   readonly appointmentDetail = signal<any>(null);
   readonly detailLoading = signal(false);
+  readonly availableHours = signal<string[]>([]);
+  readonly hoursLoading = signal(false);
+  readonly selectedScheduleDate = signal<string>('');
+  readonly selectedScheduleHour = signal<string>('');
 
   readonly scheduleForm = this.fb.nonNullable.group({
     patientId: ['', Validators.required],
@@ -210,6 +214,9 @@ export class Appointments implements OnInit {
       type: 'CONSULTATION',
       scheduleDate: '',
     });
+    this.selectedScheduleDate.set('');
+    this.selectedScheduleHour.set('');
+    this.availableHours.set([]);
     this.modalMode.set('schedule');
   }
 
@@ -467,5 +474,95 @@ export class Appointments implements OnInit {
   getAppointmentTypeLabel(type?: string): string {
     if (!type) return '—';
     return APPOINTMENT_TYPES[type] ?? type;
+  }
+
+  onScheduleDateChange(date: string): void {
+    if (!date) {
+      this.selectedScheduleDate.set('');
+      this.selectedScheduleHour.set('');
+      this.scheduleForm.patchValue({ scheduleDate: '' });
+      this.availableHours.set([]);
+      return;
+    }
+
+    if (this.isWeekend(date)) {
+      this.toast.error('No se pueden programar citas los sábados y domingos');
+      return;
+    }
+
+    this.selectedScheduleDate.set(date);
+    this.selectedScheduleHour.set('');
+    this.scheduleForm.patchValue({ scheduleDate: '' });
+    this.loadAvailableHours(date);
+  }
+
+  onScheduleNutritionistChange(nutritionistId: string): void {
+    this.scheduleForm.patchValue({ nutritionistId });
+    const date = this.selectedScheduleDate();
+
+    if (date) {
+      this.selectedScheduleHour.set('');
+      this.scheduleForm.patchValue({ scheduleDate: '' });
+      this.loadAvailableHours(date);
+    }
+  }
+
+  private loadAvailableHours(date: string): void {
+    const nid = this.scheduleForm.get('nutritionistId')?.value;
+    if (!nid) return;
+
+    this.hoursLoading.set(true);
+    this.aptSvc.getAppointmentsByNutritionistAndDate(nid, date).subscribe({
+      next: (appointments) => {
+        const occupiedHours = this.extractOccupiedHours(appointments);
+        this.availableHours.set(this.generateAvailableHours(occupiedHours));
+        this.hoursLoading.set(false);
+      },
+      error: () => {
+        this.availableHours.set(this.generateAvailableHours([]));
+        this.hoursLoading.set(false);
+      },
+    });
+  }
+
+  onScheduleHourChange(hour: string): void {
+    this.selectedScheduleHour.set(hour);
+    const date = this.selectedScheduleDate();
+    if (date && hour) {
+      const datetime = `${date}T${hour}`;
+      this.scheduleForm.patchValue({ scheduleDate: datetime });
+    }
+  }
+
+  private extractOccupiedHours(appointments: ScheduledAppointment[]): string[] {
+    return appointments
+      .filter((apt) => apt.scheduleDate && apt.status?.toUpperCase() !== 'CANCELLED')
+      .map((apt) => {
+        const date = parseDdMmYyyyHms(apt.scheduleDate);
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${hours}:${minutes}`;
+      });
+  }
+
+  private generateAvailableHours(occupiedHours: string[]): string[] {
+    const hours: string[] = [];
+    for (let h = 8; h < 18; h++) {
+      for (let m = 0; m < 60; m += 30) {
+        const hour = String(h).padStart(2, '0');
+        const minute = String(m).padStart(2, '0');
+        const timeStr = `${hour}:${minute}`;
+        if (!occupiedHours.includes(timeStr)) {
+          hours.push(timeStr);
+        }
+      }
+    }
+    return hours;
+  }
+
+  private isWeekend(dateStr: string): boolean {
+    const date = new Date(`${dateStr}T00:00:00`);
+    const dayOfWeek = date.getDay();
+    return dayOfWeek === 0 || dayOfWeek === 6;
   }
 }
