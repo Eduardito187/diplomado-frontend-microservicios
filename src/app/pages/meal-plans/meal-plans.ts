@@ -1,28 +1,67 @@
-import { Component, signal, inject } from '@angular/core';
-import { FormBuilder, FormArray, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, OnInit, signal, inject, computed } from '@angular/core';
+import { FormBuilder, FormArray, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { MealPlanService } from '../../core/services/meal-plan.service';
 import { ToastService } from '../../core/services/toast.service';
-import { MealPlan, CreateMealPlanDto, TimeFoodType } from '../../core/models/meal-plan.model';
+import { MealPlan, CreateMealPlanDto, TimeFoodType, Recipe } from '../../core/models/meal-plan.model';
 import { EmptyState } from '../../shared/components/empty-state/empty-state';
+import { finalize } from 'rxjs';
+
+type ModalMode = 'create' | 'view' | 'select-recipes' | null;
 
 @Component({
   selector: 'app-meal-plans',
-  imports: [ReactiveFormsModule, EmptyState],
+  imports: [ReactiveFormsModule, EmptyState, FormsModule],
   templateUrl: './meal-plans.html',
   styleUrl: './meal-plans.scss',
 })
-export class MealPlans {
+export class MealPlans implements OnInit {
+
   private readonly svc = inject(MealPlanService);
   private readonly toast = inject(ToastService);
   private readonly fb = inject(FormBuilder);
-
   readonly saving = signal(false);
   readonly lookupLoading = signal(false);
-  readonly lookupResult = signal<MealPlan | null>(null);
-  readonly lookupId = signal('');
-
-  readonly recentPlans = signal<Array<{ id: string; summary: string }>>([]);
-
+  readonly loading = signal(true);
+  readonly modalMode = signal<ModalMode>(null);
+  readonly selectedDayIndex = signal<number | null>(null);
+  readonly showTimeFoodsModal = signal(false);
+  //Recipes
+  readonly recipes = signal<Recipe[]>([]);
+  readonly selectedRecipeIds = signal<Set<string>>(new Set());
+  readonly recipeSearchQuery = signal('');
+  readonly filteredRecipes = computed(() => {
+    const q = this.recipeSearchQuery().toLowerCase().trim();
+    const dayIdx = this.selectedDayForRecipe();
+    const tfIdx = this.selectedTimeFoodForRecipe();
+    let selectedIds = new Set<string>();
+    if (dayIdx !== null && tfIdx !== null) {
+      const recipes = this.recipesOf(dayIdx, tfIdx).controls;
+      recipes.forEach((rCtrl: any) => {
+        const id = rCtrl.get('idRecipe')?.value;
+        if (id) selectedIds.add(id);
+      });
+    }
+    let available = this.recipes().filter(r => !selectedIds.has(r.id!));
+    if (q) {
+      available = available.filter(r =>
+        r.name?.toLowerCase().includes(q)
+      );
+    }
+    return available;
+  });
+  readonly selectedDayForRecipe = signal<number | null>(null);
+  readonly selectedTimeFoodForRecipe = signal<number | null>(null);
+  // MealPlan
+  readonly mealplans = signal<MealPlan[]>([]);
+  readonly searchQuery = signal('');
+  readonly filtered = computed(() => {
+    const q = this.searchQuery().toLowerCase().trim();
+    if (!q) return this.mealplans();
+    return this.mealplans().filter(
+      (item) =>
+        item.id?.toLowerCase().includes(q)
+    );
+  });
   readonly planForm = this.fb.nonNullable.group({
     idNutricionist: ['', Validators.required],
     idPatient: ['', Validators.required],
@@ -34,13 +73,22 @@ export class MealPlans {
     totalCalories: [2000, [Validators.required, Validators.min(0)]],
     days: this.fb.array<ReturnType<typeof this.buildDay>>([]),
   });
-
-  constructor() {
-    this.addDay();
-  }
-
   get days(): FormArray {
     return this.planForm.controls.days;
+  }
+
+  ngOnInit(): void {
+    this.load();
+  }
+
+  load(): void {
+    this.loading.set(true);
+    this.svc.getMealPlan()
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe({
+        next: (data) => this.mealplans.set(data ?? []),
+        error: () => this.toast.error('No se pudo cargar la lista de recetas.'),
+      });
   }
 
   private buildDay() {
@@ -54,7 +102,7 @@ export class MealPlans {
     return this.fb.nonNullable.group({
       type: ['BREAKFAST' as TimeFoodType, Validators.required],
       order: [1, Validators.required],
-      recipes: this.fb.array<ReturnType<typeof this.buildRecipeRef>>([this.buildRecipeRef()]),
+      recipes: this.fb.array<ReturnType<typeof this.buildRecipeRef>>([]),
     });
   }
 
@@ -63,6 +111,21 @@ export class MealPlans {
       idRecipe: ['', Validators.required],
       portion: [1, [Validators.required, Validators.min(1)]],
     });
+  }
+
+  private resetPlanForm(): void {
+    this.planForm.reset({
+      idNutricionist: '',
+      idPatient: '',
+      idAppointment: '',
+      idSubscription: '',
+      totalDays: 7,
+      starDate: '',
+      endDate: '',
+      totalCalories: 2000,
+    });
+    this.days.clear();
+    this.addDay();
   }
 
   addDay(): void {
@@ -95,9 +158,88 @@ export class MealPlans {
 
   removeRecipeRef(dayIdx: number, tfIdx: number, rIdx: number): void {
     this.recipesOf(dayIdx, tfIdx).removeAt(rIdx);
+    this.updateSelectedRecipeIds();
   }
 
-  submit(): void {
+  openCreate(): void {
+    this.svc.getRecipe()
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe({
+        next: (data) => this.recipes.set(data ?? []),
+        error: () => this.toast.error('No se pudo cargar la lista de recetas.'),
+      });
+    this.modalMode.set('create');
+  }
+
+  openSelectRecipes(dayIdx: number, tfIdx: number): void {
+    this.selectedDayForRecipe.set(dayIdx);
+    this.selectedTimeFoodForRecipe.set(tfIdx);
+    this.recipeSearchQuery.set('');
+    this.modalMode.set('select-recipes');
+  }
+
+  closeCreate(): void {
+    this.modalMode.set(null);
+  }
+
+  closeSelectRecipes(): void {
+    this.modalMode.set('create');
+  }
+
+  openTimeFoodsModal(dayIndex: number): void {
+    this.selectedDayIndex.set(dayIndex);
+    this.showTimeFoodsModal.set(true);
+  }
+
+  closeTimeFoodsModal(): void {
+    this.selectedDayIndex.set(null);
+    this.showTimeFoodsModal.set(false);
+  }
+
+  currentTimeFoods(): FormArray {
+    const idx = this.selectedDayIndex();
+    return this.days.at(idx!).get('timeFoods') as FormArray;
+  }
+
+  private updateSelectedRecipeIds(): void {
+    const ids = new Set<string>();
+    this.days.controls.forEach((dayCtrl: any) => {
+      const timeFoods = dayCtrl.get('timeFoods') as FormArray;
+      timeFoods.controls.forEach((tfCtrl: any) => {
+        const recipes = tfCtrl.get('recipes') as FormArray;
+
+        recipes.controls.forEach((rCtrl: any) => {
+          const id = rCtrl.get('idRecipe')?.value;
+          if (id) ids.add(id);
+        });
+      });
+    });
+    this.selectedRecipeIds.set(ids);
+  }
+
+  selectRecipe(recipe: Recipe): void {
+    const dayIdx = this.selectedDayForRecipe();
+    const tfIdx = this.selectedTimeFoodForRecipe();
+    if (dayIdx === null || tfIdx === null) return;
+    const recipesArray = this.recipesOf(dayIdx, tfIdx);
+    const alreadyExists = recipesArray.controls.some((rCtrl: any) => {
+      return rCtrl.get('idRecipe')?.value === recipe.id;
+    });
+    if (alreadyExists) {
+      this.toast.error('Esta receta ya fue agregada a esta comida.');
+      return;
+    }
+    const recipeGroup = this.buildRecipeRef();
+    recipeGroup.patchValue({
+      idRecipe: recipe.id,
+      portion: 1
+    });
+    recipesArray.push(recipeGroup);
+    this.toast.success(`Receta "${recipe.name}" agregada`);
+    this.closeSelectRecipes();
+  }
+
+  create(): void {
     if (this.planForm.invalid) {
       this.planForm.markAllAsTouched();
       this.toast.error('Revisa los campos del formulario.');
@@ -125,7 +267,7 @@ export class MealPlans {
     };
     this.svc.createMealPlan(dto).subscribe({
       next: (id) => {
-        this.recentPlans.update((list) => [
+        this.mealplans.update((list) => [
           { id, summary: `${raw.totalDays}d · ${raw.totalCalories} kcal · ${raw.starDate} → ${raw.endDate}` },
           ...list,
         ]);
@@ -140,49 +282,24 @@ export class MealPlans {
     });
   }
 
-  private resetPlanForm(): void {
-    this.planForm.reset({
-      idNutricionist: '',
-      idPatient: '',
-      idAppointment: '',
-      idSubscription: '',
-      totalDays: 7,
-      starDate: '',
-      endDate: '',
-      totalCalories: 2000,
-    });
-    this.days.clear();
-    this.addDay();
-  }
-
-  lookup(): void {
-    const id = this.lookupId().trim();
-    if (!id) return;
-    this.lookupLoading.set(true);
-    this.lookupResult.set(null);
-    this.svc.getMealPlanById(id).subscribe({
-      next: (plan) => {
-        this.lookupResult.set(plan);
-        this.lookupLoading.set(false);
+  cancel(mealplan: MealPlan): void {
+    if (mealplan.status != 'CREADO') {
+      this.planForm.markAllAsTouched();
+      this.toast.error('No se puede cancelar el plan.');
+      return;
+    }
+    this.svc.cancelMealPlan(mealplan.id).subscribe({
+      next: (id) => {
+        mealplan.status = "CANCELADO";
+        this.toast.success(`Plan cancelado (${id}).`);
+        this.resetPlanForm();
+        this.saving.set(false);
       },
-      error: () => {
-        this.toast.error('Plan no encontrado.');
-        this.lookupLoading.set(false);
+      error: (err) => {
+        this.toast.error(err?.message ?? 'Error al crear el plan.');
+        this.saving.set(false);
       },
     });
   }
 
-  cancel(id: string): void {
-    this.svc.cancelMealPlan(id).subscribe({
-      next: () => this.toast.success('Plan cancelado.'),
-      error: () => this.toast.error('Error al cancelar el plan.'),
-    });
-  }
-
-  refresh(id: string): void {
-    this.svc.updateMealPlan(id).subscribe({
-      next: () => this.toast.success('Plan actualizado.'),
-      error: () => this.toast.error('Error al actualizar el plan.'),
-    });
-  }
 }

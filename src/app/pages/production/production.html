@@ -30,42 +30,40 @@
       <div class="toolbar">
         <h3 class="page-h2" style="font-size:1rem;margin:0">1. Generar orden</h3>
       </div>
-      <form [formGroup]="generarForm" (ngSubmit)="submitGenerar()" novalidate class="p-3">
+      <form [formGroup]="generarForm" (ngSubmit)="submitGenerar()" novalidate class="card-form">
         <div class="form-grid">
           <div class="field">
             <label for="gen-fecha">Fecha *</label>
             <input id="gen-fecha" type="date" formControlName="fecha" />
           </div>
         </div>
-        <div class="mt-3">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <strong style="font-size:0.85rem">Items</strong>
+        <div class="items-block">
+          <div class="items-block-header">
+            <strong>Items del pedido</strong>
             <button type="button" class="btn btn-outline-secondary btn-sm" (click)="addItem()">
               <i class="bi bi-plus-lg me-1"></i>Agregar item
             </button>
           </div>
           @for (it of workflowItems.controls; track $index; let i = $index) {
-            <div class="form-grid" [formGroup]="$any(it)">
+            <div class="item-row-grid" [formGroup]="$any(it)">
               <div class="field">
                 <label [attr.for]="'gen-sku-' + i">SKU *</label>
-                <input [id]="'gen-sku-' + i" type="text" formControlName="sku" />
+                <input [id]="'gen-sku-' + i" type="text" formControlName="sku" placeholder="PROD-001" />
               </div>
               <div class="field">
                 <label [attr.for]="'gen-qty-' + i">Cantidad *</label>
                 <input [id]="'gen-qty-' + i" type="number" min="1" formControlName="qty" />
               </div>
-              <div class="field" style="align-self:end">
-                <button type="button" class="btn-icon danger" title="Eliminar" (click)="removeItem(i)">
-                  <i class="bi bi-trash3-fill"></i>
-                </button>
-              </div>
+              <button type="button" class="btn-icon danger" title="Eliminar item" (click)="removeItem(i)">
+                <i class="bi bi-trash3-fill"></i>
+              </button>
             </div>
           }
         </div>
-        <div class="modal-actions">
+        <div class="modal-actions" style="margin-top:0;padding-top:0;border:none">
           <button type="submit" class="btn btn-brand" [disabled]="saving()">
             @if (saving()) { <span class="spinner-border spinner-border-sm me-2"></span> }
-            Generar
+            Generar orden
           </button>
         </div>
       </form>
@@ -75,7 +73,7 @@
       <div class="toolbar">
         <h3 class="page-h2" style="font-size:1rem;margin:0">2. Ejecutar etapa</h3>
       </div>
-      <form [formGroup]="stageForm" class="p-3" (ngSubmit)="$event.preventDefault()">
+      <form [formGroup]="stageForm" class="card-form" (ngSubmit)="$event.preventDefault()">
         <div class="form-grid">
           <div class="field field-full">
             <label for="stg-id">ID de la orden</label>
@@ -94,7 +92,7 @@
             </select>
           </div>
         </div>
-        <div class="d-flex gap-2 flex-wrap mt-2">
+        <div class="stage-btns">
           <button type="button" class="btn btn-outline-secondary" [disabled]="saving()" (click)="runStage('planificar')">
             <i class="bi bi-diagram-3 me-2"></i>Planificar
           </button>
@@ -138,16 +136,16 @@
 
   @if (activeTab() === 'resources') {
     <div class="table-card">
-      <div class="toolbar flex-wrap">
+      <div class="resource-tabs">
         @for (r of resources; track r.key) {
           <button
             type="button"
-            class="btn btn-sm"
-            [class.btn-brand]="selectedResource() === r.key"
-            [class.btn-outline-secondary]="selectedResource() !== r.key"
+            class="resource-tab"
+            [class.active]="selectedResource() === r.key"
             (click)="selectResource(r.key)"
           >
-            <i class="bi {{ r.icon }} me-1"></i>{{ r.label }}
+            <i class="bi {{ r.icon }}"></i>
+            <span>{{ r.label }}</span>
           </button>
         }
       </div>
@@ -155,13 +153,18 @@
 
     @if (view() === 'create' || view() === 'edit') {
       <div class="table-card mt-3">
-        <div class="toolbar">
-          <h3 class="page-h2" style="font-size:1rem;margin:0">
-            <i class="bi {{ selectedSchema().icon }} me-2"></i>
-            {{ view() === 'edit' ? 'Editar' : 'Nuevo' }} {{ selectedSchema().singular }}
-          </h3>
-          <button type="button" class="btn btn-outline-secondary btn-sm ms-auto" (click)="cancelForm()">
-            <i class="bi bi-arrow-left me-1"></i>Volver al listado
+        <div class="form-panel-header">
+          <div class="form-panel-title">
+            <div class="form-panel-icon">
+              <i class="bi {{ selectedSchema().icon }}"></i>
+            </div>
+            <div>
+              <h3>{{ view() === 'edit' ? 'Editar' : 'Nuevo' }} {{ selectedSchema().singular }}</h3>
+              <p>{{ view() === 'edit' ? 'Modificá los campos y guardá los cambios.' : 'Completá los campos para crear un nuevo registro.' }}</p>
+            </div>
+          </div>
+          <button type="button" class="btn btn-outline-secondary btn-sm" (click)="cancelForm()">
+            <i class="bi bi-arrow-left me-1"></i>Volver
           </button>
         </div>
         <app-resource-form
@@ -176,10 +179,11 @@
     } @else {
       <div class="table-card mt-3">
         <div class="toolbar">
-          <h3 class="page-h2" style="font-size:1rem;margin:0">
-            <i class="bi {{ selectedSchema().icon }} me-2"></i>{{ selectedSchema().label }}
-          </h3>
-          <span class="count-badge">{{ items().length }}</span>
+          <div class="resource-list-title">
+            <i class="bi {{ selectedSchema().icon }}"></i>
+            <span>{{ selectedSchema().label }}</span>
+            <span class="count-badge">{{ items().length }}</span>
+          </div>
           <div class="ms-auto d-flex gap-2">
             <button type="button" class="btn btn-outline-secondary btn-sm" (click)="loadResource()">
               <i class="bi bi-arrow-clockwise me-1"></i>Recargar
@@ -191,7 +195,9 @@
         </div>
 
         @if (loading()) {
-          <div class="p-3"><span class="spinner-border spinner-border-sm me-2"></span>Cargando…</div>
+          <div class="p-3 d-flex align-items-center gap-2 text-muted">
+            <span class="spinner-border spinner-border-sm"></span>Cargando…
+          </div>
         } @else if (items().length === 0) {
           <app-empty-state
             [icon]="selectedSchema().icon"
@@ -202,7 +208,7 @@
           />
         } @else {
           <div class="table-responsive">
-            <table class="data-table">
+            <table class="data-table resource-table">
               <thead>
                 <tr>
                   <th>ID</th>
@@ -214,12 +220,12 @@
               </thead>
               <tbody>
                 @for (row of items(); track row.id) {
-                  <tr>
-                    <td><code style="font-size:0.7rem">{{ row.id }}</code></td>
+                  <tr class="clickable-row" (click)="openView(row)" (keydown.enter)="openView(row)" tabindex="0">
+                    <td><span class="uuid-chip">{{ row.id | slice:0:8 }}…</span></td>
                     @for (c of columns(); track c) {
-                      <td>{{ cellValue(row, c) }}</td>
+                      <td class="cell-truncate">{{ cellValue(row, c) }}</td>
                     }
-                    <td>
+                    <td (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
                       <div class="action-btns">
                         <button class="btn-icon" title="Editar" (click)="openEdit(row)">
                           <i class="bi bi-pencil-fill"></i>
@@ -239,3 +245,46 @@
     }
   }
 </div>
+
+<!-- Detail modal -->
+@if (viewRow()) {
+  <div class="modal-backdrop" (click)="closeView()" (keydown.escape)="closeView()" aria-hidden="true"></div>
+  <dialog class="modal-panel modal-detail" open aria-modal="true" aria-labelledby="detail-title">
+    <div class="modal-head">
+      <div class="detail-modal-title">
+        <div class="detail-modal-icon">
+          <i class="bi {{ selectedSchema().icon }}"></i>
+        </div>
+        <div>
+          <h3 id="detail-title">{{ selectedSchema().singular | titlecase }}</h3>
+          <span class="uuid-full">{{ viewRow()!.id }}</span>
+        </div>
+      </div>
+      <button class="btn-close-modal" (click)="closeView()" aria-label="Cerrar">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-fields">
+        @for (entry of detailEntries(viewRow()!); track entry.key) {
+          @if (entry.key !== 'id') {
+            <div class="detail-field" [class.detail-field-full]="entry.isJson">
+              <span class="detail-field-key">{{ entry.key }}</span>
+              @if (entry.isJson) {
+                <pre class="detail-field-json">{{ entry.value }}</pre>
+              } @else {
+                <span class="detail-field-val">{{ entry.value }}</span>
+              }
+            </div>
+          }
+        }
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline-secondary" (click)="closeView()">Cerrar</button>
+        <button class="btn btn-brand" (click)="openEdit(viewRow()!)">
+          <i class="bi bi-pencil-fill me-2"></i>Editar
+        </button>
+      </div>
+    </div>
+  </dialog>
+}

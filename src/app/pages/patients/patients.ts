@@ -6,7 +6,7 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
-import { finalize } from 'rxjs';
+import { finalize, Observable } from 'rxjs';
 
 function pastDateValidator(control: AbstractControl): ValidationErrors | null {
   const v = control.value;
@@ -18,17 +18,25 @@ function pastDateValidator(control: AbstractControl): ValidationErrors | null {
   return parsed < today ? null : { pastDate: true };
 }
 
+import { Router } from '@angular/router';
 import { PatientService } from '../../core/services/patient.service';
 import { ToastService } from '../../core/services/toast.service';
-import { Patient, CreatePatientDto, CreateAddressDto } from '../../core/models/patient.model';
+import { Auth } from '../../core/services/auth';
+import { SECTION_ROLES } from '../../core/config/roles';
+import { ensureRole } from '../../core/utils/role-check';
+import { Patient, Address, CreatePatientDto, CreateAddressDto } from '../../core/models/patient.model';
 import { BadgeStatus } from '../../shared/components/badge-status/badge-status';
 import { EmptyState } from '../../shared/components/empty-state/empty-state';
+import {
+  AddressMapPicker,
+  MapCoordinates,
+} from '../../shared/components/address-map-picker/address-map-picker';
 
 type ModalMode = 'create' | 'edit' | 'view' | 'address' | null;
 
 @Component({
   selector: 'app-patients',
-  imports: [ReactiveFormsModule, BadgeStatus, EmptyState],
+  imports: [ReactiveFormsModule, BadgeStatus, EmptyState, AddressMapPicker],
   templateUrl: './patients.html',
   styleUrl: './patients.scss',
 })
@@ -36,6 +44,8 @@ export class Patients implements OnInit {
   private readonly svc = inject(PatientService);
   private readonly toast = inject(ToastService);
   private readonly fb = inject(FormBuilder);
+  private readonly auth = inject(Auth);
+  private readonly router = inject(Router);
 
   readonly loading = signal(true);
   readonly saving = signal(false);
@@ -44,6 +54,7 @@ export class Patients implements OnInit {
   readonly modalMode = signal<ModalMode>(null);
   readonly selected = signal<Patient | null>(null);
   readonly deleteTarget = signal<Patient | null>(null);
+  readonly selectedAddress = signal<Address | null>(null);
 
   readonly filtered = computed(() => {
     const q = this.searchQuery().toLowerCase().trim();
@@ -79,6 +90,7 @@ export class Patients implements OnInit {
   });
 
   ngOnInit(): void {
+    if (!ensureRole(SECTION_ROLES.patients, this.auth, this.router)) return;
     this.load();
   }
 
@@ -120,13 +132,43 @@ export class Patients implements OnInit {
 
   openAddAddress(p: Patient): void {
     this.selected.set(p);
-    this.addressForm.reset({ country: 'Bolivia', label: 'Principal' });
+    const existing = p.addresses?.find((a) => a.active !== false) ?? p.addresses?.[0] ?? null;
+    this.selectedAddress.set(existing);
+    if (existing) {
+      this.addressForm.reset({
+        label: existing.label ?? 'Principal',
+        line1: existing.line1 ?? '',
+        line2: existing.line2 ?? '',
+        country: existing.country ?? 'Bolivia',
+        province: existing.province ?? '',
+        city: existing.city ?? '',
+        latitude: existing.latitude ?? null,
+        longitude: existing.longitude ?? null,
+      });
+    } else {
+      this.addressForm.reset({ country: 'Bolivia', label: 'Principal' });
+    }
     this.modalMode.set('address');
+  }
+
+  onMapCoords(coords: MapCoordinates): void {
+    this.addressForm.patchValue({ latitude: coords.lat, longitude: coords.lng });
+  }
+
+  onMapAddressFound(displayName: string): void {
+    const parts = displayName.split(',').map((s) => s.trim()).filter(Boolean);
+    if (parts.length === 0) return;
+    this.addressForm.patchValue({ line1: parts.slice(0, 2).join(', ') });
+    if (parts.length >= 4) {
+      const city = parts.at(-4);
+      if (city) this.addressForm.patchValue({ city });
+    }
   }
 
   closeModal(): void {
     this.modalMode.set(null);
     this.selected.set(null);
+    this.selectedAddress.set(null);
   }
 
   confirmDelete(p: Patient): void {
@@ -193,17 +235,18 @@ export class Patients implements OnInit {
     if (!patient) return;
     this.saving.set(true);
     const dto = this.addressForm.getRawValue() as CreateAddressDto;
-    this.svc
-      .addAddress(patient.id, dto)
-      .pipe(finalize(() => this.saving.set(false)))
-      .subscribe({
-        next: () => {
-          this.toast.success('Dirección agregada.');
-          this.closeModal();
-          this.load();
-        },
-        error: () => this.toast.error('Error al agregar la dirección.'),
-      });
+    const existing = this.selectedAddress();
+    const request$ = (existing
+      ? this.svc.updateAddress(patient.id, existing.id, dto)
+      : this.svc.addAddress(patient.id, dto)) as Observable<unknown>;
+    request$.pipe(finalize(() => this.saving.set(false))).subscribe({
+      next: () => {
+        this.toast.success(existing ? 'Dirección actualizada.' : 'Dirección agregada.');
+        this.closeModal();
+        this.load();
+      },
+      error: () => this.toast.error(`Error al ${existing ? 'actualizar' : 'agregar'} la dirección.`),
+    });
   }
 
   deletePatient(): void {

@@ -136,32 +136,4 @@ export const RESOURCE_SCHEMAS: Record<ProductionResourceKey, ResourceSchema> = {
       { name: 'hasta', label: 'Hasta', type: 'datetime', required: true, hint: 'Debe ser posterior a "desde" (incluye hora)' },
     ],
   },
-  direcciones: {
-    key: 'direcciones',
-    label: 'Direcciones',
-    icon: 'bi-geo-alt',
-    singular: 'dirección',
-    primaryColumns: ['linea1', 'ciudad', 'pais'],
-    fields: [
-      { name: 'nombre', label: 'Nombre', type: 'text', maxLength: 150, placeholder: 'Casa / Oficina' },
-      { name: 'linea1', label: 'Línea 1', type: 'text', required: true, maxLength: 255, placeholder: 'Calle principal #123' },
-      { name: 'linea2', label: 'Línea 2', type: 'text', maxLength: 255, placeholder: 'Depto / piso' },
-      { name: 'ciudad', label: 'Ciudad', type: 'text', maxLength: 150 },
-      { name: 'provincia', label: 'Provincia', type: 'text', maxLength: 150 },
-      { name: 'pais', label: 'País', type: 'text', maxLength: 150 },
-      { name: 'geo', label: 'Geo', type: 'json', hint: 'Objeto { lat, lng } opcional' },
-    ],
-  },
-  pacientes: {
-    key: 'pacientes',
-    label: 'Pacientes',
-    icon: 'bi-people-fill',
-    singular: 'paciente',
-    primaryColumns: ['nombre', 'documento'],
-    fields: [
-      { name: 'nombre', label: 'Nombre', type: 'text', required: true, maxLength: 150, placeholder: 'Nombre y apellidos' },
-      { name: 'documento', label: 'Documento', type: 'text', maxLength: 100, placeholder: 'CI / DNI' },
-      { name: 'suscripcionId', label: 'Suscripción', type: 'uuid', hint: 'UUID de suscripción existente' },
-    ],
-  },
 };

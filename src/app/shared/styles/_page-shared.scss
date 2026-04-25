@@ -92,6 +92,13 @@
   border: 1px solid rgba(0, 0, 0, 0.06);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   overflow: hidden;
+
+  // When toolbar is used as the card header bar
+  > .toolbar {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #f1f5f9;
+    background: #fafafa;
+  }
 }
 
 .table-responsive {

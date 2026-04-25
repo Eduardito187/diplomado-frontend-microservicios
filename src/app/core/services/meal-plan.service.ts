@@ -2,14 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { API, ResultEnvelope } from '../config/api.config';
-import {
-  MealPlan,
-  Recipe,
-  Ingredient,
-  CreateMealPlanDto,
-  CreateRecipeDto,
-  CreateIngredientDto,
-} from '../models/meal-plan.model';
+import { MealPlan, Recipe, Ingredient, CreateMealPlanDto, CreateRecipeDto, CreateIngredientDto } from '../models/meal-plan.model';
 
 function unwrap<T>(env: ResultEnvelope<T>): T {
   if (!env || env.success === false) {
@@ -22,6 +15,12 @@ function unwrap<T>(env: ResultEnvelope<T>): T {
 export class MealPlanService {
   private readonly http = inject(HttpClient);
 
+  getMealPlan(): Observable<MealPlan[]> {
+    return this.http
+      .get<ResultEnvelope<MealPlan[]>>(API.mealPlans.base)
+      .pipe(map(unwrap<MealPlan[]>));
+  }
+  
   getMealPlanById(id: string): Observable<MealPlan> {
     return this.http
       .get<ResultEnvelope<MealPlan>>(API.mealPlans.byId(id))
@@ -46,6 +45,12 @@ export class MealPlanService {
       .pipe(map(unwrap<boolean>));
   }
 
+  getRecipe(): Observable<Recipe[]> {
+    return this.http
+      .get<ResultEnvelope<Recipe[]>>(API.recipes.base)
+      .pipe(map(unwrap<Recipe[]>));
+  }
+
   getRecipeById(id: string): Observable<Recipe> {
     return this.http
       .get<ResultEnvelope<Recipe>>(API.recipes.byId(id))
@@ -56,6 +61,12 @@ export class MealPlanService {
     return this.http
       .post<ResultEnvelope<string>>(API.recipes.base, dto)
       .pipe(map(unwrap<string>));
+  }
+
+  getIngredient(): Observable<Ingredient[]> {
+    return this.http
+      .get<ResultEnvelope<Ingredient[]>>(API.ingredients.base)
+      .pipe(map(unwrap<Ingredient[]>));
   }
 
   getIngredientById(id: string): Observable<Ingredient> {
