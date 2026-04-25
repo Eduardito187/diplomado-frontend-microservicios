@@ -37,11 +37,12 @@ export const RESOURCE_SCHEMAS: Record<ProductionResourceKey, ResourceSchema> = {
     label: 'Productos',
     icon: 'bi-box-seam',
     singular: 'producto',
-    primaryColumns: ['sku', 'price', 'specialPrice'],
+    primaryColumns: ['nombre', 'sku', 'price'],
     fields: [
-      { name: 'sku', label: 'SKU', type: 'text', required: true, maxLength: 150, placeholder: 'PROD-001' },
+      { name: 'sku', label: 'SKU', type: 'text', required: true, maxLength: 150, placeholder: 'ALM-001' },
+      { name: 'nombre', label: 'Nombre', type: 'text', maxLength: 150, placeholder: 'Almuerzo bajo en sodio', hint: 'Opcional' },
       { name: 'price', label: 'Precio', type: 'number', required: true, min: 0, placeholder: '0.00' },
-      { name: 'specialPrice', label: 'Precio especial', type: 'number', min: 0, hint: 'Opcional' },
+      { name: 'specialPrice', label: 'Precio especial', type: 'number', required: true, min: 0, placeholder: '0.00' },
     ],
   },
   paquetes: {
@@ -78,6 +79,7 @@ export const RESOURCE_SCHEMAS: Record<ProductionResourceKey, ResourceSchema> = {
     singular: 'suscripción',
     primaryColumns: ['nombre'],
     fields: [
+      { name: 'id', label: 'ID (opcional)', type: 'uuid', hint: 'UUID para creación con ID fijo — dejar vacío para autogenerar' },
       { name: 'nombre', label: 'Nombre', type: 'text', required: true, maxLength: 150, placeholder: 'Plan semanal' },
     ],
   },

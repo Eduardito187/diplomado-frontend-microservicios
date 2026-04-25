@@ -75,9 +75,59 @@ export class Production implements OnInit {
     items: this.fb.array<ReturnType<typeof this.buildItem>>([]),
   });
 
-  readonly stageForm = this.fb.nonNullable.group({ id: [''], porcionId: [''] });
+  readonly activeStage = signal<Exclude<WorkflowStage, 'generar'> | null>(null);
+  readonly ventanasForDespacho = signal<LaravelResource[]>([]);
+  readonly stageForm = this.fb.nonNullable.group({
+    id: [''],
+    porcionId: [''],
+    pacienteId: [''],
+    direccionId: [''],
+    ventanaEntrega: [''],
+    itemsDespacho: this.fb.array<ReturnType<typeof this.buildItemDespacho>>([]),
+  });
+
+  get itemsDespachoArray(): FormArray {
+    return this.stageForm.get('itemsDespacho') as FormArray;
+  }
+
+  private buildItemDespacho() {
+    return this.fb.nonNullable.control('');
+  }
+
+  addItemDespacho(): void { this.itemsDespachoArray.push(this.buildItemDespacho()); }
+  removeItemDespacho(i: number): void { this.itemsDespachoArray.removeAt(i); }
+
+  selectStage(stage: Exclude<WorkflowStage, 'generar'>): void {
+    this.activeStage.set(this.activeStage() === stage ? null : stage);
+  }
 
   readonly porciones = signal<LaravelResource[]>([]);
+  readonly pacientesList = signal<LaravelResource[]>([]);
+  readonly calendariosList = signal<LaravelResource[]>([]);
+  readonly suscripcionesList = signal<LaravelResource[]>([]);
+  readonly relEntityType = signal<'paciente' | 'calendario' | 'ventana' | 'suscripcion'>('paciente');
+  readonly relSelectedId = signal<string>('');
+  readonly relLoading = signal(false);
+  readonly relResult1 = signal<unknown[]>([]);
+  readonly relResult2 = signal<unknown[]>([]);
+  readonly relEntities = computed<LaravelResource[]>(() => {
+    switch (this.relEntityType()) {
+      case 'calendario': return this.calendariosList();
+      case 'ventana': return this.ventanasForDespacho();
+      case 'suscripcion': return this.suscripcionesList();
+      default: return this.pacientesList();
+    }
+  });
+  readonly relResult1Keys = computed(() => {
+    const list = this.relResult1();
+    if (!list.length) return [];
+    return Object.keys(list[0] as object).filter(k => k !== 'id').slice(0, 5);
+  });
+  readonly relResult2Keys = computed(() => {
+    const list = this.relResult2();
+    if (!list.length) return [];
+    return Object.keys(list[0] as object).filter(k => k !== 'id').slice(0, 5);
+  });
   readonly productos = signal<import('../../core/models/production.model').Producto[]>([]);
   readonly productosLoading = signal(false);
   readonly productSearch = signal<Record<number, string>>({});
@@ -92,6 +142,13 @@ export class Production implements OnInit {
     this.loadResource();
     this.loadPorciones();
     this.loadProductos();
+    this.loadPacientesList();
+    this.loadCalendariosList();
+    this.loadSuscripcionesList();
+    this.svc.list('ventanasEntrega').subscribe({
+      next: (list) => this.ventanasForDespacho.set(list ?? []),
+      error: () => {},
+    });
   }
 
   private loadPorciones(): void {
@@ -99,6 +156,77 @@ export class Production implements OnInit {
       next: (list) => this.porciones.set(list ?? []),
       error: () => this.porciones.set([]),
     });
+  }
+
+  private loadPacientesList(): void {
+    this.svc.getPacientes().subscribe({
+      next: (list) => this.pacientesList.set(list ?? []),
+      error: () => this.pacientesList.set([]),
+    });
+  }
+
+  private loadCalendariosList(): void {
+    this.svc.getCalendarios().subscribe({
+      next: (list) => this.calendariosList.set((list ?? []) as LaravelResource[]),
+      error: () => this.calendariosList.set([]),
+    });
+  }
+
+  private loadSuscripcionesList(): void {
+    this.svc.getSuscripciones().subscribe({
+      next: (list) => this.suscripcionesList.set((list ?? []) as LaravelResource[]),
+      error: () => this.suscripcionesList.set([]),
+    });
+  }
+
+  setRelEntityType(type: 'paciente' | 'calendario' | 'ventana' | 'suscripcion'): void {
+    this.relEntityType.set(type);
+    this.relSelectedId.set('');
+    this.relResult1.set([]);
+    this.relResult2.set([]);
+  }
+
+  loadRelaciones(): void {
+    const id = this.relSelectedId();
+    if (!id) { this.toast.error('Selecciona un elemento.'); return; }
+    const type = this.relEntityType();
+    this.relLoading.set(true);
+    this.relResult1.set([]);
+    this.relResult2.set([]);
+
+    if (type === 'paciente') {
+      this.svc.getPacienteCalendarios(id).subscribe({
+        next: (list) => this.relResult1.set(list ?? []),
+        error: () => this.toast.error('Error al cargar calendarios del paciente.'),
+      });
+      this.svc.getPacienteVentanasEntrega(id).subscribe({
+        next: (list) => { this.relResult2.set(list ?? []); this.relLoading.set(false); },
+        error: () => { this.relLoading.set(false); this.toast.error('Error al cargar ventanas del paciente.'); },
+      });
+    } else if (type === 'calendario') {
+      this.svc.getCalendarioPacientes(id).subscribe({
+        next: (list) => this.relResult1.set(list ?? []),
+        error: () => this.toast.error('Error al cargar pacientes del calendario.'),
+      });
+      this.svc.getCalendarioVentanasEntrega(id).subscribe({
+        next: (list) => { this.relResult2.set(list ?? []); this.relLoading.set(false); },
+        error: () => { this.relLoading.set(false); this.toast.error('Error al cargar ventanas del calendario.'); },
+      });
+    } else if (type === 'ventana') {
+      this.svc.getVentanaEntregaPacientes(id).subscribe({
+        next: (list) => this.relResult1.set(list ?? []),
+        error: () => this.toast.error('Error al cargar pacientes de la ventana.'),
+      });
+      this.svc.getVentanaEntregaCalendarios(id).subscribe({
+        next: (list) => { this.relResult2.set(list ?? []); this.relLoading.set(false); },
+        error: () => { this.relLoading.set(false); this.toast.error('Error al cargar calendarios de la ventana.'); },
+      });
+    } else {
+      this.svc.getSuscripcionCalendarios(id).subscribe({
+        next: (list) => { this.relResult1.set(list ?? []); this.relLoading.set(false); },
+        error: () => { this.relLoading.set(false); this.toast.error('Error al cargar calendarios de la suscripción.'); },
+      });
+    }
   }
 
   private loadProductos(): void {
@@ -281,19 +409,25 @@ export class Production implements OnInit {
 
   runStage(stage: Exclude<WorkflowStage, 'generar'>): void {
     const ordenProduccionId = this.stageForm.controls.id.value.trim();
-    if (!ordenProduccionId) {
-      this.toast.error('Ingresa el ID de la orden.');
-      return;
-    }
+    if (!ordenProduccionId) { this.toast.error('Ingresa el ID de la orden.'); return; }
 
     let body: Record<string, unknown>;
     if (stage === 'planificar') {
       const porcionId = this.stageForm.controls.porcionId.value.trim();
-      if (!porcionId) {
-        this.toast.error('Selecciona una porción para planificar.');
+      if (!porcionId) { this.toast.error('Selecciona una porción para planificar.'); return; }
+      body = { ordenProduccionId, porcionId };
+    } else if (stage === 'despachar') {
+      const pacienteId = this.stageForm.controls.pacienteId.value.trim();
+      const direccionId = this.stageForm.controls.direccionId.value.trim();
+      const ventanaEntrega = this.stageForm.controls.ventanaEntrega.value.trim();
+      const itemsDespacho = this.itemsDespachoArray.controls
+        .map((c: any) => c.value as string)
+        .filter(Boolean);
+      if (!pacienteId || !direccionId || !ventanaEntrega || !itemsDespacho.length) {
+        this.toast.error('Completa todos los campos de despacho.');
         return;
       }
-      body = { ordenProduccionId, porcionId };
+      body = { ordenProduccionId, pacienteId, direccionId, ventanaEntrega, itemsDespacho };
     } else {
       body = { ordenProduccionId };
     }

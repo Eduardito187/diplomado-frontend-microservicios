@@ -1,5 +1,6 @@
 @use '../../shared/styles/page-shared' as *;
 @use '../../shared/styles/modal-shared' as *;
+@use './production-calendar' as *;
 
 // Resource tabs bar
 .resource-tabs {
