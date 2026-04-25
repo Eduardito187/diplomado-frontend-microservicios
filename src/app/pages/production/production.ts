@@ -22,6 +22,7 @@ import {
 import { EmptyState } from '../../shared/components/empty-state/empty-state';
 import { RESOURCE_SCHEMAS, ResourceSchema } from './resource-schemas';
 import { ResourceForm } from './components/resource-form/resource-form';
+import { DespachoMap } from '../../shared/components/despacho-map/despacho-map';
 
 function toLocalYyyyMmDd(d: Date): string {
   const y = d.getFullYear();
@@ -45,7 +46,7 @@ function lastOfMonth(): string {
 
 @Component({
   selector: 'app-production',
-  imports: [ReactiveFormsModule, TitleCasePipe, SlicePipe, DecimalPipe, NgClass, EmptyState, ResourceForm],
+  imports: [ReactiveFormsModule, TitleCasePipe, SlicePipe, DecimalPipe, NgClass, EmptyState, ResourceForm, DespachoMap],
   templateUrl: './production.html',
   styleUrl: './production.scss',
 })
@@ -149,6 +150,8 @@ export class Production implements OnInit, OnDestroy {
   readonly selectedOrden = signal<OrdenConsolidada | null>(null);
   readonly ordenSuscripcionId = signal('');
   readonly suscripcionOrdenesData = signal<SuscripcionOrdenes | null>(null);
+  readonly despachoEnriched = signal<Record<string, { paciente?: Record<string, unknown>; direccion?: Record<string, unknown>; ventana?: Record<string, unknown> }>>({});
+  readonly despachoEnrichLoading = signal(false);
 
   readonly productos = signal<import('../../core/models/production.model').Producto[]>([]);
   readonly productosLoading = signal(false);
@@ -221,7 +224,11 @@ export class Production implements OnInit, OnDestroy {
     this.direccionesLoading.set(true);
     this.proximaVentanaLoading.set(true);
     this.svc.getPacienteAddresses(id).subscribe({
-      next: (list) => { this.pacienteDirecciones.set(list ?? []); this.direccionesLoading.set(false); },
+      next: (res: any) => {
+        const list = Array.isArray(res) ? res : (res?.value ?? []);
+        this.pacienteDirecciones.set(list);
+        this.direccionesLoading.set(false);
+      },
       error: () => { this.pacienteDirecciones.set([]); this.direccionesLoading.set(false); },
     });
     this.svc.getProximaVentana().subscribe({
@@ -576,6 +583,40 @@ export class Production implements OnInit, OnDestroy {
 
   openOrdenDetail(o: OrdenConsolidada): void {
     this.selectedOrden.set(o);
+    this.despachoEnriched.set({});
+    if (!o.despacho?.length) return;
+    const allEmbedded = o.despacho.every(d => d.paciente != null || d.direccion != null);
+    if (allEmbedded) return;
+    this.despachoEnrichLoading.set(true);
+    let pending = 0;
+    const result: Record<string, { paciente?: Record<string, unknown>; direccion?: Record<string, unknown>; ventana?: Record<string, unknown> }> = {};
+    const done = () => { pending--; if (pending === 0) { this.despachoEnriched.set(result); this.despachoEnrichLoading.set(false); } };
+    for (const d of o.despacho) {
+      const key = d.paciente_id ?? d.id ?? String(Math.random());
+      result[key] = {};
+      if (!d.paciente && d.paciente_id) {
+        pending++;
+        this.svc.getPacienteById(d.paciente_id).subscribe({
+          next: (p) => { result[key].paciente = p as Record<string, unknown>; done(); },
+          error: () => done(),
+        });
+      }
+      if (!d.direccion && d.paciente_id && d.direccion_id) {
+        pending++;
+        this.svc.getPacienteDireccionById(d.paciente_id, d.direccion_id).subscribe({
+          next: (a) => { result[key].direccion = a as Record<string, unknown>; done(); },
+          error: () => done(),
+        });
+      }
+      if (d.ventana_entrega_id) {
+        pending++;
+        this.svc.getVentanaEntregaById(d.ventana_entrega_id).subscribe({
+          next: (v) => { result[key].ventana = v as Record<string, unknown>; done(); },
+          error: () => done(),
+        });
+      }
+    }
+    if (pending === 0) this.despachoEnrichLoading.set(false);
   }
 
   closeOrdenDetail(): void {

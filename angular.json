@@ -44,7 +44,9 @@
               "node_modules/leaflet/dist/leaflet.css",
               "src/styles.scss",
               "src/app/pages/production/production-agenda.scss",
-              "src/app/pages/production/production-ordenes.scss"
+              "src/app/pages/production/production-agenda-modal.scss",
+              "src/app/pages/production/production-ordenes.scss",
+              "src/app/pages/production/production-despacho.scss"
             ]
           },
           "configurations": {
