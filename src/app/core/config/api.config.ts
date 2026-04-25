@@ -127,6 +127,16 @@ export const API = {
     markDeliveryCompleted: `${GATEWAY_URL}/logistics/Package/markDeliveryCompleted`,
     registerDeliveryIncident: `${GATEWAY_URL}/logistics/Package/registerDeliveryIncident`,
   },
+  contratosSuscripciones: {
+    base: `${GATEWAY_URL}/contracts`,
+    calendarioEntrega: `${GATEWAY_URL}/CalendarioEntrega`,
+
+    // base: `${environment.contratosApiBaseUrl}/Contrato`,
+    // calendarioEntrega: `${environment.contratosApiBaseUrl}/CalendarioEntrega`,
+  },
+  suscripciones: {
+    base: `${environment.contratosApiBaseUrl}/Suscripcion`,
+  },
 };
 
 export interface ResultEnvelope<T> {
@@ -134,3 +144,7 @@ export interface ResultEnvelope<T> {
   value?: T;
   error?: { type?: string; message?: string; code?: string } | null;
 }
+
+
+
+

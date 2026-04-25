@@ -1,6 +1,7 @@
 export const environment = {
   production: false,
   gatewayUrl: 'http://207.180.197.169:5000',
+  contratosApiBaseUrl: '/contratos-api',
   keycloak: {
     url: 'http://154.38.180.80:8080',
     realm: 'group3realm',

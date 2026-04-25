@@ -53,7 +53,7 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/admin/admin-layout').then((m) => m.AdminLayout),
     children: [
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      { path: '', redirectTo: 'contratos-suscripciones', pathMatch: 'full' },
       {
         path: 'dashboard',
         title: 'Dashboard | NurTriCenter',
@@ -85,6 +85,20 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/meal-plans/meal-plans').then((m) => m.MealPlans),
       },
       {
+        path: 'contratos-suscripciones',
+        title: 'Contratos y Suscripciones | NurTriCenter',
+        loadComponent: () =>
+          import('./pages/contratos-suscripciones/contratos-suscripciones').then(
+            (m) => m.ContratosSuscripciones,
+          ),
+      },
+      {
+        path: 'suscripciones',
+        title: 'Suscripciones | NurTriCenter',
+        loadComponent: () =>
+          import('./pages/suscripciones/suscripciones').then((m) => m.Suscripciones),
+      },
+      {
         path: 'recipes',
         title: 'Recetas | NurTriCenter',
         canActivate: [roleGuard(SECTION_ROLES.recipes)],
@@ -100,7 +114,7 @@ export const routes: Routes = [
   },
   {
     path: 'home',
-    redirectTo: '/admin/dashboard',
+    redirectTo: '/admin/contratos-suscripciones',
     pathMatch: 'full',
   },
   {
@@ -118,3 +132,13 @@ export const routes: Routes = [
     redirectTo: 'error/404',
   },
 ];
+
+
+
+
+
+
+
+
+
+
