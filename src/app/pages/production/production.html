@@ -50,7 +50,7 @@
                     <input
                       [id]="'gen-prod-' + i"
                       type="text"
-                      [value]="productSearch()[i] ?? ''"
+                      [value]="productSearch()[i]"
                       (input)="onProductSearchInput(i, $any($event.target).value)"
                       (focus)="openProductDropdown.set(i)"
                       (blur)="closeProductDropdown()"
@@ -515,7 +515,7 @@
                 <span class="orden-id">{{ o.id | slice:0:18 }}…</span>
               </div>
               <span class="orden-items-cnt">
-                <i class="bi bi-box-seam me-1"></i>{{ o.items?.length ?? 0 }} items
+                <i class="bi bi-box-seam me-1"></i>{{ o.items.length }} items
               </span>
               <span class="orden-status-chip" [ngClass]="ordenStatusClass(o.estado)">{{ o.estado }}</span>
               <div class="orden-prog-wrap">
@@ -526,7 +526,7 @@
                     [style.width.%]="pct">
                   </div>
                 </div>
-                <span class="orden-prog-label">{{ o.progreso_entrega?.completados ?? 0 }}/{{ o.progreso_entrega?.total_paquetes ?? 0 }}</span>
+                <span class="orden-prog-label">{{ o.progreso_entrega.completados }}/{{ o.progreso_entrega.total_paquetes }}</span>
               </div>
             </button>
           }
@@ -607,6 +607,107 @@
             [actionLabel]="'Crear ' + selectedSchema().singular"
             (action)="openCreate()"
           />
+        } @else if (selectedResource() === 'paquetes') {
+          <!-- ── Tabla enriquecida de Paquetes ── -->
+          <div class="table-responsive">
+            <table class="data-table resource-table paquetes-table">
+              <thead>
+                <tr>
+                  <th>Paciente</th>
+                  <th>Suscripción</th>
+                  <th>Ventana de entrega</th>
+                  <th>Dirección</th>
+                  <th>Estado despacho</th>
+                  <th class="th-actions">Detalle</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of items(); track row.id) {
+                  @let paq = $any(row)
+                  <tr class="clickable-row" (click)="openPaqueteDetail(paq)" (keydown.enter)="openPaqueteDetail(paq)" tabindex="0">
+                    <td>
+                      <div class="paq-cell-main">{{ paq.etiqueta?.paciente?.nombre ?? '—' }}</div>
+                      @if (paq.etiqueta?.paciente?.documento) {
+                        <div class="paq-cell-sub">{{ paq.etiqueta.paciente.documento }}</div>
+                      }
+                    </td>
+                    <td>{{ paq.etiqueta?.suscripcion?.nombre ?? '—' }}</td>
+                    <td>
+                      @if (paq.ventana_entrega) {
+                        <div class="paq-cell-main">{{ formatWindow(paq.ventana_entrega.desde, paq.ventana_entrega.hasta) }}</div>
+                        <div class="paq-cell-sub">Estado {{ paq.ventana_entrega.estado }}</div>
+                      } @else { — }
+                    </td>
+                    <td>
+                      @if (paq.direccion) {
+                        <div class="paq-cell-main">{{ paq.direccion.linea1 }}</div>
+                        <div class="paq-cell-sub">{{ paq.direccion.ciudad }}</div>
+                      } @else { — }
+                    </td>
+                    <td>
+                      @if (paq.despacho?.delivery_status) {
+                        <span class="batch-estado" [style]="batchStatusClass(paq.despacho.delivery_status)">
+                          {{ paq.despacho.delivery_status }}
+                        </span>
+                      } @else { — }
+                    </td>
+                    <td>
+                      <button class="btn-icon" title="Ver detalle" (click)="openPaqueteDetail(paq); $event.stopPropagation()">
+                        <i class="bi bi-eye-fill"></i>
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else if (selectedResource() === 'etiquetas') {
+          <!-- ── Tabla enriquecida de Etiquetas ── -->
+          <div class="table-responsive">
+            <table class="data-table resource-table paquetes-table">
+              <thead>
+                <tr>
+                  <th>Paciente</th>
+                  <th>Suscripción</th>
+                  <th>Ventana de entrega</th>
+                  <th>Estado despacho</th>
+                  <th class="th-actions">Detalle</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of items(); track row.id) {
+                  @let etq = $any(row)
+                  <tr class="clickable-row" (click)="openEtiquetaDetail(etq)" (keydown.enter)="openEtiquetaDetail(etq)" tabindex="0">
+                    <td>
+                      <div class="paq-cell-main">{{ etq.paciente?.nombre ?? '—' }}</div>
+                      @if (etq.paciente?.documento) {
+                        <div class="paq-cell-sub">{{ etq.paciente.documento }}</div>
+                      }
+                    </td>
+                    <td>{{ etq.suscripcion?.nombre ?? '—' }}</td>
+                    <td>
+                      @if (etq.paquete?.ventana_entrega) {
+                        <div class="paq-cell-main">{{ formatWindow(etq.paquete.ventana_entrega.desde, etq.paquete.ventana_entrega.hasta) }}</div>
+                        <div class="paq-cell-sub">Estado {{ etq.paquete.ventana_entrega.estado }}</div>
+                      } @else { — }
+                    </td>
+                    <td>
+                      @if (etq.paquete?.despacho?.delivery_status) {
+                        <span class="batch-estado" [style]="batchStatusClass(etq.paquete.despacho.delivery_status)">
+                          {{ etq.paquete.despacho.delivery_status }}
+                        </span>
+                      } @else { — }
+                    </td>
+                    <td>
+                      <button class="btn-icon" title="Ver detalle" (click)="openEtiquetaDetail(etq); $event.stopPropagation()">
+                        <i class="bi bi-eye-fill"></i>
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
         } @else {
           <div class="table-responsive">
             <table class="data-table resource-table">
@@ -644,6 +745,356 @@
         }
       </div>
     }
+  }
+
+  <!-- ── Modal detalle paquete ── -->
+  @if (selectedPaquete()) {
+    @let pq = selectedPaquete()!
+    <dialog class="orden-detail-dialog" open>
+      <div class="orden-detail-panel">
+        <div class="orden-detail-header">
+          <div>
+            <h3><i class="bi bi-boxes me-2"></i>Detalle de paquete</h3>
+            <p class="orden-meta-bar">
+              <span><i class="bi bi-calendar3 me-1"></i>{{ formatDate(pq.created_at ?? '') }}</span>
+              @if (pq.despacho?.delivery_occurred_on) {
+                <span><i class="bi bi-calendar-check me-1"></i>Entregado: {{ formatDate(pq.despacho!.delivery_occurred_on!) }}</span>
+              }
+            </p>
+          </div>
+          <button class="btn btn-outline-secondary btn-sm" (click)="closePaqueteDetail()">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+
+        <!-- Paciente & Suscripción -->
+        <div class="orden-detail-section">
+          <h4><i class="bi bi-person-fill"></i>Paciente</h4>
+          <div class="despacho-info-grid">
+            <div class="despacho-info-block">
+              <div class="despacho-info-icon" style="background:#eff6ff;color:#2563eb"><i class="bi bi-person-fill"></i></div>
+              <div>
+                <div class="despacho-info-lbl">Nombre</div>
+                <div class="despacho-info-val">{{ pq.etiqueta?.paciente?.nombre ?? '—' }}</div>
+                @if (pq.etiqueta?.paciente?.documento) {
+                  <div class="despacho-info-sub">Doc: {{ pq.etiqueta!.paciente!.documento }}</div>
+                }
+              </div>
+            </div>
+            <div class="despacho-info-block">
+              <div class="despacho-info-icon" style="background:#f0fdf4;color:#15803d"><i class="bi bi-bookmark-star-fill"></i></div>
+              <div>
+                <div class="despacho-info-lbl">Suscripción</div>
+                <div class="despacho-info-val">{{ pq.etiqueta?.suscripcion?.nombre ?? '—' }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dirección -->
+        @if (pq.direccion) {
+          <div class="orden-detail-section">
+            <h4><i class="bi bi-geo-alt-fill"></i>Dirección de entrega</h4>
+            <div class="despacho-info-grid">
+              <div class="despacho-info-block">
+                <div class="despacho-info-icon" style="background:#fef9c3;color:#a16207"><i class="bi bi-house-fill"></i></div>
+                <div>
+                  <div class="despacho-info-val">{{ pq.direccion.linea1 }}</div>
+                  @if (pq.direccion.linea2) { <div class="despacho-info-sub">{{ pq.direccion.linea2 }}</div> }
+                  <div class="despacho-info-sub">{{ pq.direccion.ciudad }}, {{ pq.direccion.provincia }}, {{ pq.direccion.pais }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Ventana de entrega -->
+        @if (pq.ventana_entrega) {
+          <div class="orden-detail-section">
+            <h4><i class="bi bi-clock-fill"></i>Ventana de entrega</h4>
+            <div class="despacho-info-grid">
+              <div class="despacho-info-block">
+                <div class="despacho-info-icon" style="background:#fdf4ff;color:#7e22ce"><i class="bi bi-clock-history"></i></div>
+                <div>
+                  <div class="despacho-info-val">{{ formatWindow(pq.ventana_entrega.desde, pq.ventana_entrega.hasta) }}</div>
+                  <div class="despacho-info-sub">Estado: {{ pq.ventana_entrega.estado }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Despacho -->
+        @if (pq.despacho) {
+          <div class="orden-detail-section">
+            <h4><i class="bi bi-truck"></i>Despacho</h4>
+            <div class="despacho-info-grid">
+              <div class="despacho-info-block">
+                <div class="despacho-info-icon" style="background:#f0fdf4;color:#15803d"><i class="bi bi-truck"></i></div>
+                <div>
+                  <div class="despacho-info-lbl">Estado</div>
+                  <span class="batch-estado" [style]="batchStatusClass(pq.despacho.delivery_status)">{{ pq.despacho.delivery_status }}</span>
+                  @if (pq.despacho.delivery_occurred_on) {
+                    <div class="despacho-info-sub mt-1"><i class="bi bi-calendar-check me-1"></i>{{ formatDate(pq.despacho.delivery_occurred_on) }}</div>
+                  }
+                </div>
+              </div>
+              @if (pq.despacho.driver_id) {
+                <div class="despacho-info-block">
+                  <div class="despacho-info-icon" style="background:#f5f3ff;color:#7c3aed"><i class="bi bi-person-badge-fill"></i></div>
+                  <div>
+                    <div class="despacho-info-lbl">Conductor</div>
+                    <div class="despacho-info-val">{{ pq.despacho.driver_id | slice:0:8 }}…</div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Tracking -->
+        @if (pq.tracking) {
+          <div class="orden-detail-section">
+            <h4><i class="bi bi-activity"></i>Tracking</h4>
+            <div class="despacho-info-grid">
+              <div class="despacho-info-block">
+                <div class="despacho-info-icon" style="background:#fff7ed;color:#c2410c"><i class="bi bi-broadcast"></i></div>
+                <div>
+                  <div class="despacho-info-lbl">Estado</div>
+                  <span class="batch-estado" [style]="batchStatusClass(pq.tracking.status)">{{ pq.tracking.status }}</span>
+                  @if (pq.tracking.completed_at) {
+                    <div class="despacho-info-sub mt-1">Completado: {{ formatDate(pq.tracking.completed_at) }}</div>
+                  }
+                </div>
+              </div>
+            </div>
+            @if (pq.tracking.incident_type) {
+              <div style="margin-top:0.6rem;padding:0.6rem 0.85rem;background:#fef2f2;border-radius:8px;border:1px solid #fecaca">
+                <div style="font-size:0.78rem;font-weight:700;color:#b91c1c"><i class="bi bi-exclamation-triangle-fill me-1"></i>{{ pq.tracking.incident_type }}</div>
+                @if (pq.tracking.incident_description) {
+                  <div style="font-size:0.75rem;color:#7f1d1d;margin-top:0.2rem">{{ pq.tracking.incident_description }}</div>
+                }
+              </div>
+            }
+            @if (pq.tracking.foto_url && pq.tracking.foto_url.trim()) {
+              <div style="margin-top:0.6rem">
+                <div class="despacho-info-lbl"><i class="bi bi-camera-fill me-1"></i>Foto de entrega</div>
+                <img [src]="pq.tracking.foto_url" alt="Foto entrega"
+                     style="max-width:100%;max-height:200px;border-radius:8px;border:1px solid #e2e8f0;margin-top:0.35rem;object-fit:cover" />
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Mapa de ruta -->
+        @if (pq.ruta) {
+          <div class="orden-detail-section">
+            <h4><i class="bi bi-map-fill"></i>Ruta de entrega</h4>
+            <app-despacho-map [ruta]="pq.ruta" />
+          </div>
+        }
+
+        <!-- Referencias técnicas -->
+        <details class="ame-refs" style="margin:1rem 1.25rem 0">
+          <summary>Referencias técnicas</summary>
+          <div class="ame-refs-body">
+            <div class="ame-ref-row"><span>Paquete</span><code>{{ pq.id }}</code></div>
+            @if (pq.etiqueta?.id) { <div class="ame-ref-row"><span>Etiqueta</span><code>{{ pq.etiqueta!.id }}</code></div> }
+            @if (pq.etiqueta?.paciente?.id) { <div class="ame-ref-row"><span>Paciente</span><code>{{ pq.etiqueta!.paciente!.id }}</code></div> }
+            @if (pq.etiqueta?.suscripcion?.id) { <div class="ame-ref-row"><span>Suscripción</span><code>{{ pq.etiqueta!.suscripcion!.id }}</code></div> }
+            @if (pq.ventana_entrega?.id) { <div class="ame-ref-row"><span>Ventana entrega</span><code>{{ pq.ventana_entrega!.id }}</code></div> }
+            @if (pq.ventana_entrega?.entrega_id) { <div class="ame-ref-row"><span>Entrega</span><code>{{ pq.ventana_entrega!.entrega_id }}</code></div> }
+            @if (pq.ventana_entrega?.contrato_id) { <div class="ame-ref-row"><span>Contrato</span><code>{{ pq.ventana_entrega!.contrato_id }}</code></div> }
+            @if (pq.direccion?.id) { <div class="ame-ref-row"><span>Dirección</span><code>{{ pq.direccion!.id }}</code></div> }
+            @if (pq.despacho?.id) { <div class="ame-ref-row"><span>Despacho</span><code>{{ pq.despacho!.id }}</code></div> }
+            @if (pq.despacho?.op_id) { <div class="ame-ref-row"><span>Orden producción</span><code>{{ pq.despacho!.op_id }}</code></div> }
+            @if (pq.despacho?.driver_id) { <div class="ame-ref-row"><span>Conductor</span><code>{{ pq.despacho!.driver_id }}</code></div> }
+            @if (pq.despacho?.entrega_id) { <div class="ame-ref-row"><span>Entrega (despacho)</span><code>{{ pq.despacho!.entrega_id }}</code></div> }
+            @if (pq.despacho?.contrato_id) { <div class="ame-ref-row"><span>Contrato (despacho)</span><code>{{ pq.despacho!.contrato_id }}</code></div> }
+          </div>
+        </details>
+
+        <div class="modal-actions">
+          <button class="btn btn-outline-secondary" (click)="closePaqueteDetail()">Cerrar</button>
+        </div>
+      </div>
+    </dialog>
+  }
+
+  <!-- ── Modal detalle etiqueta ── -->
+  @if (selectedEtiqueta()) {
+    @let eq = selectedEtiqueta()!
+    <dialog class="orden-detail-dialog" open>
+      <div class="orden-detail-panel">
+        <div class="orden-detail-header">
+          <div>
+            <h3><i class="bi bi-tags me-2"></i>Detalle de etiqueta</h3>
+            <p class="orden-meta-bar">
+              <span><i class="bi bi-calendar3 me-1"></i>{{ formatDate(eq.created_at ?? '') }}</span>
+            </p>
+          </div>
+          <button class="btn btn-outline-secondary btn-sm" (click)="closeEtiquetaDetail()">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+
+        <!-- Paciente & Suscripción -->
+        <div class="orden-detail-section">
+          <h4><i class="bi bi-person-fill"></i>Paciente</h4>
+          <div class="despacho-info-grid">
+            <div class="despacho-info-block">
+              <div class="despacho-info-icon" style="background:#eff6ff;color:#2563eb"><i class="bi bi-person-fill"></i></div>
+              <div>
+                <div class="despacho-info-lbl">Nombre</div>
+                <div class="despacho-info-val">{{ eq.paciente?.nombre ?? '—' }}</div>
+                @if (eq.paciente?.documento) {
+                  <div class="despacho-info-sub">Doc: {{ eq.paciente!.documento }}</div>
+                }
+              </div>
+            </div>
+            <div class="despacho-info-block">
+              <div class="despacho-info-icon" style="background:#f0fdf4;color:#15803d"><i class="bi bi-bookmark-star-fill"></i></div>
+              <div>
+                <div class="despacho-info-lbl">Suscripción</div>
+                <div class="despacho-info-val">{{ eq.suscripcion?.nombre ?? '—' }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Paquete asociado -->
+        @if (eq.paquete) {
+          <!-- Ventana de entrega -->
+          @if (eq.paquete.ventana_entrega) {
+            <div class="orden-detail-section">
+              <h4><i class="bi bi-clock-fill"></i>Ventana de entrega</h4>
+              <div class="despacho-info-grid">
+                <div class="despacho-info-block">
+                  <div class="despacho-info-icon" style="background:#fdf4ff;color:#7e22ce"><i class="bi bi-clock-history"></i></div>
+                  <div>
+                    <div class="despacho-info-val">{{ formatWindow(eq.paquete.ventana_entrega.desde, eq.paquete.ventana_entrega.hasta) }}</div>
+                    <div class="despacho-info-sub">Estado: {{ eq.paquete.ventana_entrega.estado }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- Dirección -->
+          @if (eq.paquete.direccion) {
+            <div class="orden-detail-section">
+              <h4><i class="bi bi-geo-alt-fill"></i>Dirección de entrega</h4>
+              <div class="despacho-info-grid">
+                <div class="despacho-info-block">
+                  <div class="despacho-info-icon" style="background:#fef9c3;color:#a16207"><i class="bi bi-house-fill"></i></div>
+                  <div>
+                    <div class="despacho-info-val">{{ eq.paquete.direccion.linea1 }}</div>
+                    @if (eq.paquete.direccion.linea2) { <div class="despacho-info-sub">{{ eq.paquete.direccion.linea2 }}</div> }
+                    @if (eq.paquete.direccion.ciudad) {
+                      <div class="despacho-info-sub">{{ eq.paquete.direccion.ciudad }}, {{ eq.paquete.direccion.provincia }}, {{ eq.paquete.direccion.pais }}</div>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- Despacho -->
+          @if (eq.paquete.despacho) {
+            <div class="orden-detail-section">
+              <h4><i class="bi bi-truck"></i>Despacho</h4>
+              <div class="despacho-info-grid">
+                <div class="despacho-info-block">
+                  <div class="despacho-info-icon" style="background:#f0fdf4;color:#15803d"><i class="bi bi-truck"></i></div>
+                  <div>
+                    <div class="despacho-info-lbl">Estado</div>
+                    <span class="batch-estado" [style]="batchStatusClass(eq.paquete.despacho.delivery_status)">{{ eq.paquete.despacho.delivery_status }}</span>
+                    @if (eq.paquete.despacho.delivery_occurred_on) {
+                      <div class="despacho-info-sub mt-1"><i class="bi bi-calendar-check me-1"></i>{{ formatDate(eq.paquete.despacho.delivery_occurred_on) }}</div>
+                    }
+                  </div>
+                </div>
+                @if (eq.paquete.despacho.driver_id) {
+                  <div class="despacho-info-block">
+                    <div class="despacho-info-icon" style="background:#f5f3ff;color:#7c3aed"><i class="bi bi-person-badge-fill"></i></div>
+                    <div>
+                      <div class="despacho-info-lbl">Conductor</div>
+                      <div class="despacho-info-val">{{ eq.paquete.despacho.driver_id | slice:0:8 }}…</div>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Tracking -->
+          @if (eq.paquete.tracking) {
+            <div class="orden-detail-section">
+              <h4><i class="bi bi-activity"></i>Tracking</h4>
+              <div class="despacho-info-grid">
+                <div class="despacho-info-block">
+                  <div class="despacho-info-icon" style="background:#fff7ed;color:#c2410c"><i class="bi bi-broadcast"></i></div>
+                  <div>
+                    <div class="despacho-info-lbl">Estado</div>
+                    <span class="batch-estado" [style]="batchStatusClass(eq.paquete.tracking.status)">{{ eq.paquete.tracking.status }}</span>
+                    @if (eq.paquete.tracking.completed_at) {
+                      <div class="despacho-info-sub mt-1">Completado: {{ formatDate(eq.paquete.tracking.completed_at) }}</div>
+                    }
+                  </div>
+                </div>
+              </div>
+              @if (eq.paquete.tracking.incident_type) {
+                <div style="margin-top:0.6rem;padding:0.6rem 0.85rem;background:#fef2f2;border-radius:8px;border:1px solid #fecaca">
+                  <div style="font-size:0.78rem;font-weight:700;color:#b91c1c"><i class="bi bi-exclamation-triangle-fill me-1"></i>{{ eq.paquete.tracking.incident_type }}</div>
+                  @if (eq.paquete.tracking.incident_description) {
+                    <div style="font-size:0.75rem;color:#7f1d1d;margin-top:0.2rem">{{ eq.paquete.tracking.incident_description }}</div>
+                  }
+                </div>
+              }
+              @if (eq.paquete.tracking.foto_url && eq.paquete.tracking.foto_url.trim()) {
+                <div style="margin-top:0.6rem">
+                  <div class="despacho-info-lbl"><i class="bi bi-camera-fill me-1"></i>Foto de entrega</div>
+                  <img [src]="eq.paquete.tracking.foto_url" alt="Foto entrega"
+                       style="max-width:100%;max-height:200px;border-radius:8px;border:1px solid #e2e8f0;margin-top:0.35rem;object-fit:cover" />
+                </div>
+              }
+            </div>
+          }
+
+          <!-- Mapa de ruta -->
+          @if (eq.paquete.ruta) {
+            <div class="orden-detail-section">
+              <h4><i class="bi bi-map-fill"></i>Ruta de entrega</h4>
+              <app-despacho-map [ruta]="eq.paquete.ruta" />
+            </div>
+          }
+        }
+
+        <!-- Referencias técnicas -->
+        <details class="ame-refs" style="margin:1rem 1.25rem 0">
+          <summary>Referencias técnicas</summary>
+          <div class="ame-refs-body">
+            <div class="ame-ref-row"><span>Etiqueta</span><code>{{ eq.id }}</code></div>
+            @if (eq.paciente?.id) { <div class="ame-ref-row"><span>Paciente</span><code>{{ eq.paciente!.id }}</code></div> }
+            @if (eq.suscripcion?.id) { <div class="ame-ref-row"><span>Suscripción</span><code>{{ eq.suscripcion!.id }}</code></div> }
+            @if (eq.paquete?.id) { <div class="ame-ref-row"><span>Paquete</span><code>{{ eq.paquete!.id }}</code></div> }
+            @if (eq.paquete?.ventana_entrega?.id) { <div class="ame-ref-row"><span>Ventana entrega</span><code>{{ eq.paquete!.ventana_entrega!.id }}</code></div> }
+            @if (eq.paquete?.ventana_entrega?.entrega_id) { <div class="ame-ref-row"><span>Entrega</span><code>{{ eq.paquete!.ventana_entrega!.entrega_id }}</code></div> }
+            @if (eq.paquete?.ventana_entrega?.contrato_id) { <div class="ame-ref-row"><span>Contrato</span><code>{{ eq.paquete!.ventana_entrega!.contrato_id }}</code></div> }
+            @if (eq.paquete?.direccion?.id) { <div class="ame-ref-row"><span>Dirección</span><code>{{ eq.paquete!.direccion!.id }}</code></div> }
+            @if (eq.paquete?.despacho?.id) { <div class="ame-ref-row"><span>Despacho</span><code>{{ eq.paquete!.despacho!.id }}</code></div> }
+            @if (eq.paquete?.despacho?.op_id) { <div class="ame-ref-row"><span>Orden producción</span><code>{{ eq.paquete!.despacho!.op_id }}</code></div> }
+            @if (eq.paquete?.despacho?.driver_id) { <div class="ame-ref-row"><span>Conductor</span><code>{{ eq.paquete!.despacho!.driver_id }}</code></div> }
+            @if (eq.paquete?.despacho?.entrega_id) { <div class="ame-ref-row"><span>Entrega (despacho)</span><code>{{ eq.paquete!.despacho!.entrega_id }}</code></div> }
+            @if (eq.paquete?.despacho?.contrato_id) { <div class="ame-ref-row"><span>Contrato (despacho)</span><code>{{ eq.paquete!.despacho!.contrato_id }}</code></div> }
+          </div>
+        </details>
+
+        <div class="modal-actions">
+          <button class="btn btn-outline-secondary" (click)="closeEtiquetaDetail()">Cerrar</button>
+        </div>
+      </div>
+    </dialog>
   }
 </div>
 
@@ -764,14 +1215,14 @@
       }
 
       <!-- Items -->
-      @if (selectedOrden()!.items?.length) {
+      @if (selectedOrden()!.items.length) {
         <div class="orden-detail-section">
           <h4><i class="bi bi-box-seam"></i>Items ({{ selectedOrden()!.items.length }})</h4>
           <div class="orden-items-grid">
             @for (item of selectedOrden()!.items; track $index) {
               <div class="orden-item-row">
-                <span class="item-sku">{{ item.producto?.sku ?? '—' }}</span>
-                <span class="item-nombre">{{ item.producto?.nombre ?? '—' }}</span>
+                <span class="item-sku">{{ item.producto.sku }}</span>
+                <span class="item-nombre">{{ item.producto.nombre }}</span>
                 <span class="item-qty">× {{ item.qty }}</span>
                 <span class="item-price">Bs {{ item.price | number:'1.2-2' }}</span>
               </div>
@@ -781,7 +1232,7 @@
       }
 
       <!-- Batches -->
-      @if (selectedOrden()!.batches?.length) {
+      @if (selectedOrden()!.batches.length) {
         <div class="orden-detail-section">
           <h4><i class="bi bi-layers"></i>Batches de producción ({{ selectedOrden()!.batches.length }})</h4>
           <div class="batch-list">
@@ -811,7 +1262,7 @@
       }
 
       <!-- Despacho -->
-      @if (selectedOrden()!.despacho?.length) {
+      @if (selectedOrden()!.despacho.length) {
         <div class="orden-detail-section">
           <h4><i class="bi bi-truck"></i>Despacho ({{ selectedOrden()!.despacho.length }})</h4>
           <div class="despacho-list">
@@ -913,7 +1364,7 @@
                 }
 
                 <!-- Tracking estado general -->
-                @if (d.tracking && !d.tracking.historial?.length) {
+                @if (d.tracking && !d.tracking.historial.length) {
                   <div class="tracking-section">
                     <div class="tracking-title"><i class="bi bi-activity"></i>Estado de tracking</div>
                     <div style="padding:0.5rem 0;font-size:0.82rem;color:#475569">

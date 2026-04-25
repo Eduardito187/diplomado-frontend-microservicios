@@ -20,6 +20,8 @@ function pastDateValidator(control: AbstractControl): ValidationErrors | null {
 
 import { Router } from '@angular/router';
 import { PatientService } from '../../core/services/patient.service';
+import { ProductionService } from '../../core/services/production.service';
+import { Suscripcion } from '../../core/models/production.model';
 import { ToastService } from '../../core/services/toast.service';
 import { Auth } from '../../core/services/auth';
 import { SECTION_ROLES } from '../../core/config/roles';
@@ -42,6 +44,7 @@ type ModalMode = 'create' | 'edit' | 'view' | 'address' | null;
 })
 export class Patients implements OnInit {
   private readonly svc = inject(PatientService);
+  private readonly prodSvc = inject(ProductionService);
   private readonly toast = inject(ToastService);
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(Auth);
@@ -55,6 +58,7 @@ export class Patients implements OnInit {
   readonly selected = signal<Patient | null>(null);
   readonly deleteTarget = signal<Patient | null>(null);
   readonly selectedAddress = signal<Address | null>(null);
+  readonly suscripciones = signal<Suscripcion[]>([]);
 
   readonly filtered = computed(() => {
     const q = this.searchQuery().toLowerCase().trim();
@@ -92,6 +96,10 @@ export class Patients implements OnInit {
   ngOnInit(): void {
     if (!ensureRole(SECTION_ROLES.patients, this.auth, this.router)) return;
     this.load();
+    this.prodSvc.getSuscripciones().subscribe({
+      next: (list) => this.suscripciones.set(list ?? []),
+      error: () => {},
+    });
   }
 
   load(): void {

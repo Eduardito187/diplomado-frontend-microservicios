@@ -174,8 +174,13 @@
             }
           </div>
           <div class="field">
-            <label for="p-sub">Suscripción ID</label>
-            <input id="p-sub" type="text" formControlName="subscriptionId" placeholder="UUID de suscripción (opcional)" />
+            <label for="p-sub">Suscripción</label>
+            <select id="p-sub" formControlName="subscriptionId">
+              <option value="">— Sin suscripción —</option>
+              @for (s of suscripciones(); track s.id) {
+                <option [value]="s.id">{{ s['nombre'] ?? s.id }}</option>
+              }
+            </select>
           </div>
         </div>
         <div class="modal-actions">
