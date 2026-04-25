@@ -182,7 +182,11 @@
           </div>
           <div class="field field-full">
             <label for="sch-nutri">Nutricionista *</label>
-            <select id="sch-nutri" formControlName="nutritionistId">
+            <select
+              id="sch-nutri"
+              formControlName="nutritionistId"
+              (change)="onScheduleNutritionistChange($any($event.target).value)"
+            >
               <option value="">— selecciona —</option>
               @for (n of nutritionists(); track n.id) {
                 <option [value]="n.id">{{ nutritionistFullName(n) }}</option>
@@ -197,9 +201,40 @@
             </select>
           </div>
           <div class="field">
-            <label for="sch-date">Fecha y hora *</label>
-            <input id="sch-date" type="datetime-local" formControlName="scheduleDate" />
+            <label for="sch-date-picker">Fecha *</label>
+            <input
+              id="sch-date-picker"
+              type="date"
+              [value]="selectedScheduleDate()"
+              (change)="onScheduleDateChange($any($event.target).value)"
+            />
           </div>
+          <div class="field">
+            <label for="sch-time">Hora *</label>
+            @if (hoursLoading()) {
+              <div class="text-center py-2">
+                <span class="spinner-border spinner-border-sm"></span>
+              </div>
+            } @else if (selectedScheduleDate() && availableHours().length > 0) {
+              <select
+                id="sch-time"
+                [value]="selectedScheduleHour()"
+                (change)="onScheduleHourChange($any($event.target).value)"
+              >
+                <option value="">— selecciona hora —</option>
+                @for (hour of availableHours(); track hour) {
+                  <option [value]="hour">{{ hour }}</option>
+                }
+              </select>
+            } @else if (selectedScheduleDate()) {
+              <div class="alert alert-warning py-2">No hay horarios disponibles para esta fecha</div>
+            } @else {
+              <select disabled>
+                <option>— selecciona una fecha primero —</option>
+              </select>
+            }
+          </div>
+          <input type="hidden" formControlName="scheduleDate" />
         </div>
         <div class="modal-actions">
           <button type="button" class="btn btn-outline-secondary" (click)="closeModal()">Cancelar</button>
