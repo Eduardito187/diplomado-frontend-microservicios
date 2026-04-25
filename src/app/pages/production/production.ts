@@ -1,5 +1,6 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, inject } from '@angular/core';
 import { FormBuilder, FormArray, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Subject, debounceTime, takeUntil, distinctUntilChanged } from 'rxjs';
 import { TitleCasePipe, SlicePipe, NgClass } from '@angular/common';
 import { Router } from '@angular/router';
 import {
@@ -48,7 +49,8 @@ function lastOfMonth(): string {
   templateUrl: './production.html',
   styleUrl: './production.scss',
 })
-export class Production implements OnInit {
+export class Production implements OnInit, OnDestroy {
+  private readonly destroy$ = new Subject<void>();
   private readonly svc = inject(ProductionService);
   private readonly toast = inject(ToastService);
   private readonly fb = inject(FormBuilder);
@@ -186,6 +188,34 @@ export class Production implements OnInit {
       next: (list) => this.ventanasForDespacho.set(list ?? []),
       error: () => {},
     });
+
+    // Auto-cargar items cuando el ID de la orden cambia (también cuando se genera automáticamente)
+    this.stageForm.controls.id.valueChanges.pipe(
+      debounceTime(400),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$),
+    ).subscribe(id => {
+      const trimmed = (id ?? '').trim();
+      if (trimmed.length >= 36) {
+        this.onOrdenIdChange(trimmed);
+      } else {
+        this.ordenItems.set([]);
+        this.selectedItemIds.set([]);
+      }
+    });
+
+    // Auto-cargar direcciones cuando cambia el paciente seleccionado
+    this.stageForm.controls.pacienteId.valueChanges.pipe(
+      distinctUntilChanged(),
+      takeUntil(this.destroy$),
+    ).subscribe(id => {
+      this.onDespacharPacienteChange(id ?? '');
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   private loadPorciones(): void {
