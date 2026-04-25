@@ -67,8 +67,8 @@
                   <td>
                     <ul style="margin:0; padding-left: 16px;">
                       <li *ngFor="let r of tf.recipes">
-                        {{ r.idRecipe }}
-                        <span class="text-muted">x{{ r.portion }}</span>
+                        {{ getRecipeName(r.idRecipe) }}
+                        <span class="text-muted"> x{{ r.portion }}</span>
                       </li>
                     </ul>
                   </td>
@@ -263,9 +263,9 @@
 
           @for (rCtrl of recipesOf(selectedDayIndex()!, ti).controls; track $index; let ri = $index) {
           <div class="form-grid" [formGroup]="$any(rCtrl)">
-            <input type="text" formControlName="idRecipe" placeholder="ID receta" />
+            <input type="text" [value]="getRecipeName(rCtrl.get('idRecipe')?.value)" disabled />
+            <input type="hidden" formControlName="idRecipe" />
             <input type="number" formControlName="portion" />
-
             <button class="btn-icon danger" (click)="removeRecipeRef(selectedDayIndex()!, ti, ri)">
               <i class="bi bi-trash3-fill"></i>
             </button>

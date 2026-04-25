@@ -196,9 +196,18 @@ export class MealPlans implements OnInit {
   }
 
   openView(mealplan: MealPlan): void {
-    console.log(mealplan);
-    this.selectedMealPlan.set(mealplan);
-    this.modalMode.set('view');
+    this.svc.getRecipe()
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe({
+        next: (data) => {
+          this.recipes.set(data ?? []);
+          this.selectedMealPlan.set(mealplan);
+          this.modalMode.set('view');
+        },
+        error: () => {
+          this.toast.error('No se pudo cargar la lista de recetas.');
+        }
+      });
   }
 
   openCreate(): void {
@@ -220,6 +229,12 @@ export class MealPlans implements OnInit {
   }
 
   openEdit(mealplan: MealPlan): void {
+    this.svc.getRecipe()
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe({
+        next: (data) => this.recipes.set(data ?? []),
+        error: () => this.toast.error('No se pudo cargar la lista de recetas.'),
+      });
     this.selectedMealPlan.set(mealplan);
     this.modalMode.set('edit');
     this.resetPlanForm();
@@ -233,26 +248,18 @@ export class MealPlans implements OnInit {
       endDate: mealplan.endDate,
       totalCalories: mealplan.totalCalories,
     });
-    if (mealplan.idPatient) {
-      this.svc.getPatientAppointments(mealplan.idPatient, 'ATENDIDO')
-        .subscribe(data => this.patientAppointments.set(data ?? []));
-    }
     this.days.clear();
     mealplan.mealPlanDays?.forEach((d) => {
       const dayGroup = this.buildDay();
       dayGroup.patchValue({ day: d.day });
-
       const timeFoodsArray = dayGroup.get('timeFoods') as FormArray;
-
       d.timeFoods.forEach((tf) => {
         const tfGroup = this.buildTimeFood();
         tfGroup.patchValue({
           type: tf.type,
           order: tf.order,
         });
-
         const recipesArray = tfGroup.get('recipes') as FormArray;
-
         tf.recipes.forEach((r) => {
           const rGroup = this.buildRecipeRef();
           rGroup.patchValue({
@@ -261,7 +268,6 @@ export class MealPlans implements OnInit {
           });
           recipesArray.push(rGroup);
         });
-
         timeFoodsArray.push(tfGroup);
       });
       this.days.push(dayGroup);
@@ -348,6 +354,10 @@ export class MealPlans implements OnInit {
 
   getSubscriptionName(id: string): string {
     return this.subsctiptionTypes().find(p => p.id === id)?.name ?? id;
+  }
+
+  getRecipeName(id: string): string {
+    return this.recipes().find(p => p.id === id)?.name ?? id;
   }
 
   create(): void {
