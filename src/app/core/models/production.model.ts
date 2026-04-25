@@ -183,10 +183,10 @@ export interface OrdenConsolidada {
   fecha: string;
   estado: string;
   entrega_completada_at: string | null;
-  items: OrdenConsolidadaItem[];
-  batches: OrdenConsolidadaBatch[];
-  despacho: OrdenConsolidadaDespacho[];
-  progreso_entrega: OrdenConsolidadaProgreso;
+  items: OrdenConsolidadaItem[] | null;
+  batches: OrdenConsolidadaBatch[] | null;
+  despacho: OrdenConsolidadaDespacho[] | null;
+  progreso_entrega: OrdenConsolidadaProgreso | null;
 }
 export interface SuscripcionOrdenes {
   suscripcion: { id: string; nombre: string };
