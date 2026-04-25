@@ -1,6 +1,6 @@
 import { inject } from '@angular/core';
 import { HttpInterceptorFn, HttpErrorResponse, HttpRequest } from '@angular/common/http';
-import { catchError, switchMap, throwError } from 'rxjs';
+import { catchError, retry, switchMap, throwError, timer } from 'rxjs';
 import { Auth } from '../services/auth';
 import { API } from '../config/api.config';
 
@@ -39,7 +39,16 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const token = auth.getToken();
   const initial = !isAuth && token ? withAuth(req, token) : req;
 
+  const BACKOFF_MS = [250, 500, 1000];
+
   return next(initial).pipe(
+    retry({
+      count: 3,
+      delay: (err: HttpErrorResponse, attempt: number) => {
+        if (err.status !== 502 && err.status !== 503) throw err;
+        return timer(BACKOFF_MS[attempt - 1] ?? 1000);
+      },
+    }),
     catchError((err: HttpErrorResponse) => {
       if (err.status !== 401 || isAuth) return throwError(() => err);
       return auth.refresh().pipe(

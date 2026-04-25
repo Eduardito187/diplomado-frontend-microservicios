@@ -103,4 +103,32 @@ export class ProductionService {
     return this.list<Calendario>('calendarios');
   }
 
+  getSuscripcionCalendarios(id: string): Observable<Calendario[]> {
+    return this.http.get<Calendario[]>(API.production.suscripciones.calendarios(id));
+  }
+
+  getPacienteCalendarios(id: string): Observable<Calendario[]> {
+    return this.http.get<Calendario[]>(API.production.pacientes.calendarios(id));
+  }
+
+  getPacienteVentanasEntrega(id: string): Observable<unknown[]> {
+    return this.http.get<unknown[]>(API.production.pacientes.ventanasEntrega(id));
+  }
+
+  getCalendarioPacientes(id: string): Observable<unknown[]> {
+    return this.http.get<unknown[]>(API.production.calendarios.pacientes(id));
+  }
+
+  getCalendarioVentanasEntrega(id: string): Observable<unknown[]> {
+    return this.http.get<unknown[]>(API.production.calendarios.ventanasEntrega(id));
+  }
+
+  getVentanaEntregaPacientes(id: string): Observable<unknown[]> {
+    return this.http.get<unknown[]>(API.production.ventanasEntrega.pacientes(id));
+  }
+
+  getVentanaEntregaCalendarios(id: string): Observable<Calendario[]> {
+    return this.http.get<Calendario[]>(API.production.ventanasEntrega.calendarios(id));
+  }
+
 }
