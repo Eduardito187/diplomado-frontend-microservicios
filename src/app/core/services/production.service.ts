@@ -9,6 +9,9 @@ import {
   Suscripcion,
   Calendario,
   GenerarOrdenDto,
+  AgendaResponse,
+  OrdenConsolidada,
+  SuscripcionOrdenes,
 } from '../models/production.model';
 
 export interface LaravelResource {
@@ -107,6 +110,14 @@ export class ProductionService {
     return this.http.get<LaravelResource[]>(API.production.pacientes.base);
   }
 
+  getPacienteAddresses(pacienteId: string): Observable<unknown[]> {
+    return this.http.get<unknown[]>(API.patients.addresses(pacienteId));
+  }
+
+  getOrdenItems(ordenId: string): Observable<unknown[]> {
+    return this.http.get<unknown[]>(API.production.ordenes.items(ordenId));
+  }
+
   getSuscripcionCalendarios(id: string): Observable<Calendario[]> {
     return this.http.get<Calendario[]>(API.production.suscripciones.calendarios(id));
   }
@@ -133,6 +144,27 @@ export class ProductionService {
 
   getVentanaEntregaCalendarios(id: string): Observable<Calendario[]> {
     return this.http.get<Calendario[]>(API.production.ventanasEntrega.calendarios(id));
+  }
+
+  getAgenda(fechaInicio?: string, fechaFin?: string): Observable<AgendaResponse> {
+    let url = API.production.agenda;
+    const params: string[] = [];
+    if (fechaInicio) params.push(`fecha_inicio=${fechaInicio}`);
+    if (fechaFin) params.push(`fecha_fin=${fechaFin}`);
+    if (params.length) url += `?${params.join('&')}`;
+    return this.http.get<AgendaResponse>(url);
+  }
+
+  getOrdenesConsolidadas(): Observable<OrdenConsolidada[]> {
+    return this.http.get<OrdenConsolidada[]>(API.production.ordenesConsolidadas);
+  }
+
+  getOrdenConsolidada(id: string): Observable<OrdenConsolidada> {
+    return this.http.get<OrdenConsolidada>(API.production.ordenConsolidada(id));
+  }
+
+  getSuscripcionOrdenes(id: string): Observable<SuscripcionOrdenes> {
+    return this.http.get<SuscripcionOrdenes>(API.production.suscripcionOrdenes(id));
   }
 
 }

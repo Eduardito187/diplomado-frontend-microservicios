@@ -1,6 +1,9 @@
 @use '../../shared/styles/page-shared' as *;
 @use '../../shared/styles/modal-shared' as *;
 @use './production-calendar' as *;
+@use './production-relaciones' as *;
+@use './production-agenda' as *;
+@use './production-ordenes' as *;
 
 // Resource tabs bar
 .resource-tabs {
