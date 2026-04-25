@@ -172,20 +172,17 @@
                   <span class="spinner-border spinner-border-sm ms-2" style="width:0.75rem;height:0.75rem"></span>
                 }
               </label>
-              @if (pacienteDirecciones().length > 0) {
-                <select id="stg-dir" formControlName="direccionId">
-                  <option value="">Selecciona una dirección…</option>
-                  @for (d of pacienteDirecciones(); track $any(d)['id']) {
-                    <option [value]="$any(d)['id']">
-                      {{ $any(d)['street'] ?? $any(d)['direccion'] ?? $any(d)['address'] ?? $any(d)['id'] }}
-                      @if ($any(d)['city']) { — {{ $any(d)['city'] }} }
-                    </option>
-                  }
-                </select>
-              } @else {
-                <input id="stg-dir" type="text" formControlName="direccionId"
-                  [placeholder]="stageForm.controls.pacienteId.value ? 'Sin direcciones — ingresa UUID manual' : 'Selecciona un paciente primero'" />
-              }
+              <select id="stg-dir" formControlName="direccionId"
+                [disabled]="pacienteDirecciones().length === 0">
+                <option value="">
+                  {{ direccionesLoading() ? 'Cargando direcciones…' : pacienteDirecciones().length === 0 ? (stageForm.controls.pacienteId.value ? 'Sin direcciones registradas' : 'Selecciona un paciente primero') : 'Selecciona una dirección…' }}
+                </option>
+                @for (d of pacienteDirecciones(); track $any(d)['id']) {
+                  <option [value]="$any(d)['id']">
+                    {{ $any(d)['label'] ? '(' + $any(d)['label'] + ') ' : '' }}{{ $any(d)['line1'] ?? $any(d)['street'] ?? $any(d)['direccion'] ?? '' }}{{ $any(d)['city'] ? ' — ' + $any(d)['city'] : '' }}
+                  </option>
+                }
+              </select>
             </div>
           </div>
 
@@ -309,135 +306,42 @@
           <p>Selecciona un rango y haz clic en <strong>Cargar agenda</strong>.</p>
         </div>
       } @else {
-        <div class="agenda-layout">
-          <div class="agenda-strip">
-            @for (dia of agendaDias(); track dia) {
-              @let hd = formatAgendaDay(dia);
-              @let entries = agendaEntries(dia);
-              <div class="agenda-day" [class.is-today]="dia === today" [class.is-selected]="selectedAgendaDia() === dia">
-                <button type="button" class="agenda-day-hd" (click)="selectedAgendaDia.set(selectedAgendaDia() === dia ? null : dia)">
-                  <span class="agenda-day-wd">{{ hd.wd }}</span>
-                  <span class="agenda-day-num">{{ hd.num }}</span>
-                  <span class="agenda-day-mon">{{ hd.mon }}</span>
-                  @if (entries.length > 0) {
-                    <span class="agenda-day-cnt">{{ entries.length }}</span>
-                  }
-                </button>
-                <div class="agenda-day-body">
-                  @if (entries.length === 0) {
-                    <div class="agenda-day-empty">Sin entregas</div>
-                  }
-                  @for (entry of entries; track entry.calendario_id) {
-                    <div class="agenda-entry" [class.agenda-entry--done]="entry.estado === 1">
-                      <div class="agenda-entry-head">
-                        <span class="agenda-entry-chip" [class.chip-pendiente]="entry.estado === 0" [class.chip-completado]="entry.estado === 1">
-                          <i class="bi" [class.bi-hourglass-split]="entry.estado === 0" [class.bi-check-circle-fill]="entry.estado === 1"></i>
-                          {{ entry.estado === 0 ? 'Pendiente' : 'Completado' }}
-                        </span>
-                      </div>
-                      @if (entry.paciente) {
-                        <div class="agenda-entry-name">{{ entry.paciente.nombre }}</div>
-                        <div class="agenda-entry-doc"><i class="bi bi-person"></i>{{ entry.paciente.documento }}</div>
-                      }
-                      <div class="agenda-uuid-list">
-                        <div class="agenda-uuid-row">
-                          <span class="agenda-uuid-label"><i class="bi bi-calendar3"></i>Cal</span>
-                          <span class="agenda-uuid-val">{{ entry.calendario_id | slice:0:8 }}…</span>
-                        </div>
-                        <div class="agenda-uuid-row">
-                          <span class="agenda-uuid-label"><i class="bi bi-truck"></i>Ent</span>
-                          <span class="agenda-uuid-val">{{ entry.entrega_id | slice:0:8 }}…</span>
-                        </div>
-                        @if (entry.contrato_id) {
-                          <div class="agenda-uuid-row">
-                            <span class="agenda-uuid-label"><i class="bi bi-file-earmark-text"></i>Con</span>
-                            <span class="agenda-uuid-val">{{ entry.contrato_id | slice:0:8 }}…</span>
-                          </div>
-                        }
-                      </div>
-                      @if (entry.suscripcion) {
-                        <div class="agenda-entry-sub">
-                          <i class="bi bi-bookmark-star-fill"></i>{{ entry.suscripcion.nombre }}
-                        </div>
-                      }
-                      @if (entry.ventana_entrega) {
-                        <div class="agenda-entry-ventana">
-                          <i class="bi bi-clock"></i>{{ formatWindow(entry.ventana_entrega.desde, entry.ventana_entrega.hasta) }}
-                        </div>
-                      }
-                    </div>
-                  }
-                </div>
-              </div>
-            }
-          </div>
-
-          <!-- Day detail panel -->
-          @if (selectedAgendaDia()) {
-            @let diaHd = formatAgendaDay(selectedAgendaDia()!);
-            <div class="agenda-day-panel">
-              <div class="agenda-panel-head">
-                <div class="agenda-panel-date">
-                  <span class="panel-wd">{{ diaHd.wd }}</span>
-                  <span class="panel-num">{{ diaHd.num }}</span>
-                  <span class="panel-mon">{{ diaHd.mon }}</span>
-                </div>
-                <span class="agenda-panel-cnt">{{ selectedAgendaEntries().length }} agendado{{ selectedAgendaEntries().length !== 1 ? 's' : '' }}</span>
-                <button type="button" class="agenda-panel-close" (click)="selectedAgendaDia.set(null)">
-                  <i class="bi bi-x-lg"></i>
-                </button>
-              </div>
-              <div class="agenda-panel-body">
-                @if (selectedAgendaEntries().length === 0) {
-                  <div class="agenda-day-empty" style="padding:2rem">Sin entregas agendadas para este día.</div>
+        <div class="agenda-strip">
+          @for (dia of agendaDias(); track dia) {
+            @let hd = formatAgendaDay(dia);
+            @let entries = agendaEntries(dia);
+            <div class="agenda-day" [class.is-today]="dia === today">
+              <button type="button" class="agenda-day-hd" (click)="selectedAgendaDia.set(dia)">
+                <span class="agenda-day-wd">{{ hd.wd }}</span>
+                <span class="agenda-day-num">{{ hd.num }}</span>
+                <span class="agenda-day-mon">{{ hd.mon }}</span>
+                @if (entries.length > 0) {
+                  <span class="agenda-day-cnt">{{ entries.length }}</span>
                 }
-                @for (entry of selectedAgendaEntries(); track entry.calendario_id) {
-                  <div class="agenda-panel-entry" [class.panel-entry--done]="entry.estado === 1">
-                    <div class="panel-entry-top">
-                      <span class="agenda-entry-chip" [class.chip-pendiente]="entry.estado === 0" [class.chip-completado]="entry.estado === 1">
-                        <i class="bi" [class.bi-hourglass-split]="entry.estado === 0" [class.bi-check-circle-fill]="entry.estado === 1"></i>
-                        {{ entry.estado === 0 ? 'Pendiente' : 'Completado' }}
-                      </span>
-                    </div>
-
+              </button>
+              <div class="agenda-day-body">
+                @if (entries.length === 0) {
+                  <div class="agenda-day-empty">Sin entregas</div>
+                }
+                @for (entry of entries; track entry.calendario_id; let i = $index) {
+                  <button type="button" class="agenda-entry" [class.agenda-entry--done]="entry.estado === 1" (click)="selectedAgendaDia.set(dia)">
+                    <span class="agenda-entry-chip" [class.chip-pendiente]="entry.estado === 0" [class.chip-completado]="entry.estado === 1">
+                      <i class="bi" [class.bi-hourglass-split]="entry.estado === 0" [class.bi-check-circle-fill]="entry.estado === 1"></i>
+                      {{ entry.estado === 0 ? 'Pendiente' : 'Completado' }}
+                    </span>
                     @if (entry.paciente) {
-                      <div class="panel-entry-section">
-                        <div class="panel-entry-label"><i class="bi bi-person-fill"></i>Paciente</div>
-                        <div class="panel-entry-value">{{ entry.paciente.nombre }}</div>
-                        <div class="panel-entry-sub">{{ entry.paciente.documento }}</div>
-                      </div>
-                    }
-                    @if (entry.suscripcion) {
-                      <div class="panel-entry-section">
-                        <div class="panel-entry-label"><i class="bi bi-bookmark-star-fill"></i>Suscripción</div>
-                        <div class="panel-entry-value">{{ entry.suscripcion.nombre }}</div>
-                        <div class="panel-entry-sub">{{ entry.suscripcion.id }}</div>
-                      </div>
+                      <div class="agenda-entry-name">{{ entry.paciente.nombre }}</div>
+                      <div class="agenda-entry-meta"><i class="bi bi-person"></i>{{ entry.paciente.documento }}</div>
+                    } @else {
+                      <div class="agenda-entry-name">Entrega #{{ i + 1 }}</div>
                     }
                     @if (entry.ventana_entrega) {
-                      <div class="panel-entry-section">
-                        <div class="panel-entry-label"><i class="bi bi-clock-fill"></i>Ventana de entrega</div>
-                        <div class="panel-entry-value">{{ formatWindow(entry.ventana_entrega.desde, entry.ventana_entrega.hasta) }}</div>
-                      </div>
+                      <div class="agenda-entry-meta"><i class="bi bi-clock"></i>{{ formatWindow(entry.ventana_entrega.desde, entry.ventana_entrega.hasta) }}</div>
                     }
-
-                    <div class="panel-entry-ids">
-                      <div class="panel-id-row">
-                        <span class="panel-id-key">Calendario</span>
-                        <span class="panel-id-val">{{ entry.calendario_id }}</span>
-                      </div>
-                      <div class="panel-id-row">
-                        <span class="panel-id-key">Entrega</span>
-                        <span class="panel-id-val">{{ entry.entrega_id }}</span>
-                      </div>
-                      @if (entry.contrato_id) {
-                        <div class="panel-id-row">
-                          <span class="panel-id-key">Contrato</span>
-                          <span class="panel-id-val">{{ entry.contrato_id }}</span>
-                        </div>
-                      }
-                    </div>
-                  </div>
+                    @if (entry.suscripcion) {
+                      <div class="agenda-entry-meta"><i class="bi bi-bookmark-star-fill"></i>{{ entry.suscripcion.nombre }}</div>
+                    }
+                  </button>
                 }
               </div>
             </div>
@@ -445,6 +349,114 @@
         </div>
       }
     </div>
+  }
+
+  <!-- ══ Agenda day modal ══ -->
+  @if (selectedAgendaDia()) {
+    @let diaHd = formatAgendaDay(selectedAgendaDia()!);
+    <div class="modal-backdrop" (click)="selectedAgendaDia.set(null)" aria-hidden="true"></div>
+    <dialog class="modal-panel agenda-dia-modal" open aria-modal="true">
+      <div class="modal-head">
+        <div class="detail-modal-title">
+          <div class="agenda-modal-date-badge">
+            <span class="amd-wd">{{ diaHd.wd }}</span>
+            <span class="amd-num">{{ diaHd.num }}</span>
+            <span class="amd-mon">{{ diaHd.mon }}</span>
+          </div>
+          <div>
+            <h3 style="margin:0;font-size:1rem;font-weight:800;color:#1e293b">
+              Entregas del día
+            </h3>
+            <span style="font-size:0.75rem;color:#64748b">
+              {{ selectedAgendaEntries().length }} entrega{{ selectedAgendaEntries().length !== 1 ? 's' : '' }} agendada{{ selectedAgendaEntries().length !== 1 ? 's' : '' }}
+            </span>
+          </div>
+        </div>
+        <button class="btn-close-modal" (click)="selectedAgendaDia.set(null)" aria-label="Cerrar">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        @if (selectedAgendaEntries().length === 0) {
+          <div style="text-align:center;padding:2rem;color:#94a3b8">Sin entregas para este día.</div>
+        }
+        @for (entry of selectedAgendaEntries(); track entry.calendario_id; let i = $index) {
+          <div class="agenda-modal-entry" [class.ame--done]="entry.estado === 1">
+            <!-- Header de la entrega -->
+            <div class="ame-head">
+              <div class="ame-num">#{{ i + 1 }}</div>
+              <span class="agenda-entry-chip" [class.chip-pendiente]="entry.estado === 0" [class.chip-completado]="entry.estado === 1">
+                <i class="bi" [class.bi-hourglass-split]="entry.estado === 0" [class.bi-check-circle-fill]="entry.estado === 1"></i>
+                {{ entry.estado === 0 ? 'Pendiente' : 'Completado' }}
+              </span>
+            </div>
+
+            <!-- Info principal -->
+            <div class="ame-body">
+              <!-- Paciente -->
+              <div class="ame-info-block">
+                <div class="ame-info-icon" style="background:#eff6ff;color:#2563eb"><i class="bi bi-person-fill"></i></div>
+                <div>
+                  <div class="ame-info-label">Paciente</div>
+                  <div class="ame-info-value">{{ entry.paciente?.nombre ?? 'Sin asignar' }}</div>
+                  @if (entry.paciente?.documento) {
+                    <div class="ame-info-sub">Doc: {{ entry.paciente!.documento }}</div>
+                  }
+                </div>
+              </div>
+
+              <!-- Suscripción -->
+              <div class="ame-info-block">
+                <div class="ame-info-icon" style="background:#f0fdf4;color:#15803d"><i class="bi bi-bookmark-star-fill"></i></div>
+                <div>
+                  <div class="ame-info-label">Suscripción</div>
+                  <div class="ame-info-value">{{ entry.suscripcion?.nombre ?? 'Sin asignar' }}</div>
+                </div>
+              </div>
+
+              <!-- Ventana de entrega -->
+              <div class="ame-info-block">
+                <div class="ame-info-icon" style="background:#fef9c3;color:#a16207"><i class="bi bi-clock-fill"></i></div>
+                <div>
+                  <div class="ame-info-label">Ventana de entrega</div>
+                  <div class="ame-info-value">
+                    @if (entry.ventana_entrega) {
+                      {{ formatWindow(entry.ventana_entrega.desde, entry.ventana_entrega.hasta) }}
+                    } @else {
+                      Sin asignar
+                    }
+                  </div>
+                </div>
+              </div>
+
+              <!-- Contrato -->
+              <div class="ame-info-block">
+                <div class="ame-info-icon" style="background:#fdf4ff;color:#7e22ce"><i class="bi bi-file-earmark-text-fill"></i></div>
+                <div>
+                  <div class="ame-info-label">Contrato</div>
+                  <div class="ame-info-value">{{ entry.contrato_id ? 'Asignado' : 'Sin contrato' }}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Referencias técnicas (colapsadas visualmente) -->
+            <details class="ame-refs">
+              <summary>Referencias técnicas</summary>
+              <div class="ame-refs-body">
+                <div class="ame-ref-row"><span>Calendario</span><code>{{ entry.calendario_id }}</code></div>
+                <div class="ame-ref-row"><span>Entrega</span><code>{{ entry.entrega_id }}</code></div>
+                @if (entry.contrato_id) {
+                  <div class="ame-ref-row"><span>Contrato</span><code>{{ entry.contrato_id }}</code></div>
+                }
+              </div>
+            </details>
+          </div>
+        }
+        <div class="modal-actions">
+          <button class="btn btn-outline-secondary" (click)="selectedAgendaDia.set(null)">Cerrar</button>
+        </div>
+      </div>
+    </dialog>
   }
 
   <!-- ══════════════════ ÓRDENES CONSOLIDADAS ══════════════════ -->
@@ -807,25 +819,77 @@
               <div class="despacho-card">
                 <div class="despacho-card-head">
                   <span class="batch-estado" [style]="batchStatusClass(d.delivery_status)">{{ d.delivery_status }}</span>
+                  @if (d.delivery_occurred_on) {
+                    <span class="despacho-info-sub ms-2" style="font-size:0.72rem;color:#64748b">
+                      <i class="bi bi-calendar-check" style="margin-right:3px"></i>{{ formatDate(d.delivery_occurred_on) }}
+                    </span>
+                  }
                 </div>
-                <div class="despacho-ids">
-                  <div class="despacho-id-row">
-                    <span class="despacho-id-lbl"><i class="bi bi-person-fill"></i>Paciente</span>
-                    <span class="despacho-id-val">{{ d.paciente_id }}</span>
+
+                <div class="despacho-info-grid">
+                  <!-- Paciente -->
+                  <div class="despacho-info-block">
+                    <div class="despacho-info-icon" style="background:#eff6ff;color:#2563eb"><i class="bi bi-person-fill"></i></div>
+                    <div>
+                      <div class="despacho-info-lbl">Paciente</div>
+                      @if (d.paciente) {
+                        <div class="despacho-info-val">{{ d.paciente.nombre }}</div>
+                        @if (d.paciente.documento) {
+                          <div class="despacho-info-sub">{{ d.paciente.documento }}</div>
+                        }
+                      } @else {
+                        <div class="despacho-info-val text-muted">Sin datos</div>
+                      }
+                    </div>
                   </div>
-                  @if (d.direccion_id) {
-                    <div class="despacho-id-row">
-                      <span class="despacho-id-lbl"><i class="bi bi-geo-alt-fill"></i>Dirección</span>
-                      <span class="despacho-id-val">{{ d.direccion_id }}</span>
+
+                  <!-- Dirección -->
+                  <div class="despacho-info-block">
+                    <div class="despacho-info-icon" style="background:#fef9c3;color:#a16207"><i class="bi bi-geo-alt-fill"></i></div>
+                    <div>
+                      <div class="despacho-info-lbl">Dirección de entrega</div>
+                      @if (d.direccion) {
+                        <div class="despacho-info-val">{{ d.direccion.linea1 }}</div>
+                        @if (d.direccion.linea2) {
+                          <div class="despacho-info-sub">{{ d.direccion.linea2 }}</div>
+                        }
+                        <div class="despacho-info-sub">{{ d.direccion.ciudad }}, {{ d.direccion.provincia }}, {{ d.direccion.pais }}</div>
+                      } @else {
+                        <div class="despacho-info-val text-muted">Sin asignar</div>
+                      }
                     </div>
-                  }
-                  @if (d.ventana_entrega_id) {
-                    <div class="despacho-id-row">
-                      <span class="despacho-id-lbl"><i class="bi bi-clock-fill"></i>Ventana</span>
-                      <span class="despacho-id-val">{{ d.ventana_entrega_id }}</span>
+                  </div>
+
+                  <!-- Driver -->
+                  @if (d.driver_id) {
+                    <div class="despacho-info-block">
+                      <div class="despacho-info-icon" style="background:#f5f3ff;color:#7c3aed"><i class="bi bi-person-badge-fill"></i></div>
+                      <div>
+                        <div class="despacho-info-lbl">Conductor</div>
+                        <div class="despacho-info-val">{{ d.driver_id }}</div>
+                      </div>
                     </div>
                   }
                 </div>
+
+                <!-- Foto entrega -->
+                @if (d.tracking?.foto_url && d.tracking!.foto_url!.trim()) {
+                  <div style="padding:0.75rem 1rem 0">
+                    <div class="despacho-info-lbl" style="margin-bottom:0.35rem"><i class="bi bi-camera-fill me-1"></i>Foto de entrega</div>
+                    <img [src]="d.tracking!.foto_url!" alt="Foto entrega"
+                         style="max-width:100%;max-height:200px;border-radius:8px;border:1px solid #e2e8f0;object-fit:cover" />
+                  </div>
+                }
+
+                <!-- Mapa de ruta -->
+                @if (d.ruta) {
+                  <div style="padding:0.75rem 1rem 0">
+                    <div class="despacho-info-lbl" style="margin-bottom:0.35rem"><i class="bi bi-map-fill me-1"></i>Ruta de entrega</div>
+                    <app-despacho-map [ruta]="d.ruta" />
+                  </div>
+                }
+
+                <!-- Tracking historial -->
                 @if (d.tracking?.historial?.length) {
                   <div class="tracking-section">
                     <div class="tracking-title"><i class="bi bi-activity"></i>Historial de tracking ({{ d.tracking!.historial.length }})</div>
@@ -834,12 +898,12 @@
                         <div class="tracking-event">
                           <div class="tracking-dot"></div>
                           <div class="tracking-event-body">
-                            <span class="tracking-estado">{{ $any(ev)['estado'] ?? $any(ev)['status'] ?? '—' }}</span>
-                            @if ($any(ev)['timestamp'] || $any(ev)['fecha']) {
-                              <span class="tracking-ts">{{ formatDate($any(ev)['timestamp'] ?? $any(ev)['fecha']) }}</span>
+                            <span class="tracking-estado">{{ ev['status'] ?? ev['estado'] ?? '—' }}</span>
+                            @if (ev['occurred_on'] ?? ev['timestamp'] ?? ev['fecha']) {
+                              <span class="tracking-ts">{{ formatDate($any(ev['occurred_on'] ?? ev['timestamp'] ?? ev['fecha'])) }}</span>
                             }
-                            @if ($any(ev)['nota']) {
-                              <span class="tracking-nota">{{ $any(ev)['nota'] }}</span>
+                            @if (ev['nota']) {
+                              <span class="tracking-nota">{{ ev['nota'] }}</span>
                             }
                           </div>
                         </div>
@@ -847,6 +911,37 @@
                     </div>
                   </div>
                 }
+
+                <!-- Tracking estado general -->
+                @if (d.tracking && !d.tracking.historial?.length) {
+                  <div class="tracking-section">
+                    <div class="tracking-title"><i class="bi bi-activity"></i>Estado de tracking</div>
+                    <div style="padding:0.5rem 0;font-size:0.82rem;color:#475569">
+                      <span class="batch-estado" [style]="batchStatusClass(d.tracking.status)">{{ d.tracking.status }}</span>
+                      @if (d.tracking.incident_type) {
+                        <div style="margin-top:0.4rem;color:#b91c1c;font-size:0.78rem">
+                          <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                          {{ d.tracking.incident_type }}: {{ d.tracking.incident_description }}
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+
+                <!-- Referencias técnicas -->
+                <details class="ame-refs">
+                  <summary>Referencias técnicas</summary>
+                  <div class="ame-refs-body">
+                    @if (d.id) { <div class="ame-ref-row"><span>Despacho ID</span><code>{{ d.id }}</code></div> }
+                    @if (d.paciente?.id ?? d.paciente_id) { <div class="ame-ref-row"><span>Paciente</span><code>{{ d.paciente?.id ?? d.paciente_id }}</code></div> }
+                    @if (d.direccion?.id ?? d.direccion_id) { <div class="ame-ref-row"><span>Dirección</span><code>{{ d.direccion?.id ?? d.direccion_id }}</code></div> }
+                    @if (d.ventana_entrega_id) { <div class="ame-ref-row"><span>Ventana</span><code>{{ d.ventana_entrega_id }}</code></div> }
+                    @if (d.paquete_id) { <div class="ame-ref-row"><span>Paquete</span><code>{{ d.paquete_id }}</code></div> }
+                    @if (d.entrega_id) { <div class="ame-ref-row"><span>Entrega</span><code>{{ d.entrega_id }}</code></div> }
+                    @if (d.contrato_id) { <div class="ame-ref-row"><span>Contrato</span><code>{{ d.contrato_id }}</code></div> }
+                    @if (d.driver_id) { <div class="ame-ref-row"><span>Conductor</span><code>{{ d.driver_id }}</code></div> }
+                  </div>
+                </details>
               </div>
             }
           </div>

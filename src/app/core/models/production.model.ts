@@ -64,23 +64,61 @@ export interface OrdenConsolidadaBatch {
   estado: string;
 }
 export interface TrackingEvento {
-  estado: string;
+  event_id?: string;
+  status?: string;
+  estado?: string;
+  driver_id?: string;
+  occurred_on?: string;
   timestamp?: string;
   fecha?: string;
   nota?: string;
   [k: string]: unknown;
 }
+export interface DespachoTracking {
+  status: string;
+  completed_at: string | null;
+  driver_id: string | null;
+  foto_url?: string | null;
+  incident_type: string | null;
+  incident_description: string | null;
+  historial: TrackingEvento[];
+}
+export interface DespachoRuta {
+  origen: { lat: number; lng: number };
+  destino: { lat: number; lng: number };
+}
+export interface DespachoDireccion {
+  id: string;
+  linea1: string;
+  linea2: string | null;
+  ciudad: string;
+  provincia: string;
+  pais: string;
+  geo?: { lat: number; lng: number };
+}
 export interface OrdenConsolidadaDespacho {
+  id?: string;
   delivery_status: string;
-  paciente_id: string;
+  delivery_occurred_on?: string | null;
+  driver_id?: string | null;
+  paquete_id?: string | null;
+  entrega_id?: string | null;
+  contrato_id?: string | null;
+  paciente_id?: string;
+  paciente?: { id: string; nombre: string; documento: string } | null;
   direccion_id?: string;
-  ventana_entrega_id?: string;
-  tracking: { historial: TrackingEvento[] } | null;
+  direccion?: DespachoDireccion | null;
+  ventana_entrega_id?: string | null;
+  ruta?: DespachoRuta | null;
+  tracking: DespachoTracking | null;
 }
 export interface OrdenConsolidadaProgreso {
   total_paquetes: number;
   completados: number;
   pendientes: number;
+  completado_at?: string | null;
+  entrega_id?: string;
+  contrato_id?: string | null;
 }
 export interface OrdenConsolidada {
   id: string;

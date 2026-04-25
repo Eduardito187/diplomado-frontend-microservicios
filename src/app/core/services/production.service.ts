@@ -110,6 +110,18 @@ export class ProductionService {
     return this.http.get<LaravelResource[]>(API.production.pacientes.base);
   }
 
+  getPacienteById(id: string): Observable<LaravelResource> {
+    return this.http.get<LaravelResource>(API.patients.byId(id));
+  }
+
+  getPacienteDireccionById(pacienteId: string, direccionId: string): Observable<LaravelResource> {
+    return this.http.get<LaravelResource>(API.patients.addressById(pacienteId, direccionId));
+  }
+
+  getVentanaEntregaById(id: string): Observable<LaravelResource> {
+    return this.http.get<LaravelResource>(API.production.ventanasEntrega.byId(id));
+  }
+
   getPacienteAddresses(pacienteId: string): Observable<unknown[]> {
     return this.http.get<unknown[]>(API.patients.addresses(pacienteId));
   }
