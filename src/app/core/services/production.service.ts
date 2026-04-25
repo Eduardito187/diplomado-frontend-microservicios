@@ -146,6 +146,12 @@ export class ProductionService {
     return this.http.get<Calendario[]>(API.production.ventanasEntrega.calendarios(id));
   }
 
+  getProximaVentana(): Observable<{ id: string; desde: string; hasta: string; estado: number; entrega_id: string; contrato_id: string }> {
+    return this.http.get<{ id: string; desde: string; hasta: string; estado: number; entrega_id: string; contrato_id: string }>(
+      API.production.ventanasEntrega.proxima
+    );
+  }
+
   getAgenda(fechaInicio?: string, fechaFin?: string): Observable<AgendaResponse> {
     let url = API.production.agenda;
     const params: string[] = [];
