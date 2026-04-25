@@ -47,8 +47,45 @@
           @for (it of workflowItems.controls; track $index; let i = $index) {
             <div class="item-row-grid" [formGroup]="$any(it)">
               <div class="field">
-                <label [attr.for]="'gen-sku-' + i">SKU *</label>
-                <input [id]="'gen-sku-' + i" type="text" formControlName="sku" placeholder="PROD-001" />
+                <label [attr.for]="'gen-prod-' + i">Producto *</label>
+                <div class="prod-combobox">
+                  <div class="prod-input-wrap">
+                    <i class="bi bi-search prod-search-icon"></i>
+                    <input
+                      [id]="'gen-prod-' + i"
+                      type="text"
+                      [value]="productSearch()[i] ?? ''"
+                      (input)="onProductSearchInput(i, $any($event.target).value)"
+                      (focus)="openProductDropdown.set(i)"
+                      (blur)="closeProductDropdown()"
+                      placeholder="Buscar por nombre o SKU…"
+                      autocomplete="off"
+                    />
+                    @if (productosLoading()) {
+                      <span class="spinner-border spinner-border-sm prod-spinner"></span>
+                    }
+                  </div>
+                  @if (openProductDropdown() === i) {
+                    <div class="prod-dropdown" (mousedown)="$event.preventDefault()">
+                      @if (filteredProducts(i).length === 0) {
+                        <div class="prod-empty">Sin resultados</div>
+                      }
+                      @for (p of filteredProducts(i); track p.id) {
+                        <button type="button" class="prod-option" (click)="selectProduct(i, p)">
+                          <span class="prod-nombre">{{ p.nombre ?? p.sku }}</span>
+                          <span class="prod-sku-badge">{{ p.sku }}</span>
+                        </button>
+                      }
+                    </div>
+                  }
+                </div>
+                @if ($any(it).get('sku').value) {
+                  <small class="prod-selected-hint">
+                    <i class="bi bi-check-circle-fill"></i> SKU: <code>{{ $any(it).get('sku').value }}</code>
+                  </small>
+                } @else if ($any(it).get('sku').touched) {
+                  <small class="field-error">Selecciona un producto de la lista.</small>
+                }
               </div>
               <div class="field">
                 <label [attr.for]="'gen-qty-' + i">Cantidad *</label>

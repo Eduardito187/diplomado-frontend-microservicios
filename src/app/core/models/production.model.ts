@@ -1,8 +1,10 @@
 export interface Producto {
   id: string;
   sku: string;
+  nombre?: string;
   price: number;
   specialPrice?: number;
+  special_price?: number;
   [k: string]: unknown;
 }
 

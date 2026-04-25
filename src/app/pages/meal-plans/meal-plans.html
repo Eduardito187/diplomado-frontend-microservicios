@@ -82,7 +82,7 @@
     </div>
   </dialog>
   }
-  <!-- MealPlan Create Modal -->
+  <!-- MealPlan Create/Edit Modal -->
   @if (modalMode() === 'create' || modalMode() === 'edit') {
   <div class="modal-backdrop" (click)="closeCreate()" (keydown.escape)="closeCreate()" aria-hidden="true"></div>
   <dialog class="modal-panel modal-xl" open aria-modal="true" aria-labelledby="patient-modal-title">
@@ -210,7 +210,7 @@
   </dialog>
   }
 
-  <!-- MealPlanDays Create Modal -->
+  <!-- MealPlanDays Modal -->
   @if (showTimeFoodsModal()) {
   <div class="modal-backdrop" (click)="closeTimeFoodsModal()" (keydown.escape)="closeTimeFoodsModal()"
     aria-hidden="true"></div>
@@ -279,6 +279,7 @@
     </div>
   </dialog>
   }
+
   @if (modalMode() === 'select-recipes') {
   <div class="modal-backdrop" (click)="closeSelectRecipes()" (keydown.escape)="closeSelectRecipes()" aria-hidden="true">
   </div>
@@ -366,7 +367,7 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th>Nuricionista</th>
+            <th>Nutricionista</th>
             <th>Paciente</th>
             <th>Suscripcion</th>
             <th>Fechas</th>

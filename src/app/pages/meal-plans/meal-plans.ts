@@ -459,8 +459,6 @@ export class MealPlans implements OnInit {
 
     this.svc.updateMealPlan(id, dto).subscribe({
       next: () => {
-
-        // 🔥 ACTUALIZAR EN MEMORIA (CLAVE)
         this.mealplans.update((list) =>
           list.map((mp) =>
             mp.id === id

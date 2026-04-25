@@ -78,6 +78,10 @@ export class Production implements OnInit {
   readonly stageForm = this.fb.nonNullable.group({ id: [''], porcionId: [''] });
 
   readonly porciones = signal<LaravelResource[]>([]);
+  readonly productos = signal<import('../../core/models/production.model').Producto[]>([]);
+  readonly productosLoading = signal(false);
+  readonly productSearch = signal<Record<number, string>>({});
+  readonly openProductDropdown = signal<number | null>(null);
 
   constructor() {
     this.addItem();
@@ -87,6 +91,7 @@ export class Production implements OnInit {
     if (!ensureRole(SECTION_ROLES.production, this.auth, this.router)) return;
     this.loadResource();
     this.loadPorciones();
+    this.loadProductos();
   }
 
   private loadPorciones(): void {
@@ -94,6 +99,39 @@ export class Production implements OnInit {
       next: (list) => this.porciones.set(list ?? []),
       error: () => this.porciones.set([]),
     });
+  }
+
+  private loadProductos(): void {
+    this.productosLoading.set(true);
+    this.svc.getProductos().subscribe({
+      next: (list) => { this.productos.set(list ?? []); this.productosLoading.set(false); },
+      error: () => { this.productos.set([]); this.productosLoading.set(false); },
+    });
+  }
+
+  filteredProducts(i: number): import('../../core/models/production.model').Producto[] {
+    const q = (this.productSearch()[i] ?? '').toLowerCase().trim();
+    const all = this.productos();
+    if (!q) return all;
+    return all.filter(p =>
+      (p.nombre ?? '').toLowerCase().includes(q) || p.sku.toLowerCase().includes(q)
+    );
+  }
+
+  selectProduct(i: number, p: import('../../core/models/production.model').Producto): void {
+    this.workflowItems.at(i).get('sku')!.setValue(p.sku);
+    this.productSearch.update(s => ({ ...s, [i]: p.nombre ? `${p.nombre} (${p.sku})` : p.sku }));
+    this.openProductDropdown.set(null);
+  }
+
+  onProductSearchInput(i: number, value: string): void {
+    this.productSearch.update(s => ({ ...s, [i]: value }));
+    this.workflowItems.at(i).get('sku')!.setValue('');
+    this.openProductDropdown.set(i);
+  }
+
+  closeProductDropdown(): void {
+    this.openProductDropdown.set(null);
   }
 
   setTab(tab: ActiveTab): void {
@@ -199,7 +237,18 @@ export class Production implements OnInit {
   }
 
   removeItem(i: number): void {
-    if (this.workflowItems.length > 1) this.workflowItems.removeAt(i);
+    if (this.workflowItems.length > 1) {
+      this.workflowItems.removeAt(i);
+      this.productSearch.update(s => {
+        const next: Record<number, string> = {};
+        for (const [k, v] of Object.entries(s)) {
+          const ki = Number(k);
+          if (ki < i) next[ki] = v;
+          else if (ki > i) next[ki - 1] = v;
+        }
+        return next;
+      });
+    }
   }
 
   submitGenerar(): void {
